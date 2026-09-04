@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HKPPT Season 2 — 隊伍名單提交</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<style>
+  :root {
+    --navy: #001F3D;
+    --navy-deep: #001327;
+    --lime: #B6FF00;
+    --lime-deep: #8FCC00;
+    --ink: #1B1F2E;
+    --muted: #5B6172;
+    --line: #DCE3EC;
+    --bg: #F4F7FB;
+    --white: #FFFFFF;
+    --warn-bg: #FFF3CD;
+    --warn-text: #7A5B00;
+    --ok-bg: #E7F8E3;
+    --ok-text: #256B2B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", "PingFang HK", "Microsoft JhengHei", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .topbar {
+    background: var(--navy-deep);
+    color: var(--white);
+    padding: 22px 20px 20px;
+    text-align: center;
+  }
+  .topbar .logo {
+    height: 64px;
+    width: auto;
+    display: block;
+    margin: 0 auto 8px;
+  }
+  .topbar .brand {
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--lime);
+    font-size: 13px;
+    text-transform: uppercase;
+  }
+  .topbar h1 {
+    margin: 6px 0 4px;
+    font-size: 22px;
+    font-weight: 800;
+  }
+  .topbar p {
+    margin: 0;
+    font-size: 13px;
+    color: #B9C6D9;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 18px 16px 60px;
+  }
+  .card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 15px;
+    margin: 0 0 12px;
+    color: var(--navy);
+  }
+  label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  select, input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 10px 11px;
+    border: 1.5px solid var(--line);
+    border-radius: 7px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--white);
+  }
+  select:disabled, input:disabled { background: #F3F5F8; color: var(--muted); }
+  select:focus, input:focus {
+    outline: none;
+    border-color: var(--navy);
+  }
+  .privacy-note {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    background: #EEF3FA;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+  .privacy-note svg { flex: none; margin-top: 1px; }
+
+  .example-card {
+    background: #F7F9FC;
+    border: 1.5px dashed #C7D2E0;
+    border-radius: 9px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .example-card .ex-tag {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+    background: #E4E9F1;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .example-card .ex-row {
+    display: flex;
+    gap: 18px;
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .example-card .ex-row div span:first-child {
+    color: var(--muted);
+    margin-right: 5px;
+  }
+  .example-card .ex-row div span:last-child {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .player-card {
+    border: 1.5px solid var(--line);
+    border-radius: 9px;
+    padding: 12px 14px 14px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .player-card .p-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .player-card .p-num {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--muted);
+  }
+  .del-btn {
+    background: none; border: none; color: #C24747; font-size: 15px;
+    cursor: pointer; line-height: 1; padding: 4px 6px; font-weight: 700;
+  }
+  .del-btn:hover { color: #9c2f2f; }
+  .del-btn:disabled { color: var(--muted); cursor: not-allowed; }
+  .field-row {
+    margin-bottom: 9px;
+  }
+  .field-row label {
+    font-size: 11.5px;
+    margin-bottom: 4px;
+  }
+  .field-grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .row-input { padding: 9px 10px; font-size: 14.5px; }
+
+  .add-row {
+    margin-top: 4px;
+    width: 100%;
+    padding: 10px;
+    background: var(--white);
+    border: 1.5px dashed var(--line);
+    border-radius: 7px;
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  .add-row:hover { border-color: var(--navy); background: #F5F8FC; }
+  .add-row:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    font-size: 13.5px;
+  }
+  .summary-grid .item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: #F7F9FC;
+    border-radius: 7px;
+  }
+  .summary-grid .item span:first-child { color: var(--muted); }
+  .summary-grid .item span:last-child { font-weight: 700; color: var(--navy); }
+  .status-banner {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+  }
+  .status-banner.warn { background: var(--warn-bg); color: var(--warn-text); }
+  .status-banner.ok { background: var(--ok-bg); color: var(--ok-text); }
+
+  .result-box {
+    margin-top: 14px;
+    background: var(--navy-deep);
+    border-radius: 9px;
+    padding: 16px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .result-box .label { color: var(--white); font-size: 13.5px; font-weight: 700; line-height: 1.4; }
+  .result-box .label small { display: block; color: #9FB6CE; font-weight: 400; font-size: 11.5px; margin-top: 2px; }
+  .result-box .value { color: var(--lime); font-size: 30px; font-weight: 800; }
+
+  .submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--lime);
+    color: var(--navy-deep);
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+  .submit-btn:hover { background: var(--lime-deep); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--navy-deep);
+    color: var(--white);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.25s ease;
+    pointer-events: none;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    z-index: 80;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #7A2727; }
+
+  .meta-note { font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+
+  .admin-link {
+    text-align: center;
+    margin-top: 6px;
+  }
+  .admin-link button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 11.5px;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .admin-overlay {
+    position: fixed; inset: 0; background: rgba(0,10,20,0.55);
+    display: none; align-items: center; justify-content: center; z-index: 50;
+    padding: 20px;
+  }
+  .admin-overlay.show { display: flex; }
+  .admin-modal {
+    background: var(--white); border-radius: 10px; padding: 20px;
+    max-width: 340px; width: 100%;
+  }
+  .admin-modal h3 { margin: 0 0 10px; font-size: 15px; color: var(--navy); }
+  .admin-modal input { margin-bottom: 10px; }
+  .admin-modal .btnrow { display: flex; gap: 8px; }
+  .admin-modal button {
+    flex: 1; padding: 10px; border-radius: 7px; border: none; font-weight: 700; cursor: pointer; font-size: 13.5px;
+  }
+  .admin-modal .go { background: var(--navy); color: var(--white); }
+  .admin-modal .cancel { background: #EEE; color: var(--ink); }
+
+  .admin-panel { display: none; }
+  .admin-panel.show { display: block; }
+  .admin-panel table { font-size: 12.5px; width: 100%; border-collapse: collapse; }
+  .admin-panel th, .admin-panel td { padding: 6px 8px; border-bottom: 1px solid #EEF1F5; text-align: left; }
+  .admin-panel th { background: var(--navy); color: var(--white); position: sticky; top: 0; }
+  .division-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;
+  }
+  .refresh-btn {
+    background: var(--navy); color: white; border: none; padding: 8px 14px;
+    border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; margin-bottom: 10px;
+  }
+  .back-btn {
+    background: none; border: 1.5px solid var(--line); color: var(--navy); padding: 8px 14px;
+    border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; margin-bottom: 10px; margin-left: 8px;
+  }
+  .reset-btn {
+    background: #F3E6E6; color: #A33; border: 1px solid #E0BFBF; padding: 4px 9px;
+    border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  }
+  .admin-modal .danger { background: #C24747; color: var(--white); }
+  .admin-modal .target-team {
+    font-size: 13.5px; font-weight: 800; color: var(--navy); margin: 0 0 8px;
+  }
+  .admin-modal .warn-text {
+    font-size: 12px; color: var(--muted); margin: 0 0 10px; line-height: 1.5;
+  }
+  .reset-btn:disabled {
+    opacity: 0.35; cursor: not-allowed;
+  }
+  .loading-note {
+    text-align: center; font-size: 13px; color: var(--muted); padding: 14px 0;
+  }
+  .overlay-spin {
+    display: inline-block; width: 13px; height: 13px; border-radius: 50%;
+    border: 2px solid rgba(182,255,0,0.35); border-top-color: var(--lime);
+    animation: spin 0.7s linear infinite; vertical-align: -2px; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <img class="logo" src="assets/hkppt-logo.png" alt="HKPPT Hong Kong Premier Pickleball Tournament logo">
+  <div class="brand">HKPPT SEASON 2</div>
+  <h1>隊伍名單提交表格</h1>
+  <p>Team Lineup Submission Form</p>
+</div>
+
+<div class="wrap">
+
+  <div id="mainView">
+
+    <div class="card">
+      <h2>1. 選擇你嘅隊伍 Select Your Team</h2>
+      <select id="teamSelect">
+        <option value="">請選擇隊伍 — Select your team…</option>
+      </select>
+      <div class="privacy-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6172" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>你嘅資料只有你哋隊同大會可以睇到，其他隊伍睇唔到。<br>Only your team and the organizer can see this — no other team can view your roster.</span>
+      </div>
+    </div>
+
+    <div id="teamLoading" class="card loading-note" style="display:none;">
+      <span class="overlay-spin"></span>載入緊隊伍資料… Loading team data…
+    </div>
+
+    <div id="formSection" style="display:none;">
+      <div id="submittedBanner" class="card" style="display:none; background:#001F3D; border:none;">
+        <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">✅ 你哋隊已經提交咗名單</p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;" id="submittedAt"></p>
+        <div class="summary-grid" style="margin-top:10px;">
+          <div class="item" style="background:#0A2E4E;"><span style="color:#9FB6CE;">男球員人數</span><span id="submittedMale" style="color:#fff;">0</span></div>
+          <div class="item" style="background:#0A2E4E;"><span style="color:#9FB6CE;">女球員人數</span><span id="submittedFemale" style="color:#fff;">0</span></div>
+        </div>
+        <p style="margin:10px 0 0; color:#B9C6D9; font-size:12.5px;">為保障球員私隱，名單詳情（姓名、DUPR ID、隊伍平均 DUPR 等）唔會喺呢個畫面顯示。如需要修改，請聯絡大會協助重置後再重新提交。<br>For player privacy, roster details (names, DUPR IDs, team average DUPR, etc.) are not shown here. Contact the organizer to reset your record if you need to make changes.</p>
+      </div>
+
+      <div id="editSection">
+      <div class="card">
+        <h2>2. 球員名單 Player Roster</h2>
+
+        <div class="example-card">
+          <div class="ex-tag">例子 EXAMPLE — 僅供參考，唔使填</div>
+          <div class="ex-row">
+            <div><span>Full Name:</span><span>Chan Tai Man Peter</span></div>
+            <div><span>Preferred Name:</span><span>Peter</span></div>
+          </div>
+        </div>
+
+        <div id="playerRows"></div>
+        <button class="add-row" id="addRowBtn">＋ 新增球員 Add Player</button>
+        <p class="meta-note">建議6男6女，最多8男8女（合共最多16人）</p>
+      </div>
+
+      <div class="card">
+        <h2>3. 即時計算 Live Calculation</h2>
+        <div class="summary-grid">
+          <div class="item"><span>男球員人數</span><span id="maleCount">0</span></div>
+          <div class="item"><span>女球員人數</span><span id="femaleCount">0</span></div>
+        </div>
+        <div id="statusBanner" class="status-banner warn">⚠ 需要至少3男3女先可以準確計算隊伍DUPR</div>
+        <div class="result-box">
+          <div class="label">隊伍平均 DUPR<small>Team Average DUPR (top 3 男 + top 3 女 ÷ 6)</small></div>
+          <div class="value" id="avgDupr">0.000</div>
+        </div>
+        <p class="meta-note">DUPR評分請以 <strong>2026年8月15日</strong> 數據為準。如球員未有評分，DUPR一欄請填 <strong>NR</strong>（系統將以2.75計算）。</p>
+      </div>
+
+      <button class="submit-btn" id="submitBtn">提交隊伍名單 Submit Lineup</button>
+      <p class="meta-note" id="lastSaved"></p>
+      </div>
+    </div>
+
+    <div class="admin-link"><button id="adminOpenBtn">大會專用 Organizer view</button></div>
+  </div>
+
+  <div id="adminPanel" class="admin-panel">
+    <div class="card">
+      <h2>分組總表 Master Ranking（大會專用）</h2>
+      <button class="refresh-btn" id="refreshBtn">重新整理 Refresh</button>
+      <button class="back-btn" id="backBtn">← 返回表格 Back to form</button>
+      <div id="adminLoading" class="loading-note" style="display:none;">
+        <span class="overlay-spin"></span>載入緊… Loading…
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="adminTable">
+          <thead>
+            <tr><th>排名</th><th>隊伍</th><th>平均DUPR</th><th>男/女</th><th>級別</th><th>狀態</th><th>操作</th></tr>
+          </thead>
+          <tbody id="adminRows"></tbody>
+        </table>
+      </div>
+      <p class="meta-note" id="adminSummary"></p>
+    </div>
+  </div>
+
+</div>
+
+<div class="admin-overlay" id="adminOverlay">
+  <div class="admin-modal">
+    <h3>大會專用密碼 Organizer Passcode</h3>
+    <input type="text" id="adminPassInput" placeholder="請輸入密碼 Enter passcode">
+    <div class="btnrow">
+      <button class="cancel" id="adminCancelBtn">取消 Cancel</button>
+      <button class="go" id="adminGoBtn">進入 Enter</button>
+    </div>
+  </div>
+</div>
+
+<div class="admin-overlay" id="resetOverlay">
+  <div class="admin-modal">
+    <h3>確認重置 Confirm Reset</h3>
+    <p class="target-team" id="resetTeamLabel"></p>
+    <p class="warn-text">此操作會永久刪除該隊已提交嘅名單，無法復原。請重新輸入大會密碼以確認。<br>This permanently deletes that team's submitted roster and cannot be undone. Re-enter the organizer passcode to confirm.</p>
+    <input type="text" id="resetPassInput" placeholder="請輸入密碼 Enter passcode">
+    <div class="btnrow">
+      <button class="cancel" id="resetCancelBtn">取消 Cancel</button>
+      <button class="danger" id="resetGoBtn">確認重置 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Backend: the browser talks only to this site's own /api/roster function,
+// which proxies the Apps Script Web App ("HKPPT Season 2 - Lineup
+// Submissions" Google Sheet) server-side. The proxy never forwards another
+// team's player names/DUPR IDs to the browser, and withholds the team
+// average DUPR entirely — only gender counts and the submission time.
+const ROSTER_API = "/api/roster";
+
+const TEAMS = [
+  "The OWWWL Pickle Team","激戰魂","The Dinosaurs","Pickle Monster","Lit",
+  "Never Speed Up","Sportaday.Club","PickleCow","ChillBallic","MN Square",
+  "二喱","再 · 薩利亞","Pickle 8","提燈TEAM","Pickaboo","WWW",
+  "戰魂小隊","TWH Exit A","Picklefun","ON CLOUD NINE","零Dink球","Cyber Dinks",
+  "Over-drinking Head","Big Ballers","Drive You Crazy","Dink Don","Dink9",
+  "I Dink U","90後","Dink More","Nova","The Dinkers","THESE",
+  "Catchup","Pickle Elite","CSSA",
+  "【待定 TBC-1】","【待定 TBC-2】","【待定 TBC-3】","【待定 TBC-4】"
+];
+const MAX_PLAYERS = 16;
+const NR_VALUE = 2.75;
+const DIVISIONS = [
+  {name:"超級組 Premier", color:"#B6FF00", text:"#001F3D"},
+  {name:"精英組 Championship", color:"#7FC7FF", text:"#001F3D"},
+  {name:"挑戰組 Challenger", color:"#FFC95C", text:"#001F3D"},
+  {name:"新秀組 Development", color:"#C9B7FF", text:"#001F3D"},
+  {name:"入門組 Rookie", color:"#FF9E9E", text:"#001F3D"},
+];
+
+let currentTeam = null;
+let players = [];
+let alreadySubmitted = false;
+let submittedAtDisplay = "";
+let adminPasscode = "";
+let pendingResetTeam = null;
+
+// Surfaced when ADMIN_PASSCODE has no value in the site settings — the
+// function refuses organizer requests outright rather than falling back.
+const PASSCODE_UNSET_MSG = "大會密碼未設定，請於網站設定 ADMIN_PASSCODE。Organizer passcode is not configured — set ADMIN_PASSCODE in the site settings.";
+
+function el(id) { return document.getElementById(id); }
+
+function populateTeamSelect() {
+  const sel = el("teamSelect");
+  TEAMS.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
+  });
+}
+
+function makeEmptyPlayer() { return { name: "", preferredName: "", gender: "", duprId: "", dupr: "" }; }
+
+function resolveDupr(raw) {
+  if (raw === null || raw === undefined || raw === "") return null;
+  const trimmed = String(raw).trim();
+  if (trimmed.toUpperCase() === "NR") return NR_VALUE;
+  const n = parseFloat(trimmed);
+  return isNaN(n) ? null : n;
+}
+
+// ── Backend calls ──────────────────────────────────────────────────────
+// Only this team's own aggregate status (never another team's player data).
+async function fetchTeamStatus(team) {
+  const res = await fetch(`${ROSTER_API}?team=${encodeURIComponent(team)}`, { method: "GET" });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "unknown_error");
+  return data;
+}
+
+// Aggregate stats for every team — gated by the organizer passcode, checked
+// server-side. Never includes player names/DUPR IDs.
+async function fetchAdminTeams(passcode) {
+  const res = await fetch(`${ROSTER_API}?admin=1&passcode=${encodeURIComponent(passcode)}`, { method: "GET" });
+  const data = await res.json();
+  return data;
+}
+
+async function postAction(payload) {
+  const res = await fetch(ROSTER_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+function formatSavedAt(iso) {
+  try {
+    return new Date(iso).toLocaleString("zh-HK", { timeZone: "Asia/Hong_Kong" });
+  } catch (e) {
+    return iso;
+  }
+}
+
+function renderRows() {
+  const container = el("playerRows");
+  container.innerHTML = "";
+  players.forEach((p, i) => {
+    const card = document.createElement("div");
+    card.className = "player-card";
+    card.innerHTML = `
+      <div class="p-head">
+        <span class="p-num">球員 Player ${i + 1}</span>
+        <button class="del-btn" data-i="${i}" title="刪除">✕ 刪除</button>
+      </div>
+      <div class="field-row">
+        <label>Full Name in English 英文全名</label>
+        <input class="row-input" type="text" data-i="${i}" data-f="name" value="${p.name.replace(/"/g,'&quot;')}" placeholder="e.g. Chan Tai Man Peter">
+      </div>
+      <div class="field-row">
+        <label>Preferred Name 慣用名稱（社交媒體用）</label>
+        <input class="row-input" type="text" data-i="${i}" data-f="preferredName" value="${p.preferredName.replace(/"/g,'&quot;')}" placeholder="e.g. Peter">
+      </div>
+      <div class="field-row field-grid2">
+        <div>
+          <label>性別 M/F</label>
+          <select class="row-input" data-i="${i}" data-f="gender">
+            <option value="" ${p.gender===""?"selected":""}>--</option>
+            <option value="M" ${p.gender==="M"?"selected":""}>M</option>
+            <option value="F" ${p.gender==="F"?"selected":""}>F</option>
+          </select>
+        </div>
+        <div>
+          <label>DUPR ID</label>
+          <input class="row-input" type="text" maxlength="6" data-i="${i}" data-f="duprId" value="${p.duprId.replace(/"/g,'&quot;')}" placeholder="例如 A1B2C3">
+          <div style="font-size:10.5px;color:var(--muted);margin-top:3px;">6位英文字母及數字</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <label>DUPR 雙打分，未有分數請填NR</label>
+        <input class="row-input" type="text" data-i="${i}" data-f="dupr" value="${p.dupr}" placeholder="例如 3.188">
+      </div>
+    `;
+    container.appendChild(card);
+  });
+  el("addRowBtn").disabled = players.length >= MAX_PLAYERS;
+
+  container.querySelectorAll("input, select").forEach(input => {
+    input.addEventListener("input", onFieldChange);
+  });
+  container.querySelectorAll(".del-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      players.splice(parseInt(btn.dataset.i), 1);
+      renderRows();
+      recalc();
+    });
+  });
+}
+
+function onFieldChange(e) {
+  const i = parseInt(e.target.dataset.i);
+  const f = e.target.dataset.f;
+  players[i][f] = e.target.value;
+  recalc();
+}
+
+function top3Sum(values) {
+  const sorted = [...values].sort((a, b) => b - a);
+  const top3 = sorted.slice(0, 3);
+  return top3.reduce((a, b) => a + b, 0);
+}
+
+function computeTeamStats(playerList) {
+  const resolved = playerList.map(p => ({ gender: p.gender, val: resolveDupr(p.dupr) }));
+  const males = resolved.filter(p => p.gender === "M" && p.val !== null).map(p => p.val);
+  const females = resolved.filter(p => p.gender === "F" && p.val !== null).map(p => p.val);
+  const top3m = top3Sum(males);
+  const top3f = top3Sum(females);
+  const avg = (males.length >= 3 && females.length >= 3) ? (top3m + top3f) / 6 : 0;
+  return { maleCount: males.length, femaleCount: females.length, avg };
+}
+
+function recalc() {
+  const stats = computeTeamStats(players);
+
+  el("maleCount").textContent = stats.maleCount;
+  el("femaleCount").textContent = stats.femaleCount;
+
+  const banner = el("statusBanner");
+  if (stats.maleCount < 3 || stats.femaleCount < 3) {
+    banner.className = "status-banner warn";
+    banner.textContent = "⚠ 需要至少3男3女先可以準確計算隊伍DUPR";
+  } else {
+    banner.className = "status-banner ok";
+    banner.textContent = "✓ 人數足夠 OK";
+  }
+
+  el("avgDupr").textContent = stats.avg.toFixed(3);
+  return stats.avg;
+}
+
+function showToast(msg, isError) {
+  const t = el("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (isError ? " error" : "");
+  setTimeout(() => { t.className = "toast"; }, 2600);
+}
+
+async function loadTeamData(team) {
+  alreadySubmitted = false;
+  el("formSection").style.display = "none";
+  el("teamLoading").style.display = "block";
+  try {
+    const status = await fetchTeamStatus(team);
+    if (status.submitted) {
+      alreadySubmitted = true;
+      submittedAtDisplay = formatSavedAt(status.submittedAt);
+      el("submittedAt").textContent = `提交時間：${submittedAtDisplay}`;
+      el("submittedMale").textContent = status.maleCount;
+      el("submittedFemale").textContent = status.femaleCount;
+    } else {
+      players = Array.from({ length: 6 }, makeEmptyPlayer);
+    }
+    el("lastSaved").textContent = "";
+  } catch (e) {
+    showToast("無法載入隊伍資料，請檢查網絡後重試 Could not load team data — check your connection", true);
+    players = Array.from({ length: 6 }, makeEmptyPlayer);
+  }
+  el("teamLoading").style.display = "none";
+  el("formSection").style.display = "block";
+  el("submittedBanner").style.display = alreadySubmitted ? "block" : "none";
+  el("editSection").style.display = alreadySubmitted ? "none" : "block";
+  if (!alreadySubmitted) {
+    renderRows();
+    recalc();
+  }
+}
+
+el("teamSelect").addEventListener("change", async (e) => {
+  currentTeam = e.target.value;
+  if (!currentTeam) {
+    el("formSection").style.display = "none";
+    el("teamLoading").style.display = "none";
+    return;
+  }
+  await loadTeamData(currentTeam);
+});
+
+el("addRowBtn").addEventListener("click", () => {
+  if (players.length < MAX_PLAYERS) {
+    players.push(makeEmptyPlayer());
+    renderRows();
+    recalc();
+  }
+});
+
+el("submitBtn").addEventListener("click", async () => {
+  if (!currentTeam) return;
+  if (alreadySubmitted) {
+    showToast("⚠ 呢隊已經提交咗，如需要修改請聯絡大會協助重置", true);
+    return;
+  }
+  const cleanPlayers = players.filter(p => p.name.trim() || p.preferredName.trim() || p.gender || p.duprId.trim() || p.dupr.trim());
+  if (cleanPlayers.length === 0) {
+    showToast("請至少填寫一位球員資料", true);
+    return;
+  }
+  const stats = computeTeamStats(players);
+  const payload = {
+    action: "submit",
+    team: currentTeam,
+    players: cleanPlayers,
+    avgDupr: stats.avg,
+    maleCount: stats.maleCount,
+    femaleCount: stats.femaleCount,
+  };
+  try {
+    el("submitBtn").disabled = true;
+    el("submitBtn").textContent = "提交緊… Submitting…";
+    const result = await postAction(payload);
+    if (!result.ok) {
+      if (result.error === "already_submitted") {
+        showToast("⚠ 呢隊已經提交咗，如需要修改請聯絡大會協助重置", true);
+        alreadySubmitted = true;
+        el("submittedBanner").style.display = "block";
+        el("editSection").style.display = "none";
+      } else {
+        showToast("提交失敗，請再試一次 Submission failed, please retry", true);
+      }
+      return;
+    }
+    showToast(`✅ ${currentTeam} 嘅名單已成功提交！`);
+    alreadySubmitted = true;
+    submittedAtDisplay = formatSavedAt(result.savedAt);
+    el("submittedAt").textContent = `提交時間：${submittedAtDisplay}`;
+    el("submittedMale").textContent = stats.maleCount;
+    el("submittedFemale").textContent = stats.femaleCount;
+    el("submittedBanner").style.display = "block";
+    el("editSection").style.display = "none";
+  } catch (e) {
+    showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
+  } finally {
+    el("submitBtn").disabled = false;
+    el("submitBtn").textContent = "提交隊伍名單 Submit Lineup";
+  }
+});
+
+el("adminOpenBtn").addEventListener("click", () => {
+  el("adminOverlay").classList.add("show");
+  el("adminPassInput").value = "";
+  el("adminPassInput").focus();
+});
+el("adminCancelBtn").addEventListener("click", () => el("adminOverlay").classList.remove("show"));
+el("adminGoBtn").addEventListener("click", checkAdminPass);
+el("adminPassInput").addEventListener("keydown", (e) => { if (e.key === "Enter") checkAdminPass(); });
+
+async function checkAdminPass() {
+  const passcode = el("adminPassInput").value;
+  el("adminGoBtn").disabled = true;
+  try {
+    const data = await fetchAdminTeams(passcode);
+    if (!data.ok) {
+      showToast(data.error === "passcode_not_configured"
+        ? PASSCODE_UNSET_MSG
+        : "密碼錯誤 Incorrect passcode", true);
+      return;
+    }
+    adminPasscode = passcode;
+    el("adminOverlay").classList.remove("show");
+    el("mainView").style.display = "none";
+    el("adminPanel").classList.add("show");
+    renderAdminTeams(data.teams);
+  } catch (e) {
+    showToast("無法驗證密碼，請檢查網絡後重試 Could not verify passcode — check your connection", true);
+  } finally {
+    el("adminGoBtn").disabled = false;
+  }
+}
+el("backBtn").addEventListener("click", () => {
+  el("adminPanel").classList.remove("show");
+  el("mainView").style.display = "block";
+});
+el("refreshBtn").addEventListener("click", loadAdminData);
+
+async function loadAdminData() {
+  el("adminLoading").style.display = "block";
+  el("adminRows").innerHTML = "";
+  let data;
+  try {
+    data = await fetchAdminTeams(adminPasscode);
+  } catch (e) {
+    showToast("無法載入總表，請檢查網絡後重試 Could not load rankings — check your connection", true);
+    el("adminLoading").style.display = "none";
+    return;
+  }
+  if (!data.ok) {
+    showToast(data.error === "passcode_not_configured"
+      ? PASSCODE_UNSET_MSG
+      : "密碼已失效，請重新登入 Passcode no longer valid — please sign in again", true);
+    el("adminLoading").style.display = "none";
+    el("adminPanel").classList.remove("show");
+    el("mainView").style.display = "block";
+    return;
+  }
+  renderAdminTeams(data.teams);
+}
+
+function renderAdminTeams(submittedTeams) {
+  const byTeam = {};
+  submittedTeams.forEach(t => { byTeam[t.team] = t; });
+
+  const rows = TEAMS.map(team => {
+    const t = byTeam[team];
+    if (!t) return { team, avg: 0, male: 0, female: 0, submitted: false };
+    return { team, avg: t.avgDupr, male: t.maleCount, female: t.femaleCount, submitted: true };
+  });
+
+  rows.sort((a, b) => b.avg - a.avg);
+
+  const tbody = el("adminRows");
+  tbody.innerHTML = "";
+  let submittedCount = 0;
+  rows.forEach((r, i) => {
+    const rank = i + 1;
+    const divIdx = Math.min(Math.floor((rank - 1) / 8), DIVISIONS.length - 1);
+    const div = rank <= 40 ? DIVISIONS[divIdx] : null;
+    if (r.submitted) submittedCount++;
+    const status = r.submitted
+      ? (r.male >= 3 && r.female >= 3 ? "✓ OK" : "⚠ 人數不足")
+      : "— 未提交";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${rank}</td>
+      <td>${r.team}</td>
+      <td>${r.avg ? r.avg.toFixed(3) : "—"}</td>
+      <td>${r.male}M / ${r.female}F</td>
+      <td>${div ? `<span class="division-tag" style="background:${div.color};color:${div.text}">${div.name}</span>` : "—"}</td>
+      <td>${status}</td>
+      <td><button class="reset-btn" data-team="${r.team.replace(/"/g,'&quot;')}" ${r.submitted ? "" : "disabled"}>重置 Reset</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  el("adminSummary").textContent = `已提交：${submittedCount} / ${TEAMS.length} 支隊伍`;
+  el("adminLoading").style.display = "none";
+
+  tbody.querySelectorAll(".reset-btn").forEach(btn => {
+    btn.addEventListener("click", onResetClick);
+  });
+}
+
+function onResetClick(e) {
+  pendingResetTeam = e.currentTarget.dataset.team;
+  el("resetTeamLabel").textContent = pendingResetTeam;
+  el("resetPassInput").value = "";
+  el("resetOverlay").classList.add("show");
+  el("resetPassInput").focus();
+}
+
+function closeResetModal() {
+  el("resetOverlay").classList.remove("show");
+  pendingResetTeam = null;
+}
+
+el("resetCancelBtn").addEventListener("click", closeResetModal);
+el("resetGoBtn").addEventListener("click", confirmReset);
+el("resetPassInput").addEventListener("keydown", (e) => { if (e.key === "Enter") confirmReset(); });
+
+async function confirmReset() {
+  if (!pendingResetTeam) return;
+  const team = pendingResetTeam;
+  const passcode = el("resetPassInput").value;
+  if (!passcode) {
+    showToast("請輸入密碼 Enter the passcode", true);
+    return;
+  }
+  el("resetGoBtn").disabled = true;
+  el("resetGoBtn").textContent = "刪除緊…";
+  try {
+    const result = await postAction({ action: "reset", team, passcode });
+    if (result.ok) {
+      closeResetModal();
+      showToast(`已重置 ${team} 嘅資料，隊伍可以重新提交`);
+      loadAdminData();
+    } else if (result.error === "invalid_passcode") {
+      showToast("密碼錯誤 Incorrect passcode", true);
+    } else if (result.error === "passcode_not_configured") {
+      showToast(PASSCODE_UNSET_MSG, true);
+    } else {
+      showToast("重置失敗，請再試一次", true);
+    }
+  } catch (err) {
+    showToast("重置失敗，請檢查網絡後再試一次", true);
+  } finally {
+    el("resetGoBtn").disabled = false;
+    el("resetGoBtn").textContent = "確認重置 Reset";
+  }
+}
+
+populateTeamSelect();
+</script>
+
+</body>
+</html>
