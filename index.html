@@ -189,6 +189,14 @@
     gap: 8px;
   }
   .row-input { padding: 9px 10px; font-size: 14.5px; }
+  .row-input.invalid { border-color: #d0021b; background: #fff4f4; }
+  .dupr-error {
+    display: none;
+    font-size: 10.5px;
+    color: #d0021b;
+    margin-top: 3px;
+  }
+  .dupr-error.show { display: block; }
 
   .add-row {
     margin-top: 4px;
@@ -404,6 +412,43 @@
   .heat-table-wrap th { background: var(--navy); color: var(--white); font-weight: 700; font-size: 10.5px; }
   .heat-table-wrap td.datecell { text-align: left; font-weight: 700; color: var(--navy); background: #F7F9FC; }
   .heat-cell { font-weight: 800; color: var(--ink); }
+
+  /* ── Payment receipts ─────────────────────────────────────────────── */
+  .pay-details {
+    background: var(--navy-deep); border-radius: 9px; padding: 16px 18px; color: var(--white);
+  }
+  .pay-details .pay-row {
+    display: flex; justify-content: space-between; gap: 10px; padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 13px;
+  }
+  .pay-details .pay-row:last-child { border-bottom: none; }
+  .pay-details .pay-row span:first-child { color: #9FB6CE; }
+  .pay-details .pay-row span:last-child { font-weight: 700; text-align: right; }
+  .pay-amount {
+    margin-top: 12px; background: var(--lime); color: var(--navy-deep); border-radius: 8px;
+    padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .pay-amount .label { font-size: 12.5px; font-weight: 700; }
+  .pay-amount .value { font-size: 22px; font-weight: 800; }
+  .file-drop {
+    border: 1.5px dashed var(--line); border-radius: 9px; padding: 18px; text-align: center;
+    cursor: pointer; background: #F7F9FC;
+  }
+  .file-drop:hover { border-color: var(--navy); }
+  .file-drop input { display: none; }
+  .file-drop .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .file-preview {
+    display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--line); border-radius: 9px;
+    padding: 10px; margin-top: 10px;
+  }
+  .file-preview img { width: 52px; height: 52px; object-fit: cover; border-radius: 6px; flex: none; }
+  .file-preview .file-icon {
+    width: 52px; height: 52px; border-radius: 6px; background: var(--navy); color: var(--lime);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; flex: none;
+  }
+  .file-preview .file-name { font-size: 12.5px; font-weight: 700; color: var(--ink); word-break: break-all; }
+  .file-preview .file-remove { margin-left: auto; background: none; border: none; color: #C24747; font-weight: 700; cursor: pointer; font-size: 13px; flex: none; }
+  .receipt-link { color: var(--navy); font-weight: 700; font-size: 11.5px; text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -420,6 +465,7 @@
   <div class="tabbar">
     <button class="tab-btn active" id="tabLineupBtn" data-tab="lineup">隊伍名單 Lineup</button>
     <button class="tab-btn" id="tabSurveyBtn" data-tab="survey">時間問卷 Availability</button>
+    <button class="tab-btn" id="tabPaymentBtn" data-tab="payment">繳費 Payment</button>
   </div>
 
   <!-- ══════════════════════════ LINEUP TAB ══════════════════════════ -->
@@ -590,6 +636,85 @@
   </div>
   <!-- ═══════════════════════ /SURVEY TAB ══════════════════════════ -->
 
+  <!-- ══════════════════════════ PAYMENT TAB ══════════════════════════ -->
+  <div id="paymentView" class="tab-view" style="display:none;">
+
+  <div id="paymentMainView">
+
+    <div class="card">
+      <h2>1. 選擇你嘅隊伍 Select Your Team</h2>
+      <select id="payTeamSelect">
+        <option value="">請選擇隊伍 — Select your team…</option>
+      </select>
+    </div>
+
+    <div id="payLoading" class="card loading-note" style="display:none;">
+      <span class="overlay-spin"></span>載入緊資料… Loading…
+    </div>
+
+    <div id="payFormSection" style="display:none;">
+
+      <div class="card">
+        <h2>2. 過數資料 Payment Details</h2>
+        <div class="pay-details">
+          <div class="pay-row"><span>收款公司 Payee</span><span>Alpha Sports Development Centre Ltd</span></div>
+          <div class="pay-row"><span>中銀戶口 Bank of China</span><span>012-918-1-071032-8</span></div>
+          <div class="pay-row"><span>FPS ID</span><span>124213901</span></div>
+        </div>
+        <div class="pay-amount">
+          <span class="label">你哋隊應付金額<br>Amount due for your team</span>
+          <span class="value" id="payAmount">$—</span>
+        </div>
+        <p class="meta-note">過數後麻煩上載訂金截圖/收據。<br>After the bank transfer, please upload a screenshot/receipt of the deposit.</p>
+      </div>
+
+      <div id="paySavedBanner" class="card" style="display:none; background:#001F3D; border:none;">
+        <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">✅ 已收到你哋隊嘅收據</p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;" id="paySavedAt"></p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;">如需要重新上載，揀返檔案並提交就可以更新。<br>You can upload a different file any time to replace it.</p>
+      </div>
+
+      <div class="card">
+        <h2>3. 上載收據 Upload Receipt</h2>
+        <label class="file-drop" id="fileDropLabel">
+          <input type="file" id="receiptFileInput" accept="image/*,.pdf">
+          <div>📎 撳呢度揀相片或PDF<br>Tap to choose a photo or PDF</div>
+          <div class="hint">最大 5MB · JPG／PNG／PDF Max 5MB · JPG/PNG/PDF</div>
+        </label>
+        <div id="filePreview" class="file-preview" style="display:none;">
+          <img id="filePreviewImg" style="display:none;">
+          <div id="filePreviewIcon" class="file-icon" style="display:none;">📄</div>
+          <div class="file-name" id="filePreviewName"></div>
+          <button class="file-remove" id="fileRemoveBtn">✕ 移除</button>
+        </div>
+        <button class="submit-btn" id="paySubmitBtn" style="margin-top:12px;" disabled>上載收據 Upload Receipt</button>
+      </div>
+    </div>
+
+    <div class="admin-link"><button id="payAdminOpenBtn">大會專用 Organizer view</button></div>
+  </div>
+
+  <div id="paymentAdminPanel" class="admin-panel">
+    <div class="card">
+      <h2>繳費狀態 Payment Status（大會專用）</h2>
+      <button class="refresh-btn" id="payRefreshBtn">重新整理 Refresh</button>
+      <button class="back-btn" id="payBackBtn">← 返回表格 Back to form</button>
+      <div id="payAdminLoading" class="loading-note" style="display:none;">
+        <span class="overlay-spin"></span>載入緊… Loading…
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="payAdminTable">
+          <thead><tr><th>隊伍</th><th>應付</th><th>狀態</th><th>上載時間</th><th>收據</th><th>操作</th></tr></thead>
+          <tbody id="payAdminRows"></tbody>
+        </table>
+      </div>
+      <p class="meta-note" id="paySummary"></p>
+    </div>
+  </div>
+
+  </div>
+  <!-- ═══════════════════════ /PAYMENT TAB ══════════════════════════ -->
+
 </div>
 
 <div class="admin-overlay" id="adminOverlay">
@@ -626,6 +751,7 @@
 // team's private details to the browser.
 const ROSTER_API = "/api/roster";
 const AVAILABILITY_API = "/api/availability";
+const PAYMENT_API = "/api/payment";
 
 const TEAMS = [
   "The OWWWL Pickle Team","激戰魂","The Dinosaurs","Pickle Monster","Lit",
@@ -666,7 +792,7 @@ const PASSCODE_UNSET_MSG = "大會密碼未設定，請於網站設定 ADMIN_PAS
 function el(id) { return document.getElementById(id); }
 
 function populateTeamSelects() {
-  [el("teamSelect"), el("survTeamSelect")].forEach(sel => {
+  [el("teamSelect"), el("survTeamSelect"), el("payTeamSelect")].forEach(sel => {
     TEAMS.forEach(t => {
       const opt = document.createElement("option");
       opt.value = t; opt.textContent = t;
@@ -676,22 +802,31 @@ function populateTeamSelects() {
 }
 
 // ══════════════════════════ Tab switching ══════════════════════════════
+const TAB_META = {
+  lineup: { title: "隊伍名單提交表格", subtitle: "Team Lineup Submission Form" },
+  survey: { title: "隊伍時間問卷", subtitle: "Team Availability Survey" },
+  payment: { title: "繳費收據上載", subtitle: "Team Payment Receipt Upload" },
+};
+
 function showTab(tab, opts) {
   opts = opts || {};
-  const isSurvey = tab === "survey";
-  el("lineupView").style.display = isSurvey ? "none" : "block";
-  el("surveyView").style.display = isSurvey ? "block" : "none";
-  el("tabLineupBtn").classList.toggle("active", !isSurvey);
-  el("tabSurveyBtn").classList.toggle("active", isSurvey);
-  el("pageTitle").textContent = isSurvey ? "隊伍時間問卷" : "隊伍名單提交表格";
-  el("pageSubtitle").textContent = isSurvey ? "Team Availability Survey" : "Team Lineup Submission Form";
+  if (!TAB_META[tab]) tab = "lineup";
+  el("lineupView").style.display = tab === "lineup" ? "block" : "none";
+  el("surveyView").style.display = tab === "survey" ? "block" : "none";
+  el("paymentView").style.display = tab === "payment" ? "block" : "none";
+  el("tabLineupBtn").classList.toggle("active", tab === "lineup");
+  el("tabSurveyBtn").classList.toggle("active", tab === "survey");
+  el("tabPaymentBtn").classList.toggle("active", tab === "payment");
+  el("pageTitle").textContent = TAB_META[tab].title;
+  el("pageSubtitle").textContent = TAB_META[tab].subtitle;
   if (!opts.skipHash) {
-    history.replaceState(null, "", isSurvey ? "#survey" : "#lineup");
+    history.replaceState(null, "", "#" + tab);
   }
 }
 
 el("tabLineupBtn").addEventListener("click", () => showTab("lineup"));
 el("tabSurveyBtn").addEventListener("click", () => showTab("survey"));
+el("tabPaymentBtn").addEventListener("click", () => showTab("payment"));
 
 // ══════════════════════════ Shared helpers ═════════════════════════════
 function showToast(msg, isError) {
@@ -722,10 +857,24 @@ async function postAction(api, payload) {
 
 function makeEmptyPlayer() { return { name: "", preferredName: "", gender: "", duprId: "", dupr: "" }; }
 
+// Strict on purpose: parseFloat("5abc") === 5, so a naive parseFloat check
+// would silently accept garbage like "5abc" as a valid 5.0 rating. Only an
+// exact plain number (or NR) is treated as valid; anything else resolves to
+// null (excluded from the average) and is flagged in the UI as invalid.
+const DUPR_NUMBER_RE = /^\d+(\.\d+)?$/;
+
+function isValidDuprInput(raw) {
+  if (raw === null || raw === undefined || raw === "") return true; // not filled in yet — allowed
+  const trimmed = String(raw).trim();
+  if (trimmed.toUpperCase() === "NR") return true;
+  return DUPR_NUMBER_RE.test(trimmed);
+}
+
 function resolveDupr(raw) {
   if (raw === null || raw === undefined || raw === "") return null;
   const trimmed = String(raw).trim();
   if (trimmed.toUpperCase() === "NR") return NR_VALUE;
+  if (!DUPR_NUMBER_RE.test(trimmed)) return null;
   const n = parseFloat(trimmed);
   return isNaN(n) ? null : n;
 }
@@ -778,7 +927,8 @@ function renderRows() {
       </div>
       <div class="field-row">
         <label>DUPR 雙打分，未有分數請填NR</label>
-        <input class="row-input" type="text" data-i="${i}" data-f="dupr" value="${p.dupr}" placeholder="例如 3.188">
+        <input class="row-input${isValidDuprInput(p.dupr) ? "" : " invalid"}" type="text" data-i="${i}" data-f="dupr" value="${p.dupr}" placeholder="例如 3.188">
+        <div class="dupr-error${isValidDuprInput(p.dupr) ? "" : " show"}">請輸入有效嘅DUPR分數（例如 3.188）或填 NR　Enter a valid DUPR number (e.g. 3.188) or NR</div>
       </div>
     `;
     container.appendChild(card);
@@ -801,6 +951,15 @@ function onFieldChange(e) {
   const i = parseInt(e.target.dataset.i);
   const f = e.target.dataset.f;
   players[i][f] = e.target.value;
+  if (f === "dupr") {
+    // Toggle the invalid state directly on this input instead of calling
+    // renderRows(), which would rebuild the DOM and steal keyboard focus
+    // mid-typing.
+    const valid = isValidDuprInput(e.target.value);
+    e.target.classList.toggle("invalid", !valid);
+    const errorEl = e.target.parentElement.querySelector(".dupr-error");
+    if (errorEl) errorEl.classList.toggle("show", !valid);
+  }
   recalc();
 }
 
@@ -896,6 +1055,15 @@ el("submitBtn").addEventListener("click", async () => {
   const cleanPlayers = players.filter(p => p.name.trim() || p.preferredName.trim() || p.gender || p.duprId.trim() || p.dupr.trim());
   if (cleanPlayers.length === 0) {
     showToast("請至少填寫一位球員資料", true);
+    return;
+  }
+  const invalidIndex = players.findIndex(p =>
+    (p.name.trim() || p.preferredName.trim() || p.gender || p.duprId.trim() || p.dupr.trim()) &&
+    !isValidDuprInput(p.dupr)
+  );
+  if (invalidIndex !== -1) {
+    showToast(`⚠ 球員 Player ${invalidIndex + 1} 嘅DUPR分數格式唔正確，請輸入數字或 NR Invalid DUPR value for Player ${invalidIndex + 1} — enter a number or NR`, true);
+    renderRows();
     return;
   }
   const stats = computeTeamStats(players);
@@ -1295,10 +1463,210 @@ el("syncSheetBtn").addEventListener("click", async () => {
   }
 });
 
+// ══════════════════════════ PAYMENT TAB LOGIC ══════════════════════════
+
+let currentPayTeam = null;
+let selectedFile = null; // { filename, mimeType, dataBase64 }
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
+
+async function fetchPayStatus(team) {
+  const res = await fetch(`${PAYMENT_API}?team=${encodeURIComponent(team)}`, { method: "GET" });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "unknown_error");
+  return data;
+}
+
+async function fetchPayAdmin(passcode) {
+  const res = await fetch(`${PAYMENT_API}?admin=1&passcode=${encodeURIComponent(passcode)}`, { method: "GET" });
+  return res.json();
+}
+
+function resetFileInput() {
+  selectedFile = null;
+  el("receiptFileInput").value = "";
+  el("filePreview").style.display = "none";
+  el("filePreviewImg").style.display = "none";
+  el("filePreviewIcon").style.display = "none";
+  el("paySubmitBtn").disabled = true;
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // reader.result is "data:<mime>;base64,<data>" — keep just the payload.
+      const base64 = String(reader.result).split(",")[1] || "";
+      resolve(base64);
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+el("receiptFileInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > MAX_FILE_BYTES) {
+    showToast("檔案太大，請上載細過5MB嘅檔案 File is too large — please choose one under 5MB", true);
+    resetFileInput();
+    return;
+  }
+  try {
+    const dataBase64 = await readFileAsBase64(file);
+    selectedFile = { filename: file.name, mimeType: file.type, dataBase64 };
+    el("filePreviewName").textContent = file.name;
+    if (file.type.startsWith("image/")) {
+      el("filePreviewImg").src = `data:${file.type};base64,${dataBase64}`;
+      el("filePreviewImg").style.display = "block";
+      el("filePreviewIcon").style.display = "none";
+    } else {
+      el("filePreviewImg").style.display = "none";
+      el("filePreviewIcon").style.display = "flex";
+    }
+    el("filePreview").style.display = "flex";
+    el("paySubmitBtn").disabled = false;
+  } catch (e) {
+    showToast("無法讀取檔案，請再試一次 Could not read that file, please try again", true);
+    resetFileInput();
+  }
+});
+
+el("fileRemoveBtn").addEventListener("click", resetFileInput);
+
+async function loadPayTeamData(team) {
+  el("payFormSection").style.display = "none";
+  el("payLoading").style.display = "block";
+  resetFileInput();
+  try {
+    const status = await fetchPayStatus(team);
+    el("payAmount").textContent = `$${status.amountRequired.toLocaleString()}`;
+    if (status.uploaded) {
+      el("paySavedAt").textContent = `上次上載：${formatSavedAt(status.uploadedAt)}`;
+      el("paySavedBanner").style.display = "block";
+    } else {
+      el("paySavedBanner").style.display = "none";
+    }
+  } catch (e) {
+    showToast("無法載入資料，請檢查網絡後重試 Could not load payment info — check your connection", true);
+  }
+  el("payLoading").style.display = "none";
+  el("payFormSection").style.display = "block";
+}
+
+el("payTeamSelect").addEventListener("change", async (e) => {
+  currentPayTeam = e.target.value;
+  if (!currentPayTeam) {
+    el("payFormSection").style.display = "none";
+    el("payLoading").style.display = "none";
+    return;
+  }
+  await loadPayTeamData(currentPayTeam);
+});
+
+el("paySubmitBtn").addEventListener("click", async () => {
+  if (!currentPayTeam || !selectedFile) return;
+  try {
+    el("paySubmitBtn").disabled = true;
+    el("paySubmitBtn").textContent = "上載緊… Uploading…";
+    const result = await postAction(PAYMENT_API, {
+      action: "submit",
+      team: currentPayTeam,
+      filename: selectedFile.filename,
+      mimeType: selectedFile.mimeType,
+      dataBase64: selectedFile.dataBase64,
+    });
+    if (!result.ok) {
+      const msg = {
+        invalid_type: "檔案格式唔支援，請上載相片或PDF Unsupported file type — please upload a photo or PDF",
+        file_too_large: "檔案太大，請上載細過5MB嘅檔案 File is too large — please choose one under 5MB",
+        not_configured: "上載功能未設定，請聯絡大會 Upload isn't configured yet — please contact the organizer",
+      }[result.error] || "上載失敗，請再試一次 Upload failed, please retry";
+      showToast(msg, true);
+      return;
+    }
+    el("paySavedAt").textContent = `上次上載：${formatSavedAt(result.uploadedAt)}`;
+    el("paySavedBanner").style.display = "block";
+    resetFileInput();
+    showToast(`✅ ${currentPayTeam} 嘅收據已成功上載！`);
+  } catch (e) {
+    showToast("上載失敗，請檢查網絡後再試一次 Upload failed — check your connection", true);
+  } finally {
+    el("paySubmitBtn").textContent = "上載收據 Upload Receipt";
+    el("paySubmitBtn").disabled = !selectedFile;
+  }
+});
+
+function renderPayAdminTable(receipts) {
+  const byTeam = {};
+  receipts.forEach(r => { byTeam[r.team] = r; });
+
+  const tbody = el("payAdminRows");
+  tbody.innerHTML = "";
+  let paidCount = 0;
+  TEAMS.forEach(team => {
+    const r = byTeam[team];
+    const amount = r ? r.amountRequired : (DISCOUNTED_TEAMS_CLIENT.has(team) ? 3700 : 4000);
+    if (r) paidCount++;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${team}</td>
+      <td>$${amount.toLocaleString()}</td>
+      <td>${r ? "✓ 已上載 Uploaded" : "— 未上載 Not yet"}</td>
+      <td>${r ? formatSavedAt(r.uploadedAt) : "—"}</td>
+      <td>${r ? `<a class="receipt-link" href="${r.driveViewUrl}" target="_blank" rel="noopener">檢視 View</a>` : "—"}</td>
+      <td><button class="reset-btn" data-team="${team.replace(/"/g,'&quot;')}" ${r ? "" : "disabled"}>重置 Reset</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  el("paySummary").textContent = `已上載：${paidCount} / ${TEAMS.length} 支隊伍`;
+
+  tbody.querySelectorAll(".reset-btn").forEach(btn => {
+    btn.addEventListener("click", () => openResetModal("payment", btn.dataset.team));
+  });
+}
+
+async function loadPayAdminData() {
+  el("payAdminLoading").style.display = "block";
+  let data;
+  try {
+    data = await fetchPayAdmin(adminPasscode);
+  } catch (e) {
+    showToast("無法載入繳費狀態，請檢查網絡後重試 Could not load payment status — check your connection", true);
+    el("payAdminLoading").style.display = "none";
+    return;
+  }
+  if (!data.ok) {
+    showToast(data.error === "passcode_not_configured"
+      ? PASSCODE_UNSET_MSG
+      : "密碼已失效，請重新登入 Passcode no longer valid — please sign in again", true);
+    el("payAdminLoading").style.display = "none";
+    el("paymentAdminPanel").classList.remove("show");
+    el("paymentMainView").style.display = "block";
+    return;
+  }
+  renderPayAdminTable(data.receipts);
+  el("payAdminLoading").style.display = "none";
+}
+
+el("payRefreshBtn").addEventListener("click", loadPayAdminData);
+el("payBackBtn").addEventListener("click", () => {
+  el("paymentAdminPanel").classList.remove("show");
+  el("paymentMainView").style.display = "block";
+});
+
+// Mirrors netlify/functions/payment.mts's DISCOUNTED_TEAMS — used only to
+// show a sensible amount in the admin table for teams that haven't
+// uploaded yet (the server is still the source of truth once they have).
+const DISCOUNTED_TEAMS_CLIENT = new Set([
+  "The OWWWL Pickle Team","激戰魂","PickleCow","二喱","再 · 薩利亞","Pickle 8","WWW",
+  "Picklefun","ON CLOUD NINE","Cyber Dinks","THESE","Lit","Never Speed Up","戰魂小隊","Nova",
+]);
+
 // ══════════════════════════ Shared organizer overlays ══════════════════
 
 el("adminOpenBtn").addEventListener("click", () => openAdminOverlay("lineup"));
 el("survAdminOpenBtn").addEventListener("click", () => openAdminOverlay("survey"));
+el("payAdminOpenBtn").addEventListener("click", () => openAdminOverlay("payment"));
 
 function openAdminOverlay(target) {
   adminTarget = target;
@@ -1326,7 +1694,7 @@ async function checkAdminPass() {
       el("mainView").style.display = "none";
       el("adminPanel").classList.add("show");
       renderLineupAdminTeams(data.teams);
-    } else {
+    } else if (adminTarget === "survey") {
       await fetchCalendar();
       const data = await fetchSurveyAdmin(passcode);
       if (!data.ok) {
@@ -1340,6 +1708,17 @@ async function checkAdminPass() {
       renderHeatGrid(data.slotCounts);
       renderSurveyAdminTable(data.respondedTeams);
       el("syncSheetBtn").disabled = !data.sheetSyncAvailable;
+    } else {
+      const data = await fetchPayAdmin(passcode);
+      if (!data.ok) {
+        showToast(data.error === "passcode_not_configured" ? PASSCODE_UNSET_MSG : "密碼錯誤 Incorrect passcode", true);
+        return;
+      }
+      adminPasscode = passcode;
+      el("adminOverlay").classList.remove("show");
+      el("paymentMainView").style.display = "none";
+      el("paymentAdminPanel").classList.add("show");
+      renderPayAdminTable(data.receipts);
     }
   } catch (e) {
     showToast("無法驗證密碼，請檢查網絡後重試 Could not verify passcode — check your connection", true);
@@ -1354,9 +1733,12 @@ function openResetModal(tab, team) {
   if (tab === "lineup") {
     el("resetModalTitle").textContent = "確認重置名單 Confirm Roster Reset";
     el("resetWarnText").textContent = "此操作會永久刪除該隊已提交嘅名單，無法復原。請重新輸入大會密碼以確認。This permanently deletes that team's submitted roster and cannot be undone. Re-enter the organizer passcode to confirm.";
-  } else {
+  } else if (tab === "survey") {
     el("resetModalTitle").textContent = "確認重置問卷 Confirm Survey Reset";
     el("resetWarnText").textContent = "此操作會永久刪除該隊已提交嘅時間問卷答案，無法復原。請重新輸入大會密碼以確認。This permanently deletes that team's submitted availability answers and cannot be undone. Re-enter the organizer passcode to confirm.";
+  } else {
+    el("resetModalTitle").textContent = "確認重置收據 Confirm Receipt Reset";
+    el("resetWarnText").textContent = "此操作會永久刪除該隊已上載嘅收據，無法復原。請重新輸入大會密碼以確認。This permanently deletes that team's uploaded receipt and cannot be undone. Re-enter the organizer passcode to confirm.";
   }
   el("resetPassInput").value = "";
   el("resetOverlay").classList.add("show");
@@ -1380,7 +1762,7 @@ async function confirmReset() {
     showToast("請輸入密碼 Enter the passcode", true);
     return;
   }
-  const api = tab === "lineup" ? ROSTER_API : AVAILABILITY_API;
+  const api = tab === "lineup" ? ROSTER_API : (tab === "survey" ? AVAILABILITY_API : PAYMENT_API);
   el("resetGoBtn").disabled = true;
   el("resetGoBtn").textContent = "刪除緊…";
   try {
@@ -1390,8 +1772,10 @@ async function confirmReset() {
       showToast(`已重置 ${team} 嘅資料`);
       if (tab === "lineup") {
         loadLineupAdminData();
-      } else {
+      } else if (tab === "survey") {
         loadSurveyAdminData();
+      } else {
+        loadPayAdminData();
       }
     } else if (result.error === "invalid_passcode") {
       showToast("密碼錯誤 Incorrect passcode", true);
@@ -1410,7 +1794,7 @@ async function confirmReset() {
 
 // ══════════════════════════ Boot ═══════════════════════════════════════
 populateTeamSelects();
-showTab(location.hash === "#survey" ? "survey" : "lineup", { skipHash: true });
+showTab(location.hash.replace("#", "") || "lineup", { skipHash: true });
 </script>
 
 </body>

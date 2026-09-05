@@ -37,10 +37,24 @@ function rejectPasscode(supplied: unknown): Response | null {
   return null
 }
 
+// Strict on purpose: parseFloat("5abc") === 5, so a naive parseFloat check
+// would silently accept garbage like "5abc" as a valid 5.0 rating. Only an
+// exact plain number (or NR) is treated as valid. Kept in sync with the
+// identical check in index.html.
+const DUPR_NUMBER_RE = /^\d+(\.\d+)?$/
+
+function isValidDuprInput(raw: unknown): boolean {
+  if (raw === null || raw === undefined || raw === '') return true // not filled in — allowed
+  const trimmed = String(raw).trim()
+  if (trimmed.toUpperCase() === 'NR') return true
+  return DUPR_NUMBER_RE.test(trimmed)
+}
+
 function resolveDupr(raw: unknown): number | null {
   if (raw === null || raw === undefined || raw === '') return null
   const trimmed = String(raw).trim()
   if (trimmed.toUpperCase() === 'NR') return NR_VALUE
+  if (!DUPR_NUMBER_RE.test(trimmed)) return null
   const n = parseFloat(trimmed)
   return Number.isNaN(n) ? null : n
 }
@@ -148,7 +162,21 @@ export default async (req: Request) => {
       if (typeof payload.team !== 'string' || payload.team.trim() === '') {
         return Response.json({ ok: false, error: 'missing_team' }, { status: 400 })
       }
-    } else if (payload.action !== 'submit') {
+    } else if (payload.action === 'submit') {
+      // The client already blocks submission of an invalid DUPR value, but
+      // that's UX only — a direct API call must be re-checked here so a
+      // garbage rating can never reach the Sheet.
+      const players = payload.players
+      if (!Array.isArray(players)) {
+        return Response.json({ ok: false, error: 'missing_players' }, { status: 400 })
+      }
+      for (const p of players) {
+        const dupr = p && typeof p === 'object' ? (p as Record<string, unknown>)['dupr'] : undefined
+        if (!isValidDuprInput(dupr)) {
+          return Response.json({ ok: false, error: 'invalid_dupr' }, { status: 400 })
+        }
+      }
+    } else {
       return Response.json({ ok: false, error: 'unknown_action' }, { status: 400 })
     }
 
