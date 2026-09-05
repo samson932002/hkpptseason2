@@ -30,6 +30,7 @@ const DISCOUNTED_TEAMS = new Set([
   'Never Speed Up',
   '戰魂小隊',
   'Nova',
+  'CSSA',
 ])
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/pdf'])
