@@ -76,6 +76,11 @@
     font-size: 15px;
     margin: 0 0 12px;
     color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
   }
   label {
     display: block;
@@ -112,6 +117,7 @@
     margin-top: 12px;
   }
   .privacy-note svg { flex: none; margin-top: 1px; }
+  .privacy-note.warn { background: var(--warn-bg); border-color: #EBD9A0; color: var(--warn-text); white-space: pre-line; }
 
   .example-card {
     background: #F7F9FC;
@@ -319,8 +325,9 @@
   }
   .refresh-btn {
     background: var(--navy); color: white; border: none; padding: 8px 14px;
-    border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; margin-bottom: 10px;
+    border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; margin-bottom: 10px; margin-right: 8px;
   }
+  .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .back-btn {
     background: none; border: 1.5px solid var(--line); color: var(--navy); padding: 8px 14px;
     border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; margin-bottom: 10px; margin-left: 8px;
@@ -348,6 +355,55 @@
     animation: spin 0.7s linear infinite; vertical-align: -2px; margin-right: 6px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Tabs ─────────────────────────────────────────────────────────── */
+  .tabbar {
+    display: flex; gap: 8px; margin-bottom: 16px;
+    background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: 4px;
+  }
+  .tab-btn {
+    flex: 1; padding: 10px 8px; border: none; border-radius: 7px; background: none;
+    color: var(--muted); font-weight: 700; font-size: 13px; cursor: pointer;
+    font-family: inherit;
+  }
+  .tab-btn.active { background: var(--navy); color: var(--white); }
+
+  /* ── Availability survey ──────────────────────────────────────────── */
+  .cap-pill {
+    font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 12px;
+    background: #EEF3FA; color: var(--navy); white-space: nowrap;
+  }
+  .cap-pill.full { background: var(--ok-bg); color: var(--ok-text); }
+  .date-card {
+    border: 1.5px solid var(--line); border-radius: 9px; padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .date-card .date-head {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    font-size: 13px; font-weight: 800; color: var(--navy);
+  }
+  .reserve-badge {
+    font-size: 10px; font-weight: 800; color: var(--warn-text); background: var(--warn-bg);
+    border-radius: 10px; padding: 2px 7px;
+  }
+  .slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .slot-check {
+    display: flex; align-items: flex-start; gap: 7px; border: 1.5px solid var(--line);
+    border-radius: 7px; padding: 8px 9px; cursor: pointer; font-size: 12.5px;
+  }
+  .slot-check input { margin-top: 2px; flex: none; width: 15px; height: 15px; }
+  .slot-check .slot-text b { display: block; color: var(--ink); font-size: 12.5px; }
+  .slot-check .slot-text small { display: block; color: var(--muted); font-size: 10.5px; margin-top: 1px; }
+  .slot-check.checked { border-color: var(--navy); background: #EEF3FA; }
+  .slot-check.disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .heat-table-wrap table { border-collapse: collapse; width: 100%; font-size: 11.5px; }
+  .heat-table-wrap th, .heat-table-wrap td {
+    border: 1px solid var(--line); padding: 6px 5px; text-align: center; white-space: nowrap;
+  }
+  .heat-table-wrap th { background: var(--navy); color: var(--white); font-weight: 700; font-size: 10.5px; }
+  .heat-table-wrap td.datecell { text-align: left; font-weight: 700; color: var(--navy); background: #F7F9FC; }
+  .heat-cell { font-weight: 800; color: var(--ink); }
 </style>
 </head>
 <body>
@@ -355,11 +411,19 @@
 <div class="topbar">
   <img class="logo" src="assets/hkppt-logo.png" alt="HKPPT Hong Kong Premier Pickleball Tournament logo">
   <div class="brand">HKPPT SEASON 2</div>
-  <h1>隊伍名單提交表格</h1>
-  <p>Team Lineup Submission Form</p>
+  <h1 id="pageTitle">隊伍名單提交表格</h1>
+  <p id="pageSubtitle">Team Lineup Submission Form</p>
 </div>
 
 <div class="wrap">
+
+  <div class="tabbar">
+    <button class="tab-btn active" id="tabLineupBtn" data-tab="lineup">隊伍名單 Lineup</button>
+    <button class="tab-btn" id="tabSurveyBtn" data-tab="survey">時間問卷 Availability</button>
+  </div>
+
+  <!-- ══════════════════════════ LINEUP TAB ══════════════════════════ -->
+  <div id="lineupView" class="tab-view">
 
   <div id="mainView">
 
@@ -448,6 +512,84 @@
     </div>
   </div>
 
+  </div>
+  <!-- ═══════════════════════ /LINEUP TAB ══════════════════════════ -->
+
+  <!-- ══════════════════════════ SURVEY TAB ══════════════════════════ -->
+  <div id="surveyView" class="tab-view" style="display:none;">
+
+  <div id="surveyMainView">
+
+    <div class="card">
+      <h2>1. 選擇你嘅隊伍 Select Your Team</h2>
+      <select id="survTeamSelect">
+        <option value="">請選擇隊伍 — Select your team…</option>
+      </select>
+      <div class="privacy-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6172" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>你嘅選擇只有你哋隊同大會可以睇到，其他隊伍睇唔到。<br>Only your team and the organizer can see this — no other team can view your answers.</span>
+      </div>
+    </div>
+
+    <div id="survLoading" class="card loading-note" style="display:none;">
+      <span class="overlay-spin"></span>載入緊資料… Loading…
+    </div>
+
+    <div id="survFormSection" style="display:none;">
+      <div id="survSavedBanner" class="card" style="display:none; background:#001F3D; border:none;">
+        <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">✅ 你哋隊已經回覆咗問卷</p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;" id="survSavedAt"></p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;">你可以隨時修改同重新提交，會更新返你哋嘅答案。<br>You can change your answers and resubmit any time — it updates your existing response.</p>
+      </div>
+
+      <div class="card" id="groupStageCard">
+        <h2>2. 分組賽 Group Stage <span class="cap-pill" id="groupCapPill">已選 0/4 個半日</span></h2>
+        <p class="meta-note" style="margin-top:0;">請剔選你哋隊想避開嘅半日場次（最多4個半日）。<br>Tick the half-days your team wants to avoid (up to 4 half-days).</p>
+        <div id="groupDates"></div>
+      </div>
+
+      <div class="card" id="knockoutStageCard">
+        <h2>3. 淘汰賽 Knockout Stage <span class="cap-pill" id="knockoutCapPill">已選 0/1 個半日</span></h2>
+        <div class="privacy-note warn" id="knockoutNote"></div>
+        <div id="knockoutDates" style="margin-top:10px;"></div>
+      </div>
+
+      <button class="submit-btn" id="survSubmitBtn">提交問卷 Submit Survey</button>
+      <p class="meta-note" id="survLastSaved"></p>
+    </div>
+
+    <div class="admin-link"><button id="survAdminOpenBtn">大會專用 Organizer view</button></div>
+  </div>
+
+  <div id="surveyAdminPanel" class="admin-panel">
+    <div class="card">
+      <h2>各半日避開統計 Availability Heatmap（大會專用）</h2>
+      <button class="refresh-btn" id="survRefreshBtn">重新整理 Refresh</button>
+      <button class="refresh-btn" id="syncSheetBtn" style="background:var(--lime-deep); color:var(--navy-deep);" disabled>同步至 Google Sheet</button>
+      <button class="back-btn" id="survBackBtn">← 返回表格 Back to form</button>
+      <div id="survAdminLoading" class="loading-note" style="display:none;">
+        <span class="overlay-spin"></span>載入緊… Loading…
+      </div>
+      <div class="heat-table-wrap" style="overflow-x:auto;">
+        <div id="heatGrid"></div>
+      </div>
+      <p class="meta-note" id="heatSummary"></p>
+    </div>
+
+    <div class="card">
+      <h2>隊伍回覆狀態 Team Response Status</h2>
+      <div style="overflow-x:auto;">
+        <table id="survAdminTable">
+          <thead><tr><th>隊伍</th><th>狀態</th><th>提交時間</th><th>操作</th></tr></thead>
+          <tbody id="survAdminRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  </div>
+  <!-- ═══════════════════════ /SURVEY TAB ══════════════════════════ -->
+
 </div>
 
 <div class="admin-overlay" id="adminOverlay">
@@ -463,9 +605,9 @@
 
 <div class="admin-overlay" id="resetOverlay">
   <div class="admin-modal">
-    <h3>確認重置 Confirm Reset</h3>
+    <h3 id="resetModalTitle">確認重置 Confirm Reset</h3>
     <p class="target-team" id="resetTeamLabel"></p>
-    <p class="warn-text">此操作會永久刪除該隊已提交嘅名單，無法復原。請重新輸入大會密碼以確認。<br>This permanently deletes that team's submitted roster and cannot be undone. Re-enter the organizer passcode to confirm.</p>
+    <p class="warn-text" id="resetWarnText"></p>
     <input type="text" id="resetPassInput" placeholder="請輸入密碼 Enter passcode">
     <div class="btnrow">
       <button class="cancel" id="resetCancelBtn">取消 Cancel</button>
@@ -477,12 +619,13 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Backend: the browser talks only to this site's own /api/roster function,
-// which proxies the Apps Script Web App ("HKPPT Season 2 - Lineup
-// Submissions" Google Sheet) server-side. The proxy never forwards another
-// team's player names/DUPR IDs to the browser, and withholds the team
-// average DUPR entirely — only gender counts and the submission time.
+// ── Backend: the browser talks only to this site's own /api/roster and
+// /api/availability functions, which proxy their respective Apps Script
+// Web Apps server-side (see netlify/functions/roster.mts and
+// netlify/functions/availability.mts). Neither proxy forwards another
+// team's private details to the browser.
 const ROSTER_API = "/api/roster";
+const AVAILABILITY_API = "/api/availability";
 
 const TEAMS = [
   "The OWWWL Pickle Team","激戰魂","The Dinosaurs","Pickle Monster","Lit",
@@ -509,22 +652,73 @@ let players = [];
 let alreadySubmitted = false;
 let submittedAtDisplay = "";
 let adminPasscode = "";
-let pendingResetTeam = null;
 
-// Surfaced when ADMIN_PASSCODE has no value in the site settings — the
-// function refuses organizer requests outright rather than falling back.
+// Shared across both tabs' organizer flows — set right before either
+// "Organizer view" link opens the (shared) passcode overlay, and read when
+// the passcode is checked, so one overlay/one modal can serve both tabs.
+let adminTarget = "lineup"; // "lineup" | "survey"
+let pendingReset = null; // { tab: "lineup"|"survey", team }
+
+// Surfaced when ADMIN_PASSCODE has no value in the site settings — both
+// functions refuse organizer requests outright rather than falling back.
 const PASSCODE_UNSET_MSG = "大會密碼未設定，請於網站設定 ADMIN_PASSCODE。Organizer passcode is not configured — set ADMIN_PASSCODE in the site settings.";
 
 function el(id) { return document.getElementById(id); }
 
-function populateTeamSelect() {
-  const sel = el("teamSelect");
-  TEAMS.forEach(t => {
-    const opt = document.createElement("option");
-    opt.value = t; opt.textContent = t;
-    sel.appendChild(opt);
+function populateTeamSelects() {
+  [el("teamSelect"), el("survTeamSelect")].forEach(sel => {
+    TEAMS.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t; opt.textContent = t;
+      sel.appendChild(opt);
+    });
   });
 }
+
+// ══════════════════════════ Tab switching ══════════════════════════════
+function showTab(tab, opts) {
+  opts = opts || {};
+  const isSurvey = tab === "survey";
+  el("lineupView").style.display = isSurvey ? "none" : "block";
+  el("surveyView").style.display = isSurvey ? "block" : "none";
+  el("tabLineupBtn").classList.toggle("active", !isSurvey);
+  el("tabSurveyBtn").classList.toggle("active", isSurvey);
+  el("pageTitle").textContent = isSurvey ? "隊伍時間問卷" : "隊伍名單提交表格";
+  el("pageSubtitle").textContent = isSurvey ? "Team Availability Survey" : "Team Lineup Submission Form";
+  if (!opts.skipHash) {
+    history.replaceState(null, "", isSurvey ? "#survey" : "#lineup");
+  }
+}
+
+el("tabLineupBtn").addEventListener("click", () => showTab("lineup"));
+el("tabSurveyBtn").addEventListener("click", () => showTab("survey"));
+
+// ══════════════════════════ Shared helpers ═════════════════════════════
+function showToast(msg, isError) {
+  const t = el("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (isError ? " error" : "");
+  setTimeout(() => { t.className = "toast"; }, 2600);
+}
+
+function formatSavedAt(iso) {
+  try {
+    return new Date(iso).toLocaleString("zh-HK", { timeZone: "Asia/Hong_Kong" });
+  } catch (e) {
+    return iso;
+  }
+}
+
+async function postAction(api, payload) {
+  const res = await fetch(api, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+// ══════════════════════════ LINEUP TAB LOGIC ═══════════════════════════
 
 function makeEmptyPlayer() { return { name: "", preferredName: "", gender: "", duprId: "", dupr: "" }; }
 
@@ -536,8 +730,6 @@ function resolveDupr(raw) {
   return isNaN(n) ? null : n;
 }
 
-// ── Backend calls ──────────────────────────────────────────────────────
-// Only this team's own aggregate status (never another team's player data).
 async function fetchTeamStatus(team) {
   const res = await fetch(`${ROSTER_API}?team=${encodeURIComponent(team)}`, { method: "GET" });
   const data = await res.json();
@@ -545,29 +737,9 @@ async function fetchTeamStatus(team) {
   return data;
 }
 
-// Aggregate stats for every team — gated by the organizer passcode, checked
-// server-side. Never includes player names/DUPR IDs.
 async function fetchAdminTeams(passcode) {
   const res = await fetch(`${ROSTER_API}?admin=1&passcode=${encodeURIComponent(passcode)}`, { method: "GET" });
-  const data = await res.json();
-  return data;
-}
-
-async function postAction(payload) {
-  const res = await fetch(ROSTER_API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
   return res.json();
-}
-
-function formatSavedAt(iso) {
-  try {
-    return new Date(iso).toLocaleString("zh-HK", { timeZone: "Asia/Hong_Kong" });
-  } catch (e) {
-    return iso;
-  }
 }
 
 function renderRows() {
@@ -667,13 +839,6 @@ function recalc() {
   return stats.avg;
 }
 
-function showToast(msg, isError) {
-  const t = el("toast");
-  t.textContent = msg;
-  t.className = "toast show" + (isError ? " error" : "");
-  setTimeout(() => { t.className = "toast"; }, 2600);
-}
-
 async function loadTeamData(team) {
   alreadySubmitted = false;
   el("formSection").style.display = "none";
@@ -745,7 +910,7 @@ el("submitBtn").addEventListener("click", async () => {
   try {
     el("submitBtn").disabled = true;
     el("submitBtn").textContent = "提交緊… Submitting…";
-    const result = await postAction(payload);
+    const result = await postAction(ROSTER_API, payload);
     if (!result.ok) {
       if (result.error === "already_submitted") {
         showToast("⚠ 呢隊已經提交咗，如需要修改請聯絡大會協助重置", true);
@@ -773,44 +938,7 @@ el("submitBtn").addEventListener("click", async () => {
   }
 });
 
-el("adminOpenBtn").addEventListener("click", () => {
-  el("adminOverlay").classList.add("show");
-  el("adminPassInput").value = "";
-  el("adminPassInput").focus();
-});
-el("adminCancelBtn").addEventListener("click", () => el("adminOverlay").classList.remove("show"));
-el("adminGoBtn").addEventListener("click", checkAdminPass);
-el("adminPassInput").addEventListener("keydown", (e) => { if (e.key === "Enter") checkAdminPass(); });
-
-async function checkAdminPass() {
-  const passcode = el("adminPassInput").value;
-  el("adminGoBtn").disabled = true;
-  try {
-    const data = await fetchAdminTeams(passcode);
-    if (!data.ok) {
-      showToast(data.error === "passcode_not_configured"
-        ? PASSCODE_UNSET_MSG
-        : "密碼錯誤 Incorrect passcode", true);
-      return;
-    }
-    adminPasscode = passcode;
-    el("adminOverlay").classList.remove("show");
-    el("mainView").style.display = "none";
-    el("adminPanel").classList.add("show");
-    renderAdminTeams(data.teams);
-  } catch (e) {
-    showToast("無法驗證密碼，請檢查網絡後重試 Could not verify passcode — check your connection", true);
-  } finally {
-    el("adminGoBtn").disabled = false;
-  }
-}
-el("backBtn").addEventListener("click", () => {
-  el("adminPanel").classList.remove("show");
-  el("mainView").style.display = "block";
-});
-el("refreshBtn").addEventListener("click", loadAdminData);
-
-async function loadAdminData() {
+async function loadLineupAdminData() {
   el("adminLoading").style.display = "block";
   el("adminRows").innerHTML = "";
   let data;
@@ -830,10 +958,10 @@ async function loadAdminData() {
     el("mainView").style.display = "block";
     return;
   }
-  renderAdminTeams(data.teams);
+  renderLineupAdminTeams(data.teams);
 }
 
-function renderAdminTeams(submittedTeams) {
+function renderLineupAdminTeams(submittedTeams) {
   const byTeam = {};
   submittedTeams.forEach(t => { byTeam[t.team] = t; });
 
@@ -872,13 +1000,364 @@ function renderAdminTeams(submittedTeams) {
   el("adminLoading").style.display = "none";
 
   tbody.querySelectorAll(".reset-btn").forEach(btn => {
-    btn.addEventListener("click", onResetClick);
+    btn.addEventListener("click", () => openResetModal("lineup", btn.dataset.team));
   });
 }
 
-function onResetClick(e) {
-  pendingResetTeam = e.currentTarget.dataset.team;
-  el("resetTeamLabel").textContent = pendingResetTeam;
+el("refreshBtn").addEventListener("click", loadLineupAdminData);
+el("backBtn").addEventListener("click", () => {
+  el("adminPanel").classList.remove("show");
+  el("mainView").style.display = "block";
+});
+
+// ══════════════════════════ SURVEY TAB LOGIC ═══════════════════════════
+
+let calendarStages = null; // cached ?config=1 response
+let currentSurveyTeam = null;
+let checkedSlots = new Set();
+let surveyAlreadySubmitted = false;
+
+async function fetchCalendar() {
+  if (calendarStages) return calendarStages;
+  const res = await fetch(`${AVAILABILITY_API}?config=1`, { method: "GET" });
+  const data = await res.json();
+  if (!data.ok) throw new Error("config_error");
+  calendarStages = data.stages;
+  return calendarStages;
+}
+
+async function fetchSurveyStatus(team) {
+  const res = await fetch(`${AVAILABILITY_API}?team=${encodeURIComponent(team)}`, { method: "GET" });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "unknown_error");
+  return data;
+}
+
+async function fetchSurveyAdmin(passcode) {
+  const res = await fetch(`${AVAILABILITY_API}?admin=1&passcode=${encodeURIComponent(passcode)}`, { method: "GET" });
+  return res.json();
+}
+
+function stageByKey(key) {
+  return calendarStages.find(s => s.key === key);
+}
+
+function renderStageDates(stage) {
+  const container = document.createElement("div");
+  stage.dates.forEach(date => {
+    const card = document.createElement("div");
+    card.className = "date-card";
+    card.innerHTML = `
+      <div class="date-head">
+        <span>${date.label}</span>
+        ${date.reserve ? '<span class="reserve-badge">後備日子 Reserve</span>' : ''}
+      </div>
+      <div class="slot-grid">
+        ${date.slots.map(slot => `
+          <label class="slot-check" data-key="${slot.key}">
+            <input type="checkbox" data-key="${slot.key}" data-stage="${stage.key}">
+            <span class="slot-text"><b>${slot.label}</b><small>${slot.timeLabel}</small></span>
+          </label>
+        `).join("")}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+  return container;
+}
+
+function renderSurveyForm() {
+  el("groupDates").innerHTML = "";
+  el("groupDates").appendChild(renderStageDates(stageByKey("group")));
+  el("knockoutDates").innerHTML = "";
+  el("knockoutDates").appendChild(renderStageDates(stageByKey("knockout")));
+
+  const koStage = stageByKey("knockout");
+  el("knockoutNote").textContent = koStage.note;
+
+  document.querySelectorAll('#groupDates input[type=checkbox], #knockoutDates input[type=checkbox]').forEach(cb => {
+    cb.addEventListener("change", onSlotToggle);
+  });
+
+  applyCheckedState();
+  updateCapUI();
+}
+
+function onSlotToggle(e) {
+  const key = e.target.dataset.key;
+  if (e.target.checked) {
+    checkedSlots.add(key);
+  } else {
+    checkedSlots.delete(key);
+  }
+  applyCheckedState();
+  updateCapUI();
+}
+
+function applyCheckedState() {
+  document.querySelectorAll('#groupDates input[type=checkbox], #knockoutDates input[type=checkbox]').forEach(cb => {
+    cb.checked = checkedSlots.has(cb.dataset.key);
+    cb.closest(".slot-check").classList.toggle("checked", cb.checked);
+  });
+}
+
+// Cap enforcement here is UX only (greying out further options once a
+// stage's cap is reached) — the server re-validates every submission
+// against the same caps regardless of what the browser allowed.
+function updateCapUI() {
+  ["group", "knockout"].forEach(stageKey => {
+    const stage = stageByKey(stageKey);
+    const count = [...checkedSlots].filter(k => k.startsWith(stageKey === "group" ? "grp-" : "ko-")).length;
+    const pill = el(stageKey + "CapPill");
+    pill.textContent = `已選 ${count}/${stage.maxAvoid} 個半日`;
+    pill.classList.toggle("full", count >= stage.maxAvoid);
+
+    document.querySelectorAll(`#${stageKey}Dates input[type=checkbox]`).forEach(cb => {
+      const isChecked = checkedSlots.has(cb.dataset.key);
+      const disable = !isChecked && count >= stage.maxAvoid;
+      cb.disabled = disable;
+      cb.closest(".slot-check").classList.toggle("disabled", disable);
+    });
+  });
+}
+
+async function loadSurveyTeamData(team) {
+  surveyAlreadySubmitted = false;
+  checkedSlots = new Set();
+  el("survFormSection").style.display = "none";
+  el("survLoading").style.display = "block";
+  try {
+    await fetchCalendar();
+    const status = await fetchSurveyStatus(team);
+    if (status.submitted) {
+      surveyAlreadySubmitted = true;
+      checkedSlots = new Set(status.picks);
+      el("survSavedAt").textContent = `上次提交：${formatSavedAt(status.submittedAt)}`;
+    }
+    renderSurveyForm();
+    el("survSavedBanner").style.display = surveyAlreadySubmitted ? "block" : "none";
+    el("survSubmitBtn").textContent = surveyAlreadySubmitted ? "更新問卷 Update Survey" : "提交問卷 Submit Survey";
+    el("survLastSaved").textContent = "";
+  } catch (e) {
+    showToast("無法載入問卷資料，請檢查網絡後重試 Could not load the survey — check your connection", true);
+  }
+  el("survLoading").style.display = "none";
+  el("survFormSection").style.display = "block";
+}
+
+el("survTeamSelect").addEventListener("change", async (e) => {
+  currentSurveyTeam = e.target.value;
+  if (!currentSurveyTeam) {
+    el("survFormSection").style.display = "none";
+    el("survLoading").style.display = "none";
+    return;
+  }
+  await loadSurveyTeamData(currentSurveyTeam);
+});
+
+el("survSubmitBtn").addEventListener("click", async () => {
+  if (!currentSurveyTeam) return;
+  try {
+    el("survSubmitBtn").disabled = true;
+    el("survSubmitBtn").textContent = "提交緊… Submitting…";
+    const result = await postAction(AVAILABILITY_API, {
+      action: "submit",
+      team: currentSurveyTeam,
+      picks: [...checkedSlots],
+    });
+    if (!result.ok) {
+      if (result.error === "cap_exceeded") {
+        showToast(`⚠ ${result.stage === "group" ? "分組賽" : "淘汰賽"}最多可以避開${result.max}個半日 Too many half-days marked for this stage`, true);
+      } else {
+        showToast("提交失敗，請再試一次 Submission failed, please retry", true);
+      }
+      return;
+    }
+    surveyAlreadySubmitted = true;
+    el("survSavedAt").textContent = `上次提交：${formatSavedAt(result.submittedAt)}`;
+    el("survSavedBanner").style.display = "block";
+    el("survSubmitBtn").textContent = "更新問卷 Update Survey";
+    showToast(`✅ ${currentSurveyTeam} 嘅問卷已成功提交！`);
+  } catch (e) {
+    showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
+  } finally {
+    el("survSubmitBtn").disabled = false;
+    if (el("survSubmitBtn").textContent.indexOf("Submitting") !== -1) {
+      el("survSubmitBtn").textContent = surveyAlreadySubmitted ? "更新問卷 Update Survey" : "提交問卷 Submit Survey";
+    }
+  }
+});
+
+function heatColor(count, max) {
+  if (!count) return "transparent";
+  const ratio = max > 0 ? Math.min(count / max, 1) : 0;
+  const alpha = 0.12 + ratio * 0.65;
+  return `rgba(194, 71, 71, ${alpha.toFixed(2)})`;
+}
+
+function renderHeatGrid(slotCounts) {
+  const maxCount = Math.max(1, ...Object.values(slotCounts));
+  let html = '<table><thead><tr><th>日期 Date</th><th>上午 AM</th><th>下午 PM</th></tr></thead><tbody>';
+  calendarStages.forEach(stage => {
+    html += `<tr><td colspan="3" style="background:var(--navy); color:var(--white); font-weight:800; text-align:left;">${stage.nameZh} ${stage.nameEn}（上限 ${stage.maxAvoid} 個半日）</td></tr>`;
+    stage.dates.forEach(date => {
+      const am = date.slots.find(s => s.half === "am");
+      const pm = date.slots.find(s => s.half === "pm");
+      const amCount = slotCounts[am.key] || 0;
+      const pmCount = slotCounts[pm.key] || 0;
+      html += `<tr>
+        <td class="datecell">${date.label}${date.reserve ? ' <span class="reserve-badge">後備</span>' : ''}</td>
+        <td class="heat-cell" style="background:${heatColor(amCount, maxCount)}">${amCount}</td>
+        <td class="heat-cell" style="background:${heatColor(pmCount, maxCount)}">${pmCount}</td>
+      </tr>`;
+    });
+  });
+  html += '</tbody></table>';
+  el("heatGrid").innerHTML = html;
+}
+
+function renderSurveyAdminTable(respondedTeams) {
+  const byTeam = {};
+  respondedTeams.forEach(t => { byTeam[t.team] = t; });
+
+  const tbody = el("survAdminRows");
+  tbody.innerHTML = "";
+  let respondedCount = 0;
+  TEAMS.forEach(team => {
+    const t = byTeam[team];
+    if (t) respondedCount++;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${team}</td>
+      <td>${t ? "✓ 已回覆 Responded" : "— 未回覆 No response"}</td>
+      <td>${t ? formatSavedAt(t.submittedAt) : "—"}</td>
+      <td><button class="reset-btn" data-team="${team.replace(/"/g,'&quot;')}" ${t ? "" : "disabled"}>重置 Reset</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  el("heatSummary").textContent = `已回覆：${respondedCount} / ${TEAMS.length} 支隊伍`;
+
+  tbody.querySelectorAll(".reset-btn").forEach(btn => {
+    btn.addEventListener("click", () => openResetModal("survey", btn.dataset.team));
+  });
+}
+
+async function loadSurveyAdminData() {
+  el("survAdminLoading").style.display = "block";
+  let data;
+  try {
+    await fetchCalendar();
+    data = await fetchSurveyAdmin(adminPasscode);
+  } catch (e) {
+    showToast("無法載入統計，請檢查網絡後重試 Could not load the heatmap — check your connection", true);
+    el("survAdminLoading").style.display = "none";
+    return;
+  }
+  if (!data.ok) {
+    showToast(data.error === "passcode_not_configured"
+      ? PASSCODE_UNSET_MSG
+      : "密碼已失效，請重新登入 Passcode no longer valid — please sign in again", true);
+    el("survAdminLoading").style.display = "none";
+    el("surveyAdminPanel").classList.remove("show");
+    el("surveyMainView").style.display = "block";
+    return;
+  }
+  renderHeatGrid(data.slotCounts);
+  renderSurveyAdminTable(data.respondedTeams);
+  el("syncSheetBtn").disabled = !data.sheetSyncAvailable;
+  el("survAdminLoading").style.display = "none";
+}
+
+el("survRefreshBtn").addEventListener("click", loadSurveyAdminData);
+el("survBackBtn").addEventListener("click", () => {
+  el("surveyAdminPanel").classList.remove("show");
+  el("surveyMainView").style.display = "block";
+});
+
+el("syncSheetBtn").addEventListener("click", async () => {
+  el("syncSheetBtn").disabled = true;
+  el("syncSheetBtn").textContent = "同步緊… Syncing…";
+  try {
+    const result = await postAction(AVAILABILITY_API, { action: "resync", passcode: adminPasscode });
+    if (result.ok) {
+      showToast(result.failed && result.failed.length
+        ? `已同步 ${result.synced} 隊，${result.failed.length} 隊失敗 Synced ${result.synced}, ${result.failed.length} failed`
+        : `已同步 ${result.synced} 隊到 Google Sheet Synced ${result.synced} teams`);
+    } else {
+      showToast("同步失敗，請再試一次 Sync failed, please retry", true);
+    }
+  } catch (e) {
+    showToast("同步失敗，請檢查網絡後再試一次 Sync failed — check your connection", true);
+  } finally {
+    el("syncSheetBtn").textContent = "同步至 Google Sheet";
+    el("syncSheetBtn").disabled = false;
+    loadSurveyAdminData();
+  }
+});
+
+// ══════════════════════════ Shared organizer overlays ══════════════════
+
+el("adminOpenBtn").addEventListener("click", () => openAdminOverlay("lineup"));
+el("survAdminOpenBtn").addEventListener("click", () => openAdminOverlay("survey"));
+
+function openAdminOverlay(target) {
+  adminTarget = target;
+  el("adminOverlay").classList.add("show");
+  el("adminPassInput").value = "";
+  el("adminPassInput").focus();
+}
+
+el("adminCancelBtn").addEventListener("click", () => el("adminOverlay").classList.remove("show"));
+el("adminGoBtn").addEventListener("click", checkAdminPass);
+el("adminPassInput").addEventListener("keydown", (e) => { if (e.key === "Enter") checkAdminPass(); });
+
+async function checkAdminPass() {
+  const passcode = el("adminPassInput").value;
+  el("adminGoBtn").disabled = true;
+  try {
+    if (adminTarget === "lineup") {
+      const data = await fetchAdminTeams(passcode);
+      if (!data.ok) {
+        showToast(data.error === "passcode_not_configured" ? PASSCODE_UNSET_MSG : "密碼錯誤 Incorrect passcode", true);
+        return;
+      }
+      adminPasscode = passcode;
+      el("adminOverlay").classList.remove("show");
+      el("mainView").style.display = "none";
+      el("adminPanel").classList.add("show");
+      renderLineupAdminTeams(data.teams);
+    } else {
+      await fetchCalendar();
+      const data = await fetchSurveyAdmin(passcode);
+      if (!data.ok) {
+        showToast(data.error === "passcode_not_configured" ? PASSCODE_UNSET_MSG : "密碼錯誤 Incorrect passcode", true);
+        return;
+      }
+      adminPasscode = passcode;
+      el("adminOverlay").classList.remove("show");
+      el("surveyMainView").style.display = "none";
+      el("surveyAdminPanel").classList.add("show");
+      renderHeatGrid(data.slotCounts);
+      renderSurveyAdminTable(data.respondedTeams);
+      el("syncSheetBtn").disabled = !data.sheetSyncAvailable;
+    }
+  } catch (e) {
+    showToast("無法驗證密碼，請檢查網絡後重試 Could not verify passcode — check your connection", true);
+  } finally {
+    el("adminGoBtn").disabled = false;
+  }
+}
+
+function openResetModal(tab, team) {
+  pendingReset = { tab, team };
+  el("resetTeamLabel").textContent = team;
+  if (tab === "lineup") {
+    el("resetModalTitle").textContent = "確認重置名單 Confirm Roster Reset";
+    el("resetWarnText").textContent = "此操作會永久刪除該隊已提交嘅名單，無法復原。請重新輸入大會密碼以確認。This permanently deletes that team's submitted roster and cannot be undone. Re-enter the organizer passcode to confirm.";
+  } else {
+    el("resetModalTitle").textContent = "確認重置問卷 Confirm Survey Reset";
+    el("resetWarnText").textContent = "此操作會永久刪除該隊已提交嘅時間問卷答案，無法復原。請重新輸入大會密碼以確認。This permanently deletes that team's submitted availability answers and cannot be undone. Re-enter the organizer passcode to confirm.";
+  }
   el("resetPassInput").value = "";
   el("resetOverlay").classList.add("show");
   el("resetPassInput").focus();
@@ -886,7 +1365,7 @@ function onResetClick(e) {
 
 function closeResetModal() {
   el("resetOverlay").classList.remove("show");
-  pendingResetTeam = null;
+  pendingReset = null;
 }
 
 el("resetCancelBtn").addEventListener("click", closeResetModal);
@@ -894,21 +1373,26 @@ el("resetGoBtn").addEventListener("click", confirmReset);
 el("resetPassInput").addEventListener("keydown", (e) => { if (e.key === "Enter") confirmReset(); });
 
 async function confirmReset() {
-  if (!pendingResetTeam) return;
-  const team = pendingResetTeam;
+  if (!pendingReset) return;
+  const { tab, team } = pendingReset;
   const passcode = el("resetPassInput").value;
   if (!passcode) {
     showToast("請輸入密碼 Enter the passcode", true);
     return;
   }
+  const api = tab === "lineup" ? ROSTER_API : AVAILABILITY_API;
   el("resetGoBtn").disabled = true;
   el("resetGoBtn").textContent = "刪除緊…";
   try {
-    const result = await postAction({ action: "reset", team, passcode });
+    const result = await postAction(api, { action: "reset", team, passcode });
     if (result.ok) {
       closeResetModal();
-      showToast(`已重置 ${team} 嘅資料，隊伍可以重新提交`);
-      loadAdminData();
+      showToast(`已重置 ${team} 嘅資料`);
+      if (tab === "lineup") {
+        loadLineupAdminData();
+      } else {
+        loadSurveyAdminData();
+      }
     } else if (result.error === "invalid_passcode") {
       showToast("密碼錯誤 Incorrect passcode", true);
     } else if (result.error === "passcode_not_configured") {
@@ -924,7 +1408,9 @@ async function confirmReset() {
   }
 }
 
-populateTeamSelect();
+// ══════════════════════════ Boot ═══════════════════════════════════════
+populateTeamSelects();
+showTab(location.hash === "#survey" ? "survey" : "lineup", { skipHash: true });
 </script>
 
 </body>

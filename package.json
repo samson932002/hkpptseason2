@@ -1,0 +1,8 @@
+{
+  "name": "hkpptseason2",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@netlify/database": "latest"
+  }
+}
