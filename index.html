@@ -344,14 +344,19 @@
     background: #F3E6E6; color: #A33; border: 1px solid #E0BFBF; padding: 4px 9px;
     border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap;
   }
+  .reopen-btn {
+    background: #E7F0FF; color: #1450A3; border: 1px solid #B9D2F5; padding: 4px 9px;
+    border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  }
   .admin-modal .danger { background: #C24747; color: var(--white); }
+  .admin-modal .reopen-confirm { background: var(--navy); color: var(--lime); }
   .admin-modal .target-team {
     font-size: 13.5px; font-weight: 800; color: var(--navy); margin: 0 0 8px;
   }
   .admin-modal .warn-text {
     font-size: 12px; color: var(--muted); margin: 0 0 10px; line-height: 1.5;
   }
-  .reset-btn:disabled {
+  .reset-btn:disabled, .reopen-btn:disabled {
     opacity: 0.35; cursor: not-allowed;
   }
   .loading-note {
@@ -496,7 +501,12 @@
           <div class="item" style="background:#0A2E4E;"><span style="color:#9FB6CE;">男球員人數</span><span id="submittedMale" style="color:#fff;">0</span></div>
           <div class="item" style="background:#0A2E4E;"><span style="color:#9FB6CE;">女球員人數</span><span id="submittedFemale" style="color:#fff;">0</span></div>
         </div>
-        <p style="margin:10px 0 0; color:#B9C6D9; font-size:12.5px;">為保障球員私隱，名單詳情（姓名、DUPR ID、隊伍平均 DUPR 等）唔會喺呢個畫面顯示。如需要修改，請聯絡大會協助重置後再重新提交。<br>For player privacy, roster details (names, DUPR IDs, team average DUPR, etc.) are not shown here. Contact the organizer to reset your record if you need to make changes.</p>
+        <p style="margin:10px 0 0; color:#B9C6D9; font-size:12.5px;">為保障球員私隱，名單詳情（姓名、DUPR ID、隊伍平均 DUPR 等）唔會喺呢個畫面顯示。如需要修改，請聯絡大會協助重開後再重新提交。<br>For player privacy, roster details (names, DUPR IDs, team average DUPR, etc.) are not shown here. Contact the organizer to reopen your record if you need to make changes.</p>
+      </div>
+
+      <div id="reopenedBanner" class="card" style="display:none; background:#0A2E4E; border:none;">
+        <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">✏️ 大會已重新開放你哋嘅名單</p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;">你可以編輯下面已提交嘅資料，改好之後撳「更新名單」重新提交，就會取代返舊資料。<br>The organizer has reopened your lineup. Edit the submitted details below and press "Update Lineup" to replace the old data with your changes.</p>
       </div>
 
       <div id="editSection">
@@ -773,6 +783,7 @@ let currentTeam = null;
 let players = [];
 let alreadySubmitted = false;
 let submittedAtDisplay = "";
+let teamReopened = false;
 let adminPasscode = "";
 
 // Shared across both tabs' organizer flows — set right before either
@@ -994,13 +1005,36 @@ function recalc() {
   return stats.avg;
 }
 
+function normalizePlayer(p) {
+  return {
+    name: p.name || "",
+    preferredName: p.preferredName || "",
+    gender: p.gender || "",
+    duprId: p.duprId || "",
+    dupr: p.dupr || "",
+  };
+}
+
+function updateSubmitBtnLabel() {
+  el("submitBtn").textContent = teamReopened ? "更新名單 Update Lineup" : "提交隊伍名單 Submit Lineup";
+}
+
 async function loadTeamData(team) {
   alreadySubmitted = false;
+  teamReopened = false;
   el("formSection").style.display = "none";
   el("teamLoading").style.display = "block";
   try {
     const status = await fetchTeamStatus(team);
-    if (status.submitted) {
+    if (status.submitted && status.reopened) {
+      // Reopened by the organizer: prefill the edit form with the
+      // previously submitted roster instead of locking it behind the
+      // submitted banner — resubmitting will replace this data.
+      teamReopened = true;
+      players = Array.isArray(status.players) && status.players.length > 0
+        ? status.players.map(normalizePlayer)
+        : Array.from({ length: 6 }, makeEmptyPlayer);
+    } else if (status.submitted) {
       alreadySubmitted = true;
       submittedAtDisplay = formatSavedAt(status.submittedAt);
       el("submittedAt").textContent = `提交時間：${submittedAtDisplay}`;
@@ -1017,7 +1051,9 @@ async function loadTeamData(team) {
   el("teamLoading").style.display = "none";
   el("formSection").style.display = "block";
   el("submittedBanner").style.display = alreadySubmitted ? "block" : "none";
+  el("reopenedBanner").style.display = teamReopened ? "block" : "none";
   el("editSection").style.display = alreadySubmitted ? "none" : "block";
+  updateSubmitBtnLabel();
   if (!alreadySubmitted) {
     renderRows();
     recalc();
@@ -1045,9 +1081,10 @@ el("addRowBtn").addEventListener("click", () => {
 el("submitBtn").addEventListener("click", async () => {
   if (!currentTeam) return;
   if (alreadySubmitted) {
-    showToast("⚠ 呢隊已經提交咗，如需要修改請聯絡大會協助重置", true);
+    showToast("⚠ 呢隊已經提交咗，如需要修改請聯絡大會協助重開", true);
     return;
   }
+  const wasReopened = teamReopened;
   const cleanPlayers = players.filter(p => p.name.trim() || p.preferredName.trim() || p.gender || p.duprId.trim() || p.dupr.trim());
   if (cleanPlayers.length === 0) {
     showToast("請至少填寫一位球員資料", true);
@@ -1073,32 +1110,38 @@ el("submitBtn").addEventListener("click", async () => {
   };
   try {
     el("submitBtn").disabled = true;
-    el("submitBtn").textContent = "提交緊… Submitting…";
+    el("submitBtn").textContent = wasReopened ? "更新緊… Updating…" : "提交緊… Submitting…";
     const result = await postAction(ROSTER_API, payload);
     if (!result.ok) {
       if (result.error === "already_submitted") {
-        showToast("⚠ 呢隊已經提交咗，如需要修改請聯絡大會協助重置", true);
+        showToast("⚠ 呢隊已經提交咗，如需要修改請聯絡大會協助重開", true);
         alreadySubmitted = true;
+        teamReopened = false;
         el("submittedBanner").style.display = "block";
+        el("reopenedBanner").style.display = "none";
         el("editSection").style.display = "none";
       } else {
         showToast("提交失敗，請再試一次 Submission failed, please retry", true);
       }
       return;
     }
-    showToast(`✅ ${currentTeam} 嘅名單已成功提交！`);
+    showToast(wasReopened
+      ? `✅ ${currentTeam} 嘅名單已成功更新！Lineup updated!`
+      : `✅ ${currentTeam} 嘅名單已成功提交！`);
     alreadySubmitted = true;
+    teamReopened = false;
     submittedAtDisplay = formatSavedAt(result.savedAt);
     el("submittedAt").textContent = `提交時間：${submittedAtDisplay}`;
     el("submittedMale").textContent = stats.maleCount;
     el("submittedFemale").textContent = stats.femaleCount;
     el("submittedBanner").style.display = "block";
+    el("reopenedBanner").style.display = "none";
     el("editSection").style.display = "none";
   } catch (e) {
     showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
   } finally {
     el("submitBtn").disabled = false;
-    el("submitBtn").textContent = "提交隊伍名單 Submit Lineup";
+    updateSubmitBtnLabel();
   }
 });
 
@@ -1131,8 +1174,8 @@ function renderLineupAdminTeams(submittedTeams) {
 
   const rows = TEAMS.map(team => {
     const t = byTeam[team];
-    if (!t) return { team, avg: 0, male: 0, female: 0, submitted: false };
-    return { team, avg: t.avgDupr, male: t.maleCount, female: t.femaleCount, submitted: true };
+    if (!t) return { team, avg: 0, male: 0, female: 0, submitted: false, reopened: false };
+    return { team, avg: t.avgDupr, male: t.maleCount, female: t.femaleCount, submitted: true, reopened: !!t.reopened };
   });
 
   rows.sort((a, b) => b.avg - a.avg);
@@ -1145,9 +1188,11 @@ function renderLineupAdminTeams(submittedTeams) {
     const divIdx = Math.min(Math.floor((rank - 1) / 8), DIVISIONS.length - 1);
     const div = rank <= 40 ? DIVISIONS[divIdx] : null;
     if (r.submitted) submittedCount++;
-    const status = r.submitted
-      ? (r.male >= 3 && r.female >= 3 ? "✓ OK" : "⚠ 人數不足")
-      : "— 未提交";
+    const status = r.reopened
+      ? "🔓 已重開，等緊重新提交"
+      : r.submitted
+        ? (r.male >= 3 && r.female >= 3 ? "✓ OK" : "⚠ 人數不足")
+        : "— 未提交";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${rank}</td>
@@ -1156,14 +1201,14 @@ function renderLineupAdminTeams(submittedTeams) {
       <td>${r.male}M / ${r.female}F</td>
       <td>${div ? `<span class="division-tag" style="background:${div.color};color:${div.text}">${div.name}</span>` : "—"}</td>
       <td>${status}</td>
-      <td><button class="reset-btn" data-team="${r.team.replace(/"/g,'&quot;')}" ${r.submitted ? "" : "disabled"}>重置 Reset</button></td>
+      <td><button class="reopen-btn" data-team="${r.team.replace(/"/g,'&quot;')}" ${r.submitted && !r.reopened ? "" : "disabled"}>${r.reopened ? "已重開 Reopened" : "重開 Reopen"}</button></td>
     `;
     tbody.appendChild(tr);
   });
   el("adminSummary").textContent = `已提交：${submittedCount} / ${TEAMS.length} 支隊伍`;
   el("adminLoading").style.display = "none";
 
-  tbody.querySelectorAll(".reset-btn").forEach(btn => {
+  tbody.querySelectorAll(".reopen-btn").forEach(btn => {
     btn.addEventListener("click", () => openResetModal("lineup", btn.dataset.team));
   });
 }
@@ -1723,18 +1768,32 @@ async function checkAdminPass() {
   }
 }
 
+// Lineup uses a non-destructive "reopen" instead of the survey/payment
+// tabs' genuine, permanent "reset" — the shared overlay's title, warning
+// copy, button label/style, and the API action it sends are all branched on
+// tab here so the rest of the modal stays generic.
 function openResetModal(tab, team) {
   pendingReset = { tab, team };
   el("resetTeamLabel").textContent = team;
+  const goBtn = el("resetGoBtn");
   if (tab === "lineup") {
-    el("resetModalTitle").textContent = "確認重置名單 Confirm Roster Reset";
-    el("resetWarnText").textContent = "此操作會永久刪除該隊已提交嘅名單，無法復原。請重新輸入大會密碼以確認。This permanently deletes that team's submitted roster and cannot be undone. Re-enter the organizer passcode to confirm.";
+    el("resetModalTitle").textContent = "確認重開名單 Confirm Reopen Lineup";
+    el("resetWarnText").textContent = "呢個操作會等該隊修改同重新提交佢哋嘅名單；喺佢哋實際重新提交之前，而家嘅資料唔會被刪除。請重新輸入大會密碼以確認。This lets the team edit and resubmit their lineup — their current data isn't deleted until they actually resubmit. Re-enter the organizer passcode to confirm.";
+    goBtn.textContent = "確認重開 Reopen";
+    goBtn.classList.remove("danger");
+    goBtn.classList.add("reopen-confirm");
   } else if (tab === "survey") {
     el("resetModalTitle").textContent = "確認重置問卷 Confirm Survey Reset";
     el("resetWarnText").textContent = "此操作會永久刪除該隊已提交嘅時間問卷答案，無法復原。請重新輸入大會密碼以確認。This permanently deletes that team's submitted availability answers and cannot be undone. Re-enter the organizer passcode to confirm.";
+    goBtn.textContent = "確認重置 Reset";
+    goBtn.classList.remove("reopen-confirm");
+    goBtn.classList.add("danger");
   } else {
     el("resetModalTitle").textContent = "確認重置收據 Confirm Receipt Reset";
     el("resetWarnText").textContent = "此操作會永久刪除該隊已上載嘅收據，無法復原。請重新輸入大會密碼以確認。This permanently deletes that team's uploaded receipt and cannot be undone. Re-enter the organizer passcode to confirm.";
+    goBtn.textContent = "確認重置 Reset";
+    goBtn.classList.remove("reopen-confirm");
+    goBtn.classList.add("danger");
   }
   el("resetPassInput").value = "";
   el("resetOverlay").classList.add("show");
@@ -1759,13 +1818,17 @@ async function confirmReset() {
     return;
   }
   const api = tab === "lineup" ? ROSTER_API : (tab === "survey" ? AVAILABILITY_API : PAYMENT_API);
+  const action = tab === "lineup" ? "reopen" : "reset";
+  const idleLabel = tab === "lineup" ? "確認重開 Reopen" : "確認重置 Reset";
   el("resetGoBtn").disabled = true;
-  el("resetGoBtn").textContent = "刪除緊…";
+  el("resetGoBtn").textContent = tab === "lineup" ? "重開緊…" : "刪除緊…";
   try {
-    const result = await postAction(api, { action: "reset", team, passcode });
+    const result = await postAction(api, { action, team, passcode });
     if (result.ok) {
       closeResetModal();
-      showToast(`已重置 ${team} 嘅資料`);
+      showToast(tab === "lineup"
+        ? `已重開 ${team} 嘅名單，佢哋可以編輯同重新提交 Reopened ${team}'s lineup for editing`
+        : `已重置 ${team} 嘅資料`);
       if (tab === "lineup") {
         loadLineupAdminData();
       } else if (tab === "survey") {
@@ -1777,14 +1840,18 @@ async function confirmReset() {
       showToast("密碼錯誤 Incorrect passcode", true);
     } else if (result.error === "passcode_not_configured") {
       showToast(PASSCODE_UNSET_MSG, true);
+    } else if (result.error === "not_submitted") {
+      showToast("呢隊仲未提交過名單，冇嘢可以重開 This team hasn't submitted a lineup yet — nothing to reopen", true);
+      closeResetModal();
+      loadLineupAdminData();
     } else {
-      showToast("重置失敗，請再試一次", true);
+      showToast(tab === "lineup" ? "重開失敗，請再試一次" : "重置失敗，請再試一次", true);
     }
   } catch (err) {
-    showToast("重置失敗，請檢查網絡後再試一次", true);
+    showToast(tab === "lineup" ? "重開失敗，請檢查網絡後再試一次" : "重置失敗，請檢查網絡後再試一次", true);
   } finally {
     el("resetGoBtn").disabled = false;
-    el("resetGoBtn").textContent = "確認重置 Reset";
+    el("resetGoBtn").textContent = idleLabel;
   }
 }
 
