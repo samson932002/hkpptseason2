@@ -660,6 +660,12 @@
 
     <div id="payFormSection" style="display:none;">
 
+      <div id="payExemptBanner" class="card" style="display:none; background:#001F3D; border:none;">
+        <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">✅ 你哋隊毋需繳費</p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;">你哋隊已經確認毋需繳交報名費，唔使上載收據。<br>Your team is confirmed as exempt from the registration fee — no receipt upload is needed.</p>
+      </div>
+
+      <div id="payChargeSection">
       <div class="card">
         <h2>2. 過數資料 Payment Details</h2>
         <div class="pay-details">
@@ -694,6 +700,7 @@
           <button class="file-remove" id="fileRemoveBtn">✕ 移除</button>
         </div>
         <button class="submit-btn" id="paySubmitBtn" style="margin-top:12px;" disabled>上載收據 Upload Receipt</button>
+      </div>
       </div>
     </div>
 
@@ -767,7 +774,7 @@ const TEAMS = [
   "Over-drinking Head","Big Ballers","Drive You Crazy","Dink Don","Dink9",
   "I Dink U","90後","Dink More","Nova","The Dinkers","THESE",
   "Catchup","Pickle Elite","CSSA",
-  "【待定 TBC-1】","【待定 TBC-2】","【待定 TBC-3】","【待定 TBC-4】"
+  "PxP","我嘅訴求係打波","PickandMatch","The Pickleball Lab"
 ];
 const MAX_PLAYERS = 16;
 const NR_VALUE = 2.75;
@@ -1580,12 +1587,19 @@ async function loadPayTeamData(team) {
   resetFileInput();
   try {
     const status = await fetchPayStatus(team);
-    el("payAmount").textContent = `$${status.amountRequired.toLocaleString()}`;
-    if (status.uploaded) {
-      el("paySavedAt").textContent = `上次上載：${formatSavedAt(status.uploadedAt)}`;
-      el("paySavedBanner").style.display = "block";
+    if (status.exempt) {
+      el("payExemptBanner").style.display = "block";
+      el("payChargeSection").style.display = "none";
     } else {
-      el("paySavedBanner").style.display = "none";
+      el("payExemptBanner").style.display = "none";
+      el("payChargeSection").style.display = "block";
+      el("payAmount").textContent = `$${status.amountRequired.toLocaleString()}`;
+      if (status.uploaded) {
+        el("paySavedAt").textContent = `上次上載：${formatSavedAt(status.uploadedAt)}`;
+        el("paySavedBanner").style.display = "block";
+      } else {
+        el("paySavedBanner").style.display = "none";
+      }
     }
   } catch (e) {
     showToast("無法載入資料，請檢查網絡後重試 Could not load payment info — check your connection", true);
@@ -1644,22 +1658,25 @@ function renderPayAdminTable(receipts) {
   const tbody = el("payAdminRows");
   tbody.innerHTML = "";
   let paidCount = 0;
+  let exemptCount = 0;
   TEAMS.forEach(team => {
     const r = byTeam[team];
-    const amount = r ? r.amountRequired : (DISCOUNTED_TEAMS_CLIENT.has(team) ? 3700 : 4000);
+    const exempt = EXEMPT_TEAMS_CLIENT.has(team);
+    const amount = r ? r.amountRequired : amountForClient(team);
     if (r) paidCount++;
+    if (exempt) exemptCount++;
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${team}</td>
-      <td>$${amount.toLocaleString()}</td>
-      <td>${r ? "✓ 已上載 Uploaded" : "— 未上載 Not yet"}</td>
+      <td>${exempt ? "免費 Free" : `$${amount.toLocaleString()}`}</td>
+      <td>${exempt ? "— 毋需繳費 Exempt" : (r ? "✓ 已上載 Uploaded" : "— 未上載 Not yet")}</td>
       <td>${r ? formatSavedAt(r.uploadedAt) : "—"}</td>
       <td>${r ? `<a class="receipt-link" href="${r.driveViewUrl}" target="_blank" rel="noopener">檢視 View</a>` : "—"}</td>
       <td><button class="reset-btn" data-team="${team.replace(/"/g,'&quot;')}" ${r ? "" : "disabled"}>重置 Reset</button></td>
     `;
     tbody.appendChild(tr);
   });
-  el("paySummary").textContent = `已上載：${paidCount} / ${TEAMS.length} 支隊伍`;
+  el("paySummary").textContent = `已上載：${paidCount} / ${TEAMS.length - exemptCount} 支需繳費隊伍（另有 ${exemptCount} 隊毋需繳費）`;
 
   tbody.querySelectorAll(".reset-btn").forEach(btn => {
     btn.addEventListener("click", () => openResetModal("payment", btn.dataset.team));
@@ -1695,13 +1712,25 @@ el("payBackBtn").addEventListener("click", () => {
   el("paymentMainView").style.display = "block";
 });
 
-// Mirrors netlify/functions/payment.mts's DISCOUNTED_TEAMS — used only to
-// show a sensible amount in the admin table for teams that haven't
-// uploaded yet (the server is still the source of truth once they have).
+// Mirrors netlify/functions/payment.mts's DISCOUNTED_TEAMS / CUSTOM_AMOUNTS
+// / EXEMPT_TEAMS — used only to show a sensible amount in the admin table
+// for teams that haven't uploaded yet (the server is still the source of
+// truth once they have).
 const DISCOUNTED_TEAMS_CLIENT = new Set([
   "The OWWWL Pickle Team","激戰魂","PickleCow","二喱","再 · 薩利亞","Pickle 8","WWW",
   "Picklefun","ON CLOUD NINE","Cyber Dinks","THESE","Lit","Never Speed Up","戰魂小隊","Nova","CSSA",
 ]);
+const CUSTOM_AMOUNTS_CLIENT = new Map([
+  ["PxP", 4500],
+  ["我嘅訴求係打波", 4200],
+]);
+const EXEMPT_TEAMS_CLIENT = new Set(["PickandMatch", "The Pickleball Lab"]);
+
+function amountForClient(team) {
+  if (EXEMPT_TEAMS_CLIENT.has(team)) return 0;
+  if (CUSTOM_AMOUNTS_CLIENT.has(team)) return CUSTOM_AMOUNTS_CLIENT.get(team);
+  return DISCOUNTED_TEAMS_CLIENT.has(team) ? 3700 : 4000;
+}
 
 // ══════════════════════════ Shared organizer overlays ══════════════════
 

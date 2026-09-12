@@ -33,6 +33,18 @@ const DISCOUNTED_TEAMS = new Set([
   'CSSA',
 ])
 
+// One-off custom amounts for specific teams, outside the standard/discounted
+// split above.
+const CUSTOM_AMOUNTS = new Map<string, number>([
+  ['PxP', 4500],
+  ['我嘅訴求係打波', 4200],
+])
+
+// These teams don't need to pay at all — the payment tab shows them a "no
+// payment needed" message instead of the upload form, and the organizer
+// view marks them exempt instead of "not yet uploaded".
+const EXEMPT_TEAMS = new Set(['PickandMatch', 'The Pickleball Lab'])
+
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/pdf'])
 
 // Base64 length ceiling — roughly a 5 MB original file (base64 inflates by
@@ -40,7 +52,13 @@ const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'im
 // leaving headroom for typical phone-camera screenshots.
 const MAX_BASE64_LENGTH = 7_000_000
 
+function isExempt(team: string): boolean {
+  return EXEMPT_TEAMS.has(team)
+}
+
 function amountFor(team: string): number {
+  if (isExempt(team)) return 0
+  if (CUSTOM_AMOUNTS.has(team)) return CUSTOM_AMOUNTS.get(team)!
   return DISCOUNTED_TEAMS.has(team) ? DISCOUNTED_AMOUNT : STANDARD_AMOUNT
 }
 
@@ -108,6 +126,7 @@ export default async (req: Request) => {
 
     return Response.json({
       ok: true,
+      exempt: isExempt(team),
       amountRequired: amountFor(team),
       uploaded: rows.length > 0,
       uploadedAt: rows[0]?.uploaded_at || null,
@@ -130,6 +149,11 @@ export default async (req: Request) => {
 
       if (!team) {
         return Response.json({ ok: false, error: 'missing_team' }, { status: 400 })
+      }
+      if (isExempt(team)) {
+        // The client already hides the upload form for exempt teams — this
+        // is defense in depth against a direct API call.
+        return Response.json({ ok: false, error: 'exempt_no_payment_needed' }, { status: 400 })
       }
       if (!ALLOWED_MIME_TYPES.has(mimeType)) {
         return Response.json({ ok: false, error: 'invalid_type' }, { status: 400 })
