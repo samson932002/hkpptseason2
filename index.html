@@ -479,25 +479,31 @@
   }
   .match-row-list { border: 1.5px solid var(--line); border-radius: 0 0 7px 7px; overflow: hidden; }
   .match-row {
-    display: flex; align-items: center; gap: 10px; padding: 9px 10px; font-size: 12.5px;
+    display: flex; flex-direction: column; gap: 5px; padding: 9px 10px; font-size: 12.5px;
     border-top: 1px solid var(--line);
   }
   .match-row:first-child { border-top: none; }
-  .match-row .m-time { color: var(--muted); font-weight: 700; min-width: 78px; }
-  .match-row .m-venue { color: var(--muted); font-size: 11px; min-width: 46px; }
+  .match-row-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .match-row .m-time { color: var(--muted); font-weight: 700; }
+  .match-row .m-venue { color: var(--muted); font-size: 11px; }
+  .match-row .m-court { color: var(--navy); background: #EEF3FA; font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 5px; }
   .match-row .m-teams { flex: 1; font-weight: 700; color: var(--ink); }
   .match-row .m-teams .vs { color: var(--muted); font-weight: 500; margin: 0 4px; }
   .match-row .m-teams .me { color: var(--navy); background: #EEF3FA; padding: 1px 6px; border-radius: 5px; }
   .sch-table-wrap table { border-collapse: collapse; width: 100%; font-size: 12px; table-layout: fixed; }
   .sch-table-wrap th, .sch-table-wrap td {
-    border: 1px solid var(--line); padding: 7px 6px; text-align: left; word-break: break-word;
+    border: 1px solid var(--line); padding: 7px 5px; text-align: left; word-break: break-word; overflow: hidden;
   }
-  .sch-table-wrap th:nth-child(1), .sch-table-wrap td:nth-child(1) { width: 17%; white-space: nowrap; }
-  .sch-table-wrap th:nth-child(2), .sch-table-wrap td:nth-child(2) { width: 19%; white-space: nowrap; }
-  .sch-table-wrap th:nth-child(3), .sch-table-wrap td:nth-child(3) { width: 14%; white-space: nowrap; }
-  .sch-table-wrap th:nth-child(4), .sch-table-wrap td:nth-child(4),
-  .sch-table-wrap th:nth-child(5), .sch-table-wrap td:nth-child(5) { width: 25%; }
-  .sch-table-wrap th { background: var(--navy); color: var(--white); font-weight: 700; font-size: 11px; }
+  .sch-table-wrap td:nth-child(1) { width: 14%; white-space: nowrap; }
+  .sch-table-wrap td:nth-child(2) { width: 16%; white-space: nowrap; }
+  .sch-table-wrap td:nth-child(3) { width: 12%; white-space: nowrap; }
+  .sch-table-wrap td:nth-child(4) { width: 10%; white-space: nowrap; text-align: center; }
+  .sch-table-wrap td:nth-child(5),
+  .sch-table-wrap td:nth-child(6) { width: 24%; }
+  .sch-table-wrap th {
+    background: var(--navy); color: var(--white); font-weight: 700; font-size: 9.5px;
+    line-height: 1.3; white-space: normal; text-align: center; vertical-align: middle;
+  }
   .sch-empty { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 0; }
   .playoff-day-card {
     display: flex; align-items: center; gap: 12px; border: 1.5px solid var(--line);
@@ -537,14 +543,27 @@
   .strength-row .sr-rank {
     min-width: 20px; text-align: center; font-weight: 800; color: var(--muted); font-size: 12px;
   }
-  .strength-row .sr-team { flex: 0 0 34%; font-weight: 700; color: var(--ink); line-height: 1.3; }
-  .strength-row .sr-team small { display: block; color: var(--muted); font-weight: 600; font-size: 10.5px; margin-top: 1px; }
+  .strength-row .sr-team { flex: 1 1 auto; font-weight: 700; color: var(--ink); line-height: 1.3; min-width: 0; }
   .strength-row .sr-bar {
-    display: block; flex: 1; height: 10px; background: #EEF1F5; border-radius: 6px; overflow: hidden; position: relative;
+    display: block; flex: 0 0 34%; height: 10px; background: #EEF1F5; border-radius: 6px; overflow: hidden; position: relative;
   }
   .strength-row .sr-fill { display: block; height: 100%; background: var(--lime); border-radius: 6px; }
-  .strength-row .sr-value { min-width: 40px; text-align: right; font-weight: 800; color: var(--navy); font-size: 12px; }
-  .strength-footnote { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+  .strength-row .sr-mf {
+    flex: 0 0 auto; border-collapse: collapse; font-size: 10px; font-weight: 700; color: var(--muted);
+  }
+  .strength-row .sr-mf th, .strength-row .sr-mf td {
+    padding: 1px 6px; text-align: center; border: 1px solid var(--line);
+  }
+  .strength-row .sr-mf th { background: #EEF3FA; color: var(--navy); font-weight: 800; font-size: 9.5px; }
+  .strength-row .sr-mf-pending { flex: 0 0 auto; font-size: 10px; color: var(--muted); max-width: 70px; line-height: 1.3; }
+
+  /* ── Division block (Divisions tab, all 5 listed) ───────────────────── */
+  .div-block { margin-bottom: 18px; }
+  .div-block:last-child { margin-bottom: 0; }
+  .div-block-head {
+    font-weight: 800; font-size: 13.5px; padding: 8px 12px; border-radius: 7px 7px 0 0;
+  }
+  .div-block-rows { border: 1.5px solid var(--line); border-top: none; border-radius: 0 0 7px 7px; padding: 2px 6px; }
 </style>
 </head>
 <body>
@@ -559,7 +578,7 @@
 <div class="wrap">
 
   <div class="tabbar">
-    <button class="tab-btn active" id="tabScheduleBtn" data-tab="schedule">賽程 Schedule</button>
+    <button class="tab-btn active" id="tabScheduleBtn" data-tab="schedule">循環賽 Round-Robin</button>
     <button class="tab-btn" id="tabPlayoffsBtn" data-tab="playoffs">淘汰賽 Playoffs</button>
     <button class="tab-btn" id="tabDivisionsBtn" data-tab="divisions">組別實力 Divisions</button>
     <button class="tab-btn" id="tabLineupBtn" data-tab="lineup" style="display:none;">隊伍名單 Lineup</button>
@@ -569,14 +588,6 @@
 
   <!-- ══════════════════════════ SCHEDULE TAB ══════════════════════════ -->
   <div id="scheduleView" class="tab-view">
-
-    <div class="card" id="schBackupCard">
-      <h2>📌 後備日期 Backup Dates</h2>
-      <p style="margin:0; font-size:12.5px; color:var(--muted); line-height:1.6;">
-        如分組賽因場地或天氣需要調動場次，<strong style="color:var(--navy);">10/19（一）同 11/21（六）</strong>會作為後備日期使用。如有任何調動，大會會直接通知受影響嘅隊伍。<br>
-        10/19 (Mon) and 11/21 (Sat) are held as backup dates for the group stage, in case any matches need to be rescheduled (e.g. venue or weather issues). Affected teams will be notified directly of any changes.
-      </p>
-    </div>
 
     <div class="sch-subtabs">
       <button class="sch-subtab active" id="schSubTeamBtn" data-schsub="team">我嘅賽程 My Team</button>
@@ -604,6 +615,14 @@
     <div class="card" id="schVenueCard">
       <h2>📍 場地資訊 Venue Information</h2>
       <div id="schVenueList"></div>
+    </div>
+
+    <div class="card" id="schBackupCard">
+      <h2>📌 後備日期 Backup Dates</h2>
+      <p style="margin:0; font-size:12.5px; color:var(--muted); line-height:1.6;">
+        如循環賽因場地或天氣需要調動場次，<strong style="color:var(--navy);">10/19（一）同 11/21（六）</strong>會作為後備日期使用。如有任何調動，大會會直接通知受影響嘅隊伍。<br>
+        10/19 (Mon) and 11/21 (Sat) are held as backup dates for the round-robin schedule, in case any matches need to be rescheduled (e.g. venue or weather issues). Affected teams will be notified directly of any changes.
+      </p>
     </div>
 
     <div id="schLoading" class="card loading-note">
@@ -634,25 +653,12 @@
 
     <div class="card" id="promoCard">
       <h2>⬆️⬇️ 升降級機制 Promotion &amp; Relegation</h2>
-      <p style="margin:0 0 12px; font-size:12.5px; color:var(--muted); line-height:1.6;">
-        五個組別由上至下實力遞減：超級組（最高）至入門組（最基本）。賽季完結後，表現優異／落後嘅隊伍將有機會升／降組，實際名額將由大會稍後公佈。<br>
-        The five divisions run from strongest (Premier, top) to entry-level (Rookie, bottom). At the end of the season, top- and bottom-placed teams will have the opportunity to move up or down a division — exact numbers will be announced later by the organizer.
-      </p>
       <div class="promo-diagram" id="promoDiagram"></div>
     </div>
 
-    <div class="card" id="divChipsCard">
-      <h2>選擇組別 Select Division</h2>
-      <div class="division-chips" id="divTabChips"></div>
-    </div>
-
     <div class="card" id="divStrengthCard">
-      <h2 id="divStrengthTitle">分組實力 Division Strength</h2>
-      <div id="divStrengthTable"></div>
-      <p class="strength-footnote">
-        實力條以隊伍平均 DUPR 為基準（男子首3位 + 女子首3位 / 6，NR 以 2.75 計算），僅供參考。標「＊」隊伍請留意備註。<br>
-        Strength bars are based on each team's average DUPR (top 3 men + top 3 women ÷ 6; NR counted as 2.75) — for reference only. Teams marked "＊" have a note below.
-      </p>
+      <h2>組別名單 Division &amp; Team List</h2>
+      <div id="divAllTables"></div>
     </div>
 
     <div id="divLoading" class="card loading-note">
@@ -1006,7 +1012,7 @@ function populateTeamSelects() {
 
 // ══════════════════════════ Tab switching ══════════════════════════════
 const TAB_META = {
-  schedule: { title: "賽程表", subtitle: "Match Schedule" },
+  schedule: { title: "循環賽賽程表", subtitle: "Round-Robin Schedule" },
   playoffs: { title: "淘汰賽日期（暫定）", subtitle: "Playoffs Dates (Tentative)" },
   divisions: { title: "組別實力", subtitle: "Division Strength & Promotion/Relegation" },
   lineup: { title: "隊伍名單提交表格", subtitle: "Team Lineup Submission Form" },
@@ -1119,9 +1125,13 @@ function renderTeamSchedule(team) {
       <div class="match-row-list">`;
     ms.forEach(m => {
       const opponent = m.teamA === team ? m.teamB : m.teamA;
+      const courtBadge = m.court ? `<span class="m-court">場地 Court ${m.court}</span>` : "";
       html += `<div class="match-row">
-        <span class="m-time">${m.time}</span>
-        <span class="m-venue">${m.venueZh}</span>
+        <div class="match-row-meta">
+          <span class="m-time">${m.time}</span>
+          <span class="m-venue">${m.venueZh}</span>
+          ${courtBadge}
+        </div>
         <span class="m-teams"><span class="me">${team}</span><span class="vs">vs</span>${opponent}</span>
       </div>`;
     });
@@ -1164,9 +1174,9 @@ function renderDivisionSchedule(code) {
     return;
   }
   let html = '<div class="card"><div class="sch-table-wrap" style="overflow-x:auto;"><table><thead><tr>' +
-    '<th>日期 Date</th><th>時間 Time</th><th>場地 Venue</th><th>隊伍 A</th><th>隊伍 B</th></tr></thead><tbody>';
+    '<th>日期<br>Date</th><th>時間<br>Time</th><th>場地<br>Venue</th><th>球場<br>Court</th><th>隊伍 A<br>Team A</th><th>隊伍 B<br>Team B</th></tr></thead><tbody>';
   matches.forEach(m => {
-    html += `<tr><td>${m.dateLabel}（${m.weekday}）</td><td>${m.time}</td><td>${m.venueZh}</td><td>${m.teamA}</td><td>${m.teamB}</td></tr>`;
+    html += `<tr><td>${m.dateLabel}（${m.weekday}）</td><td>${m.time}</td><td>${m.venueZh}</td><td>${m.court || "—"}</td><td>${m.teamA}</td><td>${m.teamB}</td></tr>`;
   });
   html += '</tbody></table></div></div>';
   container.innerHTML = html;
@@ -1225,7 +1235,16 @@ async function initSchedule() {
 
 const DIVISIONS_URL = "divisions.json";
 let DIVISIONS_DATA = null;
-let divCurrentDivision = null;
+
+// Fixed display scale for the strength bars (not the data's actual min/max) —
+// keeps bar lengths comparable across divisions and stable if future teams'
+// ratings fall outside the current data's range.
+const STRENGTH_SCALE_MIN = 2.0;
+const STRENGTH_SCALE_MAX = 4.0;
+
+// Promotion/relegation count, agreed with the organizer — shown directly in
+// the diagram rather than left as a vague "will be announced later".
+const PROMO_RELEGATE_COUNT = 2;
 
 async function loadDivisionsData() {
   if (DIVISIONS_DATA) return DIVISIONS_DATA;
@@ -1251,8 +1270,8 @@ function renderPromoRelegationDiagram() {
     const dm = divTabMeta(code);
     const arrowsHtml = i < order.length - 1 ? `
       <div class="promo-arrows">
-        <span class="promo-up">▲ 晉級 Promotion</span>
-        <span class="promo-down">▼ 降級 Relegation</span>
+        <span class="promo-up">▲ ${PROMO_RELEGATE_COUNT}隊晉級 ${PROMO_RELEGATE_COUNT} Teams Promote</span>
+        <span class="promo-down">▼ ${PROMO_RELEGATE_COUNT}隊降級 ${PROMO_RELEGATE_COUNT} Teams Relegate</span>
       </div>` : "";
     return `
       <div class="promo-tier" style="background:${dm.color}; color:${dm.text};">${dm.zh} ${dm.code}</div>
@@ -1262,59 +1281,33 @@ function renderPromoRelegationDiagram() {
   el("promoDiagram").innerHTML = tiersHtml;
 }
 
-function renderDivTabChips() {
-  const container = el("divTabChips");
-  container.innerHTML = "";
-  (DIVISIONS_DATA.divisionOrder || []).forEach(code => {
-    const dm = divTabMeta(code);
-    const btn = document.createElement("button");
-    btn.className = "division-chip";
-    btn.textContent = `${dm.zh} ${dm.code}`;
-    btn.dataset.code = code;
-    btn.addEventListener("click", () => {
-      divCurrentDivision = code;
-      container.querySelectorAll(".division-chip").forEach(b => {
-        const active = b.dataset.code === code;
-        b.classList.toggle("active", active);
-        const m = divTabMeta(b.dataset.code);
-        b.style.background = active ? m.color : "var(--white)";
-        b.style.color = active ? m.text : "var(--navy)";
-        b.style.borderColor = active ? m.color : "var(--line)";
-      });
-      renderDivisionStrengthTable(code);
-    });
-    container.appendChild(btn);
-  });
-}
-
-function renderDivisionStrengthTable(code) {
-  const dm = divTabMeta(code);
-  el("divStrengthTitle").textContent = `分組實力 · ${dm.zh} ${dm.code}`;
-  const div = (DIVISIONS_DATA.divisions || []).find(x => x.code === code);
-  const container = el("divStrengthTable");
-  if (!div) { container.innerHTML = ""; return; }
-  const { min, max } = DIVISIONS_DATA.duprRange || { min: 2.5, max: 3.6 };
-  const span = Math.max(max - min, 0.001);
+function renderAllDivisionTables() {
+  const order = DIVISIONS_DATA.divisionOrder || [];
+  const span = Math.max(STRENGTH_SCALE_MAX - STRENGTH_SCALE_MIN, 0.001);
   let html = "";
-  div.teams.forEach(t => {
-    const pct = t.avgDupr == null ? 0 : Math.max(4, Math.round(((t.avgDupr - min) / span) * 100));
-    const genderLabel = (t.male == null || t.female == null)
-      ? "球員人數待更新 Roster pending"
-      : `男 ${t.male} · 女 ${t.female}`;
-    const flag = t.note ? "＊" : "";
-    html += `
-      <div class="strength-row">
-        <span class="sr-rank">${t.rank}</span>
-        <span class="sr-team">${t.team}${flag}<small>${genderLabel}</small></span>
-        <span class="sr-bar"><span class="sr-fill" style="width:${pct}%;"></span></span>
-        <span class="sr-value">${t.avgDupr != null ? t.avgDupr.toFixed(3) : "—"}</span>
-      </div>`;
+  order.forEach(code => {
+    const dm = divTabMeta(code);
+    const div = (DIVISIONS_DATA.divisions || []).find(x => x.code === code);
+    if (!div) return;
+    html += `<div class="div-block">
+      <div class="div-block-head" style="background:${dm.color}; color:${dm.text};">${dm.zh} ${dm.code}</div>
+      <div class="div-block-rows">`;
+    div.teams.forEach(t => {
+      const pct = t.avgDupr == null ? 0 : Math.min(100, Math.max(4, Math.round(((t.avgDupr - STRENGTH_SCALE_MIN) / span) * 100)));
+      const mfHtml = (t.male == null || t.female == null)
+        ? `<span class="sr-mf-pending">球員人數待更新<br>Roster pending</span>`
+        : `<table class="sr-mf"><tr><th>男 M</th><th>女 F</th></tr><tr><td>${t.male}</td><td>${t.female}</td></tr></table>`;
+      html += `
+        <div class="strength-row">
+          <span class="sr-rank">${t.rank}</span>
+          <span class="sr-team">${t.team}</span>
+          ${mfHtml}
+          <span class="sr-bar"><span class="sr-fill" style="width:${pct}%;"></span></span>
+        </div>`;
+    });
+    html += `</div></div>`;
   });
-  const notes = div.teams.filter(t => t.note);
-  if (notes.length) {
-    html += `<p class="strength-footnote" style="margin-top:12px;">${notes.map(t => `＊${t.team}：${t.note}`).join("　")}</p>`;
-  }
-  container.innerHTML = html;
+  el("divAllTables").innerHTML = html;
 }
 
 async function initDivisions() {
@@ -1322,12 +1315,7 @@ async function initDivisions() {
   try {
     await loadDivisionsData();
     renderPromoRelegationDiagram();
-    renderDivTabChips();
-    const firstCode = (DIVISIONS_DATA.divisionOrder || [])[0];
-    if (firstCode) {
-      divCurrentDivision = firstCode;
-      el("divTabChips").querySelector(`[data-code="${firstCode}"]`)?.click();
-    }
+    renderAllDivisionTables();
   } catch (e) {
     el("divLoading").innerHTML = "無法載入組別資料，請重新整理頁面 Could not load division data — please refresh the page";
     return;

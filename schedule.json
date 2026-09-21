@@ -25,7 +25,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Catchup",
-      "teamB": "激戰魂"
+      "teamB": "激戰魂",
+      "court": 1
     },
     {
       "date": "2026-10-10",
@@ -37,7 +38,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Picklefun",
-      "teamB": "戰魂小隊"
+      "teamB": "戰魂小隊",
+      "court": 2
     },
     {
       "date": "2026-10-10",
@@ -49,7 +51,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Catchup",
-      "teamB": "Picklefun"
+      "teamB": "Picklefun",
+      "court": 1
     },
     {
       "date": "2026-10-10",
@@ -61,7 +64,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "激戰魂",
-      "teamB": "戰魂小隊"
+      "teamB": "戰魂小隊",
+      "court": 2
     },
     {
       "date": "2026-10-10",
@@ -73,7 +77,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Catchup",
-      "teamB": "戰魂小隊"
+      "teamB": "戰魂小隊",
+      "court": 1
     },
     {
       "date": "2026-10-10",
@@ -85,7 +90,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "激戰魂",
-      "teamB": "Picklefun"
+      "teamB": "Picklefun",
+      "court": 2
     },
     {
       "date": "2026-10-11",
@@ -97,7 +103,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "Drive You Crazy",
-      "teamB": "PxP"
+      "teamB": "PxP",
+      "court": 1
     },
     {
       "date": "2026-10-11",
@@ -109,7 +116,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "Sportaday.Club",
-      "teamB": "CSSA"
+      "teamB": "CSSA",
+      "court": 2
     },
     {
       "date": "2026-10-11",
@@ -121,7 +129,8 @@
       "venueZh": "余振強",
       "division": "Challenger",
       "teamA": "ChillBallic",
-      "teamB": "Nova"
+      "teamB": "Nova",
+      "court": 1
     },
     {
       "date": "2026-10-11",
@@ -133,7 +142,8 @@
       "venueZh": "余振強",
       "division": "Challenger",
       "teamA": "Big Ballers",
-      "teamB": "二喱"
+      "teamB": "二喱",
+      "court": 2
     },
     {
       "date": "2026-10-11",
@@ -145,7 +155,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "Drive You Crazy",
-      "teamB": "Sportaday.Club"
+      "teamB": "Sportaday.Club",
+      "court": 1
     },
     {
       "date": "2026-10-11",
@@ -157,7 +168,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "PxP",
-      "teamB": "CSSA"
+      "teamB": "CSSA",
+      "court": 2
     },
     {
       "date": "2026-10-11",
@@ -169,7 +181,8 @@
       "venueZh": "余振強",
       "division": "Challenger",
       "teamA": "ChillBallic",
-      "teamB": "二喱"
+      "teamB": "二喱",
+      "court": 1
     },
     {
       "date": "2026-10-11",
@@ -181,7 +194,8 @@
       "venueZh": "余振強",
       "division": "Challenger",
       "teamA": "Big Ballers",
-      "teamB": "Nova"
+      "teamB": "Nova",
+      "court": 2
     },
     {
       "date": "2026-10-11",
@@ -193,7 +207,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "Drive You Crazy",
-      "teamB": "CSSA"
+      "teamB": "CSSA",
+      "court": 1
     },
     {
       "date": "2026-10-11",
@@ -205,7 +220,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "PxP",
-      "teamB": "Sportaday.Club"
+      "teamB": "Sportaday.Club",
+      "court": 2
     },
     {
       "date": "2026-10-11",
@@ -217,7 +233,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "再 · 薩利亞",
-      "teamB": "The Dinkers"
+      "teamB": "The Dinkers",
+      "court": 1
     },
     {
       "date": "2026-10-11",
@@ -229,7 +246,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "Over-drinking Head",
-      "teamB": "Dink9"
+      "teamB": "Dink9",
+      "court": 2
     },
     {
       "date": "2026-10-11",
@@ -241,7 +259,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "再 · 薩利亞",
-      "teamB": "Dink9"
+      "teamB": "Dink9",
+      "court": 1
     },
     {
       "date": "2026-10-11",
@@ -253,7 +272,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "Over-drinking Head",
-      "teamB": "The Dinkers"
+      "teamB": "The Dinkers",
+      "court": 2
     },
     {
       "date": "2026-10-17",
@@ -265,7 +285,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "The Pickleball Lab",
-      "teamB": "I Dink U"
+      "teamB": "I Dink U",
+      "court": 1
     },
     {
       "date": "2026-10-17",
@@ -277,7 +298,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "提燈TEAM",
-      "teamB": "THESE"
+      "teamB": "THESE",
+      "court": 2
     },
     {
       "date": "2026-10-17",
@@ -289,7 +311,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "Dink More",
-      "teamB": "Pickaboo"
+      "teamB": "Pickaboo",
+      "court": 1
     },
     {
       "date": "2026-10-17",
@@ -301,7 +324,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "零Dink球",
-      "teamB": "Lit"
+      "teamB": "Lit",
+      "court": 2
     },
     {
       "date": "2026-10-17",
@@ -313,7 +337,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "The Pickleball Lab",
-      "teamB": "提燈TEAM"
+      "teamB": "提燈TEAM",
+      "court": 1
     },
     {
       "date": "2026-10-17",
@@ -325,7 +350,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "I Dink U",
-      "teamB": "THESE"
+      "teamB": "THESE",
+      "court": 2
     },
     {
       "date": "2026-10-17",
@@ -337,7 +363,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "Dink More",
-      "teamB": "Lit"
+      "teamB": "Lit",
+      "court": 1
     },
     {
       "date": "2026-10-17",
@@ -349,7 +376,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "零Dink球",
-      "teamB": "Pickaboo"
+      "teamB": "Pickaboo",
+      "court": 2
     },
     {
       "date": "2026-10-17",
@@ -361,7 +389,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "The Pickleball Lab",
-      "teamB": "THESE"
+      "teamB": "THESE",
+      "court": 1
     },
     {
       "date": "2026-10-17",
@@ -373,7 +402,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "I Dink U",
-      "teamB": "提燈TEAM"
+      "teamB": "提燈TEAM",
+      "court": 2
     },
     {
       "date": "2026-10-18",
@@ -385,7 +415,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "Drive You Crazy",
-      "teamB": "The OWWWL Pickle Team"
+      "teamB": "The OWWWL Pickle Team",
+      "court": 1
     },
     {
       "date": "2026-10-18",
@@ -397,7 +428,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "PxP",
-      "teamB": "ON CLOUD NINE"
+      "teamB": "ON CLOUD NINE",
+      "court": 2
     },
     {
       "date": "2026-10-18",
@@ -409,7 +441,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "Drive You Crazy",
-      "teamB": "ON CLOUD NINE"
+      "teamB": "ON CLOUD NINE",
+      "court": 1
     },
     {
       "date": "2026-10-18",
@@ -421,7 +454,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "PxP",
-      "teamB": "The OWWWL Pickle Team"
+      "teamB": "The OWWWL Pickle Team",
+      "court": 2
     },
     {
       "date": "2026-10-18",
@@ -433,7 +467,8 @@
       "venueZh": "余振強",
       "division": "Rookie",
       "teamA": "Picklefun",
-      "teamB": "Cyber Dinks"
+      "teamB": "Cyber Dinks",
+      "court": 1
     },
     {
       "date": "2026-10-18",
@@ -445,7 +480,8 @@
       "venueZh": "余振強",
       "division": "Rookie",
       "teamA": "戰魂小隊",
-      "teamB": "Never Speed Up"
+      "teamB": "Never Speed Up",
+      "court": 2
     },
     {
       "date": "2026-10-18",
@@ -457,7 +493,8 @@
       "venueZh": "梁李秀娛",
       "division": "Development",
       "teamA": "WWW",
-      "teamB": "90後"
+      "teamB": "90後",
+      "court": 1
     },
     {
       "date": "2026-10-18",
@@ -469,7 +506,8 @@
       "venueZh": "梁李秀娛",
       "division": "Development",
       "teamA": "TWH Exit A",
-      "teamB": "Pickle Monster"
+      "teamB": "Pickle Monster",
+      "court": 2
     },
     {
       "date": "2026-10-18",
@@ -481,7 +519,8 @@
       "venueZh": "余振強",
       "division": "Rookie",
       "teamA": "Picklefun",
-      "teamB": "Never Speed Up"
+      "teamB": "Never Speed Up",
+      "court": 1
     },
     {
       "date": "2026-10-18",
@@ -493,7 +532,8 @@
       "venueZh": "余振強",
       "division": "Rookie",
       "teamA": "戰魂小隊",
-      "teamB": "Cyber Dinks"
+      "teamB": "Cyber Dinks",
+      "court": 2
     },
     {
       "date": "2026-10-18",
@@ -505,7 +545,8 @@
       "venueZh": "梁李秀娛",
       "division": "Development",
       "teamA": "WWW",
-      "teamB": "Pickle Monster"
+      "teamB": "Pickle Monster",
+      "court": 1
     },
     {
       "date": "2026-10-18",
@@ -517,7 +558,8 @@
       "venueZh": "梁李秀娛",
       "division": "Development",
       "teamA": "TWH Exit A",
-      "teamB": "90後"
+      "teamB": "90後",
+      "court": 2
     },
     {
       "date": "2026-10-18",
@@ -529,7 +571,8 @@
       "venueZh": "余振強",
       "division": "Championship",
       "teamA": "Sportaday.Club",
-      "teamB": "The Dinosaurs"
+      "teamB": "The Dinosaurs",
+      "court": 1
     },
     {
       "date": "2026-10-18",
@@ -541,7 +584,8 @@
       "venueZh": "余振強",
       "division": "Championship",
       "teamA": "CSSA",
-      "teamB": "PickleCow"
+      "teamB": "PickleCow",
+      "court": 2
     },
     {
       "date": "2026-10-18",
@@ -553,7 +597,8 @@
       "venueZh": "余振強",
       "division": "Championship",
       "teamA": "Sportaday.Club",
-      "teamB": "PickleCow"
+      "teamB": "PickleCow",
+      "court": 1
     },
     {
       "date": "2026-10-18",
@@ -565,7 +610,8 @@
       "venueZh": "余振強",
       "division": "Championship",
       "teamA": "CSSA",
-      "teamB": "The Dinosaurs"
+      "teamB": "The Dinosaurs",
+      "court": 2
     },
     {
       "date": "2026-10-31",
@@ -577,7 +623,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Cyber Dinks",
-      "teamB": "Never Speed Up"
+      "teamB": "Never Speed Up",
+      "court": 1
     },
     {
       "date": "2026-10-31",
@@ -589,7 +636,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Dink Don",
-      "teamB": "Pickle 8"
+      "teamB": "Pickle 8",
+      "court": 2
     },
     {
       "date": "2026-10-31",
@@ -601,7 +649,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Cyber Dinks",
-      "teamB": "Dink Don"
+      "teamB": "Dink Don",
+      "court": 1
     },
     {
       "date": "2026-10-31",
@@ -613,7 +662,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Never Speed Up",
-      "teamB": "Pickle 8"
+      "teamB": "Pickle 8",
+      "court": 2
     },
     {
       "date": "2026-10-31",
@@ -625,7 +675,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "Sportaday.Club",
-      "teamB": "The OWWWL Pickle Team"
+      "teamB": "The OWWWL Pickle Team",
+      "court": 1
     },
     {
       "date": "2026-10-31",
@@ -637,7 +688,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "CSSA",
-      "teamB": "ON CLOUD NINE"
+      "teamB": "ON CLOUD NINE",
+      "court": 2
     },
     {
       "date": "2026-10-31",
@@ -649,7 +701,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Cyber Dinks",
-      "teamB": "Pickle 8"
+      "teamB": "Pickle 8",
+      "court": 1
     },
     {
       "date": "2026-10-31",
@@ -661,7 +714,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Never Speed Up",
-      "teamB": "Dink Don"
+      "teamB": "Dink Don",
+      "court": 2
     },
     {
       "date": "2026-10-31",
@@ -673,7 +727,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "Sportaday.Club",
-      "teamB": "ON CLOUD NINE"
+      "teamB": "ON CLOUD NINE",
+      "court": 1
     },
     {
       "date": "2026-10-31",
@@ -685,7 +740,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "CSSA",
-      "teamB": "The OWWWL Pickle Team"
+      "teamB": "The OWWWL Pickle Team",
+      "court": 2
     },
     {
       "date": "2026-11-01",
@@ -697,7 +753,8 @@
       "venueZh": "梁李秀娛",
       "division": "Premier",
       "teamA": "The Pickleball Lab",
-      "teamB": "Pickle Elite"
+      "teamB": "Pickle Elite",
+      "court": 1
     },
     {
       "date": "2026-11-01",
@@ -709,7 +766,8 @@
       "venueZh": "梁李秀娛",
       "division": "Premier",
       "teamA": "I Dink U",
-      "teamB": "PickandMatch"
+      "teamB": "PickandMatch",
+      "court": 2
     },
     {
       "date": "2026-11-01",
@@ -721,7 +779,8 @@
       "venueZh": "梁李秀娛",
       "division": "Premier",
       "teamA": "The Pickleball Lab",
-      "teamB": "PickandMatch"
+      "teamB": "PickandMatch",
+      "court": 1
     },
     {
       "date": "2026-11-01",
@@ -733,7 +792,8 @@
       "venueZh": "梁李秀娛",
       "division": "Premier",
       "teamA": "I Dink U",
-      "teamB": "Pickle Elite"
+      "teamB": "Pickle Elite",
+      "court": 2
     },
     {
       "date": "2026-11-01",
@@ -745,7 +805,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "WWW",
-      "teamB": "The Dinkers"
+      "teamB": "The Dinkers",
+      "court": 1
     },
     {
       "date": "2026-11-01",
@@ -757,7 +818,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "TWH Exit A",
-      "teamB": "Dink9"
+      "teamB": "Dink9",
+      "court": 2
     },
     {
       "date": "2026-11-01",
@@ -769,7 +831,8 @@
       "venueZh": "梁李秀娛",
       "division": "Development",
       "teamA": "再 · 薩利亞",
-      "teamB": "90後"
+      "teamB": "90後",
+      "court": 1
     },
     {
       "date": "2026-11-01",
@@ -781,7 +844,8 @@
       "venueZh": "梁李秀娛",
       "division": "Development",
       "teamA": "Over-drinking Head",
-      "teamB": "Pickle Monster"
+      "teamB": "Pickle Monster",
+      "court": 2
     },
     {
       "date": "2026-11-01",
@@ -793,7 +857,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "WWW",
-      "teamB": "Dink9"
+      "teamB": "Dink9",
+      "court": 1
     },
     {
       "date": "2026-11-01",
@@ -805,7 +870,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "TWH Exit A",
-      "teamB": "The Dinkers"
+      "teamB": "The Dinkers",
+      "court": 2
     },
     {
       "date": "2026-11-01",
@@ -817,7 +883,8 @@
       "venueZh": "梁李秀娛",
       "division": "Development",
       "teamA": "再 · 薩利亞",
-      "teamB": "Pickle Monster"
+      "teamB": "Pickle Monster",
+      "court": 1
     },
     {
       "date": "2026-11-01",
@@ -829,7 +896,8 @@
       "venueZh": "梁李秀娛",
       "division": "Development",
       "teamA": "Over-drinking Head",
-      "teamB": "90後"
+      "teamB": "90後",
+      "court": 2
     },
     {
       "date": "2026-11-01",
@@ -841,7 +909,8 @@
       "venueZh": "余振強",
       "division": "Premier",
       "teamA": "提燈TEAM",
-      "teamB": "我嘅訴求係打波"
+      "teamB": "我嘅訴求係打波",
+      "court": 1
     },
     {
       "date": "2026-11-01",
@@ -853,7 +922,8 @@
       "venueZh": "余振強",
       "division": "Premier",
       "teamA": "THESE",
-      "teamB": "MN Square"
+      "teamB": "MN Square",
+      "court": 2
     },
     {
       "date": "2026-11-01",
@@ -865,7 +935,8 @@
       "venueZh": "余振強",
       "division": "Premier",
       "teamA": "提燈TEAM",
-      "teamB": "MN Square"
+      "teamB": "MN Square",
+      "court": 1
     },
     {
       "date": "2026-11-01",
@@ -877,7 +948,8 @@
       "venueZh": "余振強",
       "division": "Premier",
       "teamA": "THESE",
-      "teamB": "我嘅訴求係打波"
+      "teamB": "我嘅訴求係打波",
+      "court": 2
     },
     {
       "date": "2026-11-07",
@@ -889,7 +961,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "The Dinosaurs",
-      "teamB": "PickleCow"
+      "teamB": "PickleCow",
+      "court": 1
     },
     {
       "date": "2026-11-07",
@@ -901,7 +974,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "The OWWWL Pickle Team",
-      "teamB": "ON CLOUD NINE"
+      "teamB": "ON CLOUD NINE",
+      "court": 2
     },
     {
       "date": "2026-11-07",
@@ -913,7 +987,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "The Dinosaurs",
-      "teamB": "The OWWWL Pickle Team"
+      "teamB": "The OWWWL Pickle Team",
+      "court": 1
     },
     {
       "date": "2026-11-07",
@@ -925,7 +1000,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "PickleCow",
-      "teamB": "ON CLOUD NINE"
+      "teamB": "ON CLOUD NINE",
+      "court": 2
     },
     {
       "date": "2026-11-07",
@@ -937,7 +1013,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "The Dinosaurs",
-      "teamB": "ON CLOUD NINE"
+      "teamB": "ON CLOUD NINE",
+      "court": 1
     },
     {
       "date": "2026-11-07",
@@ -949,7 +1026,8 @@
       "venueZh": "葛量洪",
       "division": "Championship",
       "teamA": "PickleCow",
-      "teamB": "The OWWWL Pickle Team"
+      "teamB": "The OWWWL Pickle Team",
+      "court": 2
     },
     {
       "date": "2026-11-07",
@@ -961,7 +1039,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Catchup",
-      "teamB": "Cyber Dinks"
+      "teamB": "Cyber Dinks",
+      "court": 1
     },
     {
       "date": "2026-11-07",
@@ -973,7 +1052,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "激戰魂",
-      "teamB": "Never Speed Up"
+      "teamB": "Never Speed Up",
+      "court": 2
     },
     {
       "date": "2026-11-07",
@@ -985,7 +1065,8 @@
       "venueZh": "梁李秀娛",
       "division": "Premier",
       "teamA": "提燈TEAM",
-      "teamB": "Pickle Elite"
+      "teamB": "Pickle Elite",
+      "court": 1
     },
     {
       "date": "2026-11-07",
@@ -997,7 +1078,8 @@
       "venueZh": "梁李秀娛",
       "division": "Premier",
       "teamA": "THESE",
-      "teamB": "PickandMatch"
+      "teamB": "PickandMatch",
+      "court": 2
     },
     {
       "date": "2026-11-07",
@@ -1009,7 +1091,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "Catchup",
-      "teamB": "Never Speed Up"
+      "teamB": "Never Speed Up",
+      "court": 1
     },
     {
       "date": "2026-11-07",
@@ -1021,7 +1104,8 @@
       "venueZh": "葛量洪",
       "division": "Rookie",
       "teamA": "激戰魂",
-      "teamB": "Cyber Dinks"
+      "teamB": "Cyber Dinks",
+      "court": 2
     },
     {
       "date": "2026-11-07",
@@ -1033,7 +1117,8 @@
       "venueZh": "梁李秀娛",
       "division": "Premier",
       "teamA": "提燈TEAM",
-      "teamB": "PickandMatch"
+      "teamB": "PickandMatch",
+      "court": 1
     },
     {
       "date": "2026-11-07",
@@ -1045,7 +1130,8 @@
       "venueZh": "梁李秀娛",
       "division": "Premier",
       "teamA": "THESE",
-      "teamB": "Pickle Elite"
+      "teamB": "Pickle Elite",
+      "court": 2
     },
     {
       "date": "2026-11-08",
@@ -1057,7 +1143,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "Dink More",
-      "teamB": "Nova"
+      "teamB": "Nova",
+      "court": 1
     },
     {
       "date": "2026-11-08",
@@ -1069,7 +1156,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "零Dink球",
-      "teamB": "二喱"
+      "teamB": "二喱",
+      "court": 2
     },
     {
       "date": "2026-11-08",
@@ -1081,7 +1169,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "Dink More",
-      "teamB": "二喱"
+      "teamB": "二喱",
+      "court": 1
     },
     {
       "date": "2026-11-08",
@@ -1093,7 +1182,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "零Dink球",
-      "teamB": "Nova"
+      "teamB": "Nova",
+      "court": 2
     },
     {
       "date": "2026-11-08",
@@ -1105,7 +1195,8 @@
       "venueZh": "葛量洪",
       "division": "Development",
       "teamA": "90後",
-      "teamB": "Pickle Monster"
+      "teamB": "Pickle Monster",
+      "court": 1
     },
     {
       "date": "2026-11-08",
@@ -1117,7 +1208,8 @@
       "venueZh": "葛量洪",
       "division": "Development",
       "teamA": "The Dinkers",
-      "teamB": "Dink9"
+      "teamB": "Dink9",
+      "court": 2
     },
     {
       "date": "2026-11-08",
@@ -1129,7 +1221,8 @@
       "venueZh": "余振強",
       "division": "Challenger",
       "teamA": "ChillBallic",
-      "teamB": "Pickaboo"
+      "teamB": "Pickaboo",
+      "court": 1
     },
     {
       "date": "2026-11-08",
@@ -1141,7 +1234,8 @@
       "venueZh": "余振強",
       "division": "Challenger",
       "teamA": "Big Ballers",
-      "teamB": "Lit"
+      "teamB": "Lit",
+      "court": 2
     },
     {
       "date": "2026-11-08",
@@ -1153,7 +1247,8 @@
       "venueZh": "葛量洪",
       "division": "Development",
       "teamA": "90後",
-      "teamB": "The Dinkers"
+      "teamB": "The Dinkers",
+      "court": 1
     },
     {
       "date": "2026-11-08",
@@ -1165,7 +1260,8 @@
       "venueZh": "葛量洪",
       "division": "Development",
       "teamA": "Pickle Monster",
-      "teamB": "Dink9"
+      "teamB": "Dink9",
+      "court": 2
     },
     {
       "date": "2026-11-08",
@@ -1177,7 +1273,8 @@
       "venueZh": "梁李秀娛",
       "division": "Rookie",
       "teamA": "Picklefun",
-      "teamB": "Dink Don"
+      "teamB": "Dink Don",
+      "court": 1
     },
     {
       "date": "2026-11-08",
@@ -1189,7 +1286,8 @@
       "venueZh": "梁李秀娛",
       "division": "Rookie",
       "teamA": "戰魂小隊",
-      "teamB": "Pickle 8"
+      "teamB": "Pickle 8",
+      "court": 2
     },
     {
       "date": "2026-11-08",
@@ -1201,7 +1299,8 @@
       "venueZh": "余振強",
       "division": "Challenger",
       "teamA": "ChillBallic",
-      "teamB": "Lit"
+      "teamB": "Lit",
+      "court": 1
     },
     {
       "date": "2026-11-08",
@@ -1213,7 +1312,8 @@
       "venueZh": "余振強",
       "division": "Challenger",
       "teamA": "Big Ballers",
-      "teamB": "Pickaboo"
+      "teamB": "Pickaboo",
+      "court": 2
     },
     {
       "date": "2026-11-08",
@@ -1225,7 +1325,8 @@
       "venueZh": "葛量洪",
       "division": "Development",
       "teamA": "90後",
-      "teamB": "Dink9"
+      "teamB": "Dink9",
+      "court": 1
     },
     {
       "date": "2026-11-08",
@@ -1237,7 +1338,8 @@
       "venueZh": "葛量洪",
       "division": "Development",
       "teamA": "Pickle Monster",
-      "teamB": "The Dinkers"
+      "teamB": "The Dinkers",
+      "court": 2
     },
     {
       "date": "2026-11-08",
@@ -1249,7 +1351,8 @@
       "venueZh": "梁李秀娛",
       "division": "Rookie",
       "teamA": "Picklefun",
-      "teamB": "Pickle 8"
+      "teamB": "Pickle 8",
+      "court": 1
     },
     {
       "date": "2026-11-08",
@@ -1261,7 +1364,8 @@
       "venueZh": "梁李秀娛",
       "division": "Rookie",
       "teamA": "戰魂小隊",
-      "teamB": "Dink Don"
+      "teamB": "Dink Don",
+      "court": 2
     },
     {
       "date": "2026-11-08",
@@ -1273,7 +1377,8 @@
       "venueZh": "余振強",
       "division": "Premier",
       "teamA": "The Pickleball Lab",
-      "teamB": "我嘅訴求係打波"
+      "teamB": "我嘅訴求係打波",
+      "court": 1
     },
     {
       "date": "2026-11-08",
@@ -1285,7 +1390,8 @@
       "venueZh": "余振強",
       "division": "Premier",
       "teamA": "I Dink U",
-      "teamB": "MN Square"
+      "teamB": "MN Square",
+      "court": 2
     },
     {
       "date": "2026-11-08",
@@ -1297,7 +1403,8 @@
       "venueZh": "余振強",
       "division": "Premier",
       "teamA": "The Pickleball Lab",
-      "teamB": "MN Square"
+      "teamB": "MN Square",
+      "court": 1
     },
     {
       "date": "2026-11-08",
@@ -1309,7 +1416,8 @@
       "venueZh": "余振強",
       "division": "Premier",
       "teamA": "I Dink U",
-      "teamB": "我嘅訴求係打波"
+      "teamB": "我嘅訴求係打波",
+      "court": 2
     },
     {
       "date": "2026-11-14",
@@ -1321,7 +1429,8 @@
       "venueZh": "葛量洪",
       "division": "Challenger",
       "teamA": "Nova",
-      "teamB": "二喱"
+      "teamB": "二喱",
+      "court": 1
     },
     {
       "date": "2026-11-14",
@@ -1333,7 +1442,8 @@
       "venueZh": "葛量洪",
       "division": "Challenger",
       "teamA": "Pickaboo",
-      "teamB": "Lit"
+      "teamB": "Lit",
+      "court": 2
     },
     {
       "date": "2026-11-14",
@@ -1345,7 +1455,8 @@
       "venueZh": "葛量洪",
       "division": "Challenger",
       "teamA": "Nova",
-      "teamB": "Pickaboo"
+      "teamB": "Pickaboo",
+      "court": 1
     },
     {
       "date": "2026-11-14",
@@ -1357,7 +1468,8 @@
       "venueZh": "葛量洪",
       "division": "Challenger",
       "teamA": "二喱",
-      "teamB": "Lit"
+      "teamB": "Lit",
+      "court": 2
     },
     {
       "date": "2026-11-14",
@@ -1369,7 +1481,8 @@
       "venueZh": "梁李秀娛",
       "division": "Rookie",
       "teamA": "Catchup",
-      "teamB": "Dink Don"
+      "teamB": "Dink Don",
+      "court": 1
     },
     {
       "date": "2026-11-14",
@@ -1381,7 +1494,8 @@
       "venueZh": "梁李秀娛",
       "division": "Rookie",
       "teamA": "激戰魂",
-      "teamB": "Pickle 8"
+      "teamB": "Pickle 8",
+      "court": 2
     },
     {
       "date": "2026-11-14",
@@ -1393,7 +1507,8 @@
       "venueZh": "葛量洪",
       "division": "Challenger",
       "teamA": "Nova",
-      "teamB": "Lit"
+      "teamB": "Lit",
+      "court": 1
     },
     {
       "date": "2026-11-14",
@@ -1405,7 +1520,8 @@
       "venueZh": "葛量洪",
       "division": "Challenger",
       "teamA": "二喱",
-      "teamB": "Pickaboo"
+      "teamB": "Pickaboo",
+      "court": 2
     },
     {
       "date": "2026-11-14",
@@ -1417,7 +1533,8 @@
       "venueZh": "梁李秀娛",
       "division": "Rookie",
       "teamA": "Catchup",
-      "teamB": "Pickle 8"
+      "teamB": "Pickle 8",
+      "court": 1
     },
     {
       "date": "2026-11-14",
@@ -1429,7 +1546,8 @@
       "venueZh": "梁李秀娛",
       "division": "Rookie",
       "teamA": "激戰魂",
-      "teamB": "Dink Don"
+      "teamB": "Dink Don",
+      "court": 2
     },
     {
       "date": "2026-11-15",
@@ -1441,7 +1559,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "Drive You Crazy",
-      "teamB": "The Dinosaurs"
+      "teamB": "The Dinosaurs",
+      "court": 1
     },
     {
       "date": "2026-11-15",
@@ -1453,7 +1572,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "PxP",
-      "teamB": "PickleCow"
+      "teamB": "PickleCow",
+      "court": 2
     },
     {
       "date": "2026-11-15",
@@ -1465,7 +1585,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "Drive You Crazy",
-      "teamB": "PickleCow"
+      "teamB": "PickleCow",
+      "court": 1
     },
     {
       "date": "2026-11-15",
@@ -1477,7 +1598,8 @@
       "venueZh": "梁李秀娛",
       "division": "Championship",
       "teamA": "PxP",
-      "teamB": "The Dinosaurs"
+      "teamB": "The Dinosaurs",
+      "court": 2
     },
     {
       "date": "2026-11-15",
@@ -1489,7 +1611,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "我嘅訴求係打波",
-      "teamB": "MN Square"
+      "teamB": "MN Square",
+      "court": 1
     },
     {
       "date": "2026-11-15",
@@ -1501,7 +1624,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "Pickle Elite",
-      "teamB": "PickandMatch"
+      "teamB": "PickandMatch",
+      "court": 2
     },
     {
       "date": "2026-11-15",
@@ -1513,7 +1637,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "Dink More",
-      "teamB": "零Dink球"
+      "teamB": "零Dink球",
+      "court": 1
     },
     {
       "date": "2026-11-15",
@@ -1525,7 +1650,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "ChillBallic",
-      "teamB": "Big Ballers"
+      "teamB": "Big Ballers",
+      "court": 2
     },
     {
       "date": "2026-11-15",
@@ -1537,7 +1663,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "再 · 薩利亞",
-      "teamB": "Over-drinking Head"
+      "teamB": "Over-drinking Head",
+      "court": 1
     },
     {
       "date": "2026-11-15",
@@ -1549,7 +1676,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "WWW",
-      "teamB": "TWH Exit A"
+      "teamB": "TWH Exit A",
+      "court": 2
     },
     {
       "date": "2026-11-15",
@@ -1561,7 +1689,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "我嘅訴求係打波",
-      "teamB": "Pickle Elite"
+      "teamB": "Pickle Elite",
+      "court": 1
     },
     {
       "date": "2026-11-15",
@@ -1573,7 +1702,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "MN Square",
-      "teamB": "PickandMatch"
+      "teamB": "PickandMatch",
+      "court": 2
     },
     {
       "date": "2026-11-15",
@@ -1585,7 +1715,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "Dink More",
-      "teamB": "ChillBallic"
+      "teamB": "ChillBallic",
+      "court": 1
     },
     {
       "date": "2026-11-15",
@@ -1597,7 +1728,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "零Dink球",
-      "teamB": "Big Ballers"
+      "teamB": "Big Ballers",
+      "court": 2
     },
     {
       "date": "2026-11-15",
@@ -1609,7 +1741,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "再 · 薩利亞",
-      "teamB": "WWW"
+      "teamB": "WWW",
+      "court": 1
     },
     {
       "date": "2026-11-15",
@@ -1621,7 +1754,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "Over-drinking Head",
-      "teamB": "TWH Exit A"
+      "teamB": "TWH Exit A",
+      "court": 2
     },
     {
       "date": "2026-11-15",
@@ -1633,7 +1767,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "我嘅訴求係打波",
-      "teamB": "PickandMatch"
+      "teamB": "PickandMatch",
+      "court": 1
     },
     {
       "date": "2026-11-15",
@@ -1645,7 +1780,8 @@
       "venueZh": "葛量洪",
       "division": "Premier",
       "teamA": "MN Square",
-      "teamB": "Pickle Elite"
+      "teamB": "Pickle Elite",
+      "court": 2
     },
     {
       "date": "2026-11-15",
@@ -1657,7 +1793,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "Dink More",
-      "teamB": "Big Ballers"
+      "teamB": "Big Ballers",
+      "court": 1
     },
     {
       "date": "2026-11-15",
@@ -1669,7 +1806,8 @@
       "venueZh": "梁李秀娛",
       "division": "Challenger",
       "teamA": "零Dink球",
-      "teamB": "ChillBallic"
+      "teamB": "ChillBallic",
+      "court": 2
     },
     {
       "date": "2026-11-15",
@@ -1681,7 +1819,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "再 · 薩利亞",
-      "teamB": "TWH Exit A"
+      "teamB": "TWH Exit A",
+      "court": 1
     },
     {
       "date": "2026-11-15",
@@ -1693,7 +1832,8 @@
       "venueZh": "余振強",
       "division": "Development",
       "teamA": "Over-drinking Head",
-      "teamB": "WWW"
+      "teamB": "WWW",
+      "court": 2
     }
   ],
   "backupDates": [
