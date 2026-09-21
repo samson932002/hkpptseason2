@@ -543,19 +543,11 @@
   .strength-row .sr-rank {
     min-width: 20px; text-align: center; font-weight: 800; color: var(--muted); font-size: 12px;
   }
-  .strength-row .sr-team { flex: 1 1 auto; font-weight: 700; color: var(--ink); line-height: 1.3; min-width: 0; }
+  .strength-row .sr-team { flex: 0 0 42%; font-weight: 700; color: var(--ink); line-height: 1.3; min-width: 0; }
   .strength-row .sr-bar {
-    display: block; flex: 0 0 34%; height: 10px; background: #EEF1F5; border-radius: 6px; overflow: hidden; position: relative;
+    display: block; flex: 1; height: 10px; background: #EEF1F5; border-radius: 6px; overflow: hidden; position: relative;
   }
   .strength-row .sr-fill { display: block; height: 100%; background: var(--lime); border-radius: 6px; }
-  .strength-row .sr-mf {
-    flex: 0 0 auto; border-collapse: collapse; font-size: 10px; font-weight: 700; color: var(--muted);
-  }
-  .strength-row .sr-mf th, .strength-row .sr-mf td {
-    padding: 1px 6px; text-align: center; border: 1px solid var(--line);
-  }
-  .strength-row .sr-mf th { background: #EEF3FA; color: var(--navy); font-weight: 800; font-size: 9.5px; }
-  .strength-row .sr-mf-pending { flex: 0 0 auto; font-size: 10px; color: var(--muted); max-width: 70px; line-height: 1.3; }
 
   /* ── Division block (Divisions tab, all 5 listed) ───────────────────── */
   .div-block { margin-bottom: 18px; }
@@ -1125,11 +1117,10 @@ function renderTeamSchedule(team) {
       <div class="match-row-list">`;
     ms.forEach(m => {
       const opponent = m.teamA === team ? m.teamB : m.teamA;
-      const courtBadge = m.court ? `<span class="m-court">場地 Court ${m.court}</span>` : "";
+      const courtBadge = m.court ? `<span class="m-court">${m.venueZh} Court ${m.court}</span>` : `<span class="m-court">${m.venueZh}</span>`;
       html += `<div class="match-row">
         <div class="match-row-meta">
           <span class="m-time">${m.time}</span>
-          <span class="m-venue">${m.venueZh}</span>
           ${courtBadge}
         </div>
         <span class="m-teams"><span class="me">${team}</span><span class="vs">vs</span>${opponent}</span>
@@ -1294,14 +1285,10 @@ function renderAllDivisionTables() {
       <div class="div-block-rows">`;
     div.teams.forEach(t => {
       const pct = t.avgDupr == null ? 0 : Math.min(100, Math.max(4, Math.round(((t.avgDupr - STRENGTH_SCALE_MIN) / span) * 100)));
-      const mfHtml = (t.male == null || t.female == null)
-        ? `<span class="sr-mf-pending">球員人數待更新<br>Roster pending</span>`
-        : `<table class="sr-mf"><tr><th>男 M</th><th>女 F</th></tr><tr><td>${t.male}</td><td>${t.female}</td></tr></table>`;
       html += `
         <div class="strength-row">
           <span class="sr-rank">${t.rank}</span>
           <span class="sr-team">${t.team}</span>
-          ${mfHtml}
           <span class="sr-bar"><span class="sr-fill" style="width:${pct}%;"></span></span>
         </div>`;
     });
