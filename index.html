@@ -454,6 +454,66 @@
   .file-preview .file-name { font-size: 12.5px; font-weight: 700; color: var(--ink); word-break: break-all; }
   .file-preview .file-remove { margin-left: auto; background: none; border: none; color: #C24747; font-weight: 700; cursor: pointer; font-size: 13px; flex: none; }
   .receipt-link { color: var(--navy); font-weight: 700; font-size: 11.5px; text-decoration: underline; }
+
+  /* ── Schedule ──────────────────────────────────────────────────────── */
+  .sch-subtabs {
+    display: flex; gap: 8px; margin-bottom: 14px;
+    background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: 4px;
+  }
+  .sch-subtab {
+    flex: 1; padding: 9px 8px; border: none; border-radius: 7px; background: none;
+    color: var(--muted); font-weight: 700; font-size: 12.5px; cursor: pointer; font-family: inherit;
+  }
+  .sch-subtab.active { background: var(--navy); color: var(--white); }
+  .division-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .division-chip {
+    border: 2px solid var(--line); background: var(--white); border-radius: 999px;
+    padding: 8px 16px; font-weight: 800; font-size: 12.5px; cursor: pointer; font-family: inherit;
+    color: var(--navy);
+  }
+  .division-chip.active { border-color: transparent; }
+  .match-day-group { margin-bottom: 10px; }
+  .match-day-head {
+    font-size: 12.5px; font-weight: 800; color: var(--navy); background: #EEF3FA;
+    padding: 6px 10px; border-radius: 7px 7px 0 0; border: 1.5px solid var(--line); border-bottom: none;
+  }
+  .match-row-list { border: 1.5px solid var(--line); border-radius: 0 0 7px 7px; overflow: hidden; }
+  .match-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 10px; font-size: 12.5px;
+    border-top: 1px solid var(--line);
+  }
+  .match-row:first-child { border-top: none; }
+  .match-row .m-time { color: var(--muted); font-weight: 700; min-width: 78px; }
+  .match-row .m-venue { color: var(--muted); font-size: 11px; min-width: 46px; }
+  .match-row .m-teams { flex: 1; font-weight: 700; color: var(--ink); }
+  .match-row .m-teams .vs { color: var(--muted); font-weight: 500; margin: 0 4px; }
+  .match-row .m-teams .me { color: var(--navy); background: #EEF3FA; padding: 1px 6px; border-radius: 5px; }
+  .sch-table-wrap table { border-collapse: collapse; width: 100%; font-size: 12px; table-layout: fixed; }
+  .sch-table-wrap th, .sch-table-wrap td {
+    border: 1px solid var(--line); padding: 7px 6px; text-align: left; word-break: break-word;
+  }
+  .sch-table-wrap th:nth-child(1), .sch-table-wrap td:nth-child(1) { width: 17%; white-space: nowrap; }
+  .sch-table-wrap th:nth-child(2), .sch-table-wrap td:nth-child(2) { width: 19%; white-space: nowrap; }
+  .sch-table-wrap th:nth-child(3), .sch-table-wrap td:nth-child(3) { width: 14%; white-space: nowrap; }
+  .sch-table-wrap th:nth-child(4), .sch-table-wrap td:nth-child(4),
+  .sch-table-wrap th:nth-child(5), .sch-table-wrap td:nth-child(5) { width: 25%; }
+  .sch-table-wrap th { background: var(--navy); color: var(--white); font-weight: 700; font-size: 11px; }
+  .sch-empty { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 0; }
+  .playoff-day-card {
+    display: flex; align-items: center; gap: 12px; border: 1.5px solid var(--line);
+    border-radius: 9px; padding: 12px 14px; margin-bottom: 8px;
+  }
+  .playoff-day-card .pd-date {
+    background: var(--navy); color: var(--lime); font-weight: 800; font-size: 13px;
+    border-radius: 7px; padding: 8px 10px; text-align: center; min-width: 64px; line-height: 1.2;
+  }
+  .playoff-day-card .pd-date small { display: block; color: #9FB6CE; font-weight: 600; font-size: 10px; }
+  .playoff-day-card .pd-label { font-weight: 700; font-size: 13.5px; color: var(--ink); }
+  .playoff-day-card .pd-label small { display: block; color: var(--muted); font-weight: 500; font-size: 11.5px; margin-top: 2px; }
+  .venue-card { border: 1.5px solid var(--line); border-radius: 9px; padding: 12px 14px; margin-bottom: 8px; }
+  .venue-card .v-name { font-weight: 800; font-size: 13.5px; color: var(--navy); }
+  .venue-card .v-addr { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .venue-card a.v-map { font-size: 11.5px; color: var(--navy); font-weight: 700; text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -468,13 +528,66 @@
 <div class="wrap">
 
   <div class="tabbar">
-    <button class="tab-btn active" id="tabLineupBtn" data-tab="lineup">隊伍名單 Lineup</button>
+    <button class="tab-btn active" id="tabScheduleBtn" data-tab="schedule">賽程 Schedule</button>
+    <button class="tab-btn" id="tabLineupBtn" data-tab="lineup">隊伍名單 Lineup</button>
     <button class="tab-btn" id="tabSurveyBtn" data-tab="survey">時間問卷 Availability</button>
     <button class="tab-btn" id="tabPaymentBtn" data-tab="payment">繳費 Payment</button>
   </div>
 
+  <!-- ══════════════════════════ SCHEDULE TAB ══════════════════════════ -->
+  <div id="scheduleView" class="tab-view">
+
+    <div class="card" id="schBackupCard">
+      <h2>📌 後備日期 Backup Dates</h2>
+      <p style="margin:0; font-size:12.5px; color:var(--muted); line-height:1.6;">
+        如分組賽因場地或天氣需要調動場次，<strong style="color:var(--navy);">10/19（一）同 11/21（六）</strong>會作為後備日期使用。如有任何調動，大會會直接通知受影響嘅隊伍。<br>
+        10/19 (Mon) and 11/21 (Sat) are held as backup dates for the group stage, in case any matches need to be rescheduled (e.g. venue or weather issues). Affected teams will be notified directly of any changes.
+      </p>
+    </div>
+
+    <div class="sch-subtabs">
+      <button class="sch-subtab active" id="schSubTeamBtn" data-schsub="team">我嘅賽程 My Team</button>
+      <button class="sch-subtab" id="schSubDivBtn" data-schsub="division">分組賽程 By Division</button>
+    </div>
+
+    <div id="schTeamSubview">
+      <div class="card">
+        <h2>選擇你嘅隊伍 Select Your Team</h2>
+        <select id="schTeamSelect">
+          <option value="">請選擇隊伍 — Select your team…</option>
+        </select>
+      </div>
+      <div id="schTeamResults"></div>
+    </div>
+
+    <div id="schDivSubview" style="display:none;">
+      <div class="card">
+        <h2>選擇組別 Select Division</h2>
+        <div class="division-chips" id="schDivChips"></div>
+      </div>
+      <div id="schDivResults"></div>
+    </div>
+
+    <div class="card" id="schPlayoffsCard">
+      <h2>🏆 淘汰賽 Playoffs</h2>
+      <div id="schPlayoffsDays"></div>
+      <p class="meta-note" id="schPlayoffsVenueNote" style="text-align:left; margin-top:8px;"></p>
+    </div>
+
+    <div class="card" id="schVenueCard">
+      <h2>📍 場地資訊 Venue Information</h2>
+      <div id="schVenueList"></div>
+    </div>
+
+    <div id="schLoading" class="card loading-note">
+      <span class="overlay-spin"></span>載入緊賽程… Loading schedule…
+    </div>
+
+  </div>
+  <!-- ═══════════════════════ /SCHEDULE TAB ══════════════════════════ -->
+
   <!-- ══════════════════════════ LINEUP TAB ══════════════════════════ -->
-  <div id="lineupView" class="tab-view">
+  <div id="lineupView" class="tab-view" style="display:none;">
 
   <div id="mainView">
 
@@ -806,7 +919,7 @@ const PASSCODE_UNSET_MSG = "大會密碼未設定，請於網站設定 ADMIN_PAS
 function el(id) { return document.getElementById(id); }
 
 function populateTeamSelects() {
-  [el("teamSelect"), el("survTeamSelect"), el("payTeamSelect")].forEach(sel => {
+  [el("teamSelect"), el("survTeamSelect"), el("payTeamSelect"), el("schTeamSelect")].forEach(sel => {
     TEAMS.forEach(t => {
       const opt = document.createElement("option");
       opt.value = t; opt.textContent = t;
@@ -817,6 +930,7 @@ function populateTeamSelects() {
 
 // ══════════════════════════ Tab switching ══════════════════════════════
 const TAB_META = {
+  schedule: { title: "賽程表", subtitle: "Match Schedule" },
   lineup: { title: "隊伍名單提交表格", subtitle: "Team Lineup Submission Form" },
   survey: { title: "隊伍時間問卷", subtitle: "Team Availability Survey" },
   payment: { title: "繳費收據上載", subtitle: "Team Payment Receipt Upload" },
@@ -824,10 +938,12 @@ const TAB_META = {
 
 function showTab(tab, opts) {
   opts = opts || {};
-  if (!TAB_META[tab]) tab = "lineup";
+  if (!TAB_META[tab]) tab = "schedule";
+  el("scheduleView").style.display = tab === "schedule" ? "block" : "none";
   el("lineupView").style.display = tab === "lineup" ? "block" : "none";
   el("surveyView").style.display = tab === "survey" ? "block" : "none";
   el("paymentView").style.display = tab === "payment" ? "block" : "none";
+  el("tabScheduleBtn").classList.toggle("active", tab === "schedule");
   el("tabLineupBtn").classList.toggle("active", tab === "lineup");
   el("tabSurveyBtn").classList.toggle("active", tab === "survey");
   el("tabPaymentBtn").classList.toggle("active", tab === "payment");
@@ -838,6 +954,7 @@ function showTab(tab, opts) {
   }
 }
 
+el("tabScheduleBtn").addEventListener("click", () => showTab("schedule"));
 el("tabLineupBtn").addEventListener("click", () => showTab("lineup"));
 el("tabSurveyBtn").addEventListener("click", () => showTab("survey"));
 el("tabPaymentBtn").addEventListener("click", () => showTab("payment"));
@@ -865,6 +982,159 @@ async function postAction(api, payload) {
     body: JSON.stringify(payload)
   });
   return res.json();
+}
+
+// ══════════════════════════ SCHEDULE TAB LOGIC ═════════════════════════
+
+const SCHEDULE_URL = "schedule.json";
+let SCHEDULE_DATA = null;
+let schCurrentTeam = null;
+let schCurrentDivision = null;
+
+// Same order/colors as DIVISIONS above — index i of divisionOrder matches
+// index i of DIVISIONS, so this just pairs the (Chinese/English) division
+// code from schedule.json with the badge color already used elsewhere.
+function divisionMeta(code) {
+  const idx = (SCHEDULE_DATA.divisionOrder || []).indexOf(code);
+  const d = DIVISIONS[idx] || { name: code, color: "#EEF3FA", text: "#001F3D" };
+  return { code, label: d.name, color: d.color, text: d.text, zh: (SCHEDULE_DATA.divisionZh || {})[code] || code };
+}
+
+async function loadScheduleData() {
+  if (SCHEDULE_DATA) return SCHEDULE_DATA;
+  const res = await fetch(SCHEDULE_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error("schedule_fetch_failed");
+  SCHEDULE_DATA = await res.json();
+  return SCHEDULE_DATA;
+}
+
+function groupMatchesByDate(matches) {
+  const byDate = new Map();
+  matches.forEach(m => {
+    const key = m.date;
+    if (!byDate.has(key)) byDate.set(key, []);
+    byDate.get(key).push(m);
+  });
+  return [...byDate.entries()]; // already sorted since SCHEDULE_DATA.groupStage is pre-sorted
+}
+
+function renderTeamSchedule(team) {
+  const container = el("schTeamResults");
+  const matches = SCHEDULE_DATA.groupStage.filter(m => m.teamA === team || m.teamB === team);
+  if (matches.length === 0) {
+    container.innerHTML = `<div class="card sch-empty">未搵到 ${team} 嘅賽程 No matches found for this team</div>`;
+    return;
+  }
+  const groups = groupMatchesByDate(matches);
+  let html = '<div class="card">';
+  groups.forEach(([date, ms]) => {
+    const first = ms[0];
+    const dm = divisionMeta(first.division);
+    html += `<div class="match-day-group">
+      <div class="match-day-head">${first.dateLabel}（${first.weekday}） · <span class="division-tag" style="background:${dm.color};color:${dm.text}; margin-left:4px;">${dm.label}</span></div>
+      <div class="match-row-list">`;
+    ms.forEach(m => {
+      const opponent = m.teamA === team ? m.teamB : m.teamA;
+      html += `<div class="match-row">
+        <span class="m-time">${m.time}</span>
+        <span class="m-venue">${m.venueZh}</span>
+        <span class="m-teams"><span class="me">${team}</span><span class="vs">vs</span>${opponent}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function renderDivisionChips() {
+  const container = el("schDivChips");
+  container.innerHTML = "";
+  (SCHEDULE_DATA.divisionOrder || []).forEach(code => {
+    const dm = divisionMeta(code);
+    const btn = document.createElement("button");
+    btn.className = "division-chip";
+    btn.textContent = `${dm.zh} ${dm.code}`;
+    btn.dataset.code = code;
+    btn.addEventListener("click", () => {
+      schCurrentDivision = code;
+      container.querySelectorAll(".division-chip").forEach(b => {
+        const active = b.dataset.code === code;
+        b.classList.toggle("active", active);
+        const m = divisionMeta(b.dataset.code);
+        b.style.background = active ? m.color : "var(--white)";
+        b.style.color = active ? m.text : "var(--navy)";
+        b.style.borderColor = active ? m.color : "var(--line)";
+      });
+      renderDivisionSchedule(code);
+    });
+    container.appendChild(btn);
+  });
+}
+
+function renderDivisionSchedule(code) {
+  const container = el("schDivResults");
+  const matches = SCHEDULE_DATA.groupStage.filter(m => m.division === code);
+  if (matches.length === 0) {
+    container.innerHTML = '<div class="card sch-empty">未搵到呢個組別嘅賽程 No matches found</div>';
+    return;
+  }
+  let html = '<div class="card"><div class="sch-table-wrap" style="overflow-x:auto;"><table><thead><tr>' +
+    '<th>日期 Date</th><th>時間 Time</th><th>場地 Venue</th><th>隊伍 A</th><th>隊伍 B</th></tr></thead><tbody>';
+  matches.forEach(m => {
+    html += `<tr><td>${m.dateLabel}（${m.weekday}）</td><td>${m.time}</td><td>${m.venueZh}</td><td>${m.teamA}</td><td>${m.teamB}</td></tr>`;
+  });
+  html += '</tbody></table></div></div>';
+  container.innerHTML = html;
+}
+
+function renderPlayoffsAndVenues() {
+  const daysHtml = (SCHEDULE_DATA.playoffs.days || []).map(d => `
+    <div class="playoff-day-card">
+      <div class="pd-date">${d.dateLabel}<small>（${d.weekday}）</small></div>
+      <div class="pd-label">${d.titleZh}<small>${d.titleEn}</small></div>
+    </div>
+  `).join("");
+  el("schPlayoffsDays").innerHTML = daysHtml;
+  el("schPlayoffsVenueNote").textContent = SCHEDULE_DATA.playoffs.venueNote || "";
+
+  const venuesHtml = (SCHEDULE_DATA.venues || []).map(v => `
+    <div class="venue-card">
+      <div class="v-name">${v.name}</div>
+      <div class="v-addr">${v.address}</div>
+      <a class="v-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.name + " " + v.address)}" target="_blank" rel="noopener">在Google地圖開啟 Open in Google Maps →</a>
+    </div>
+  `).join("");
+  el("schVenueList").innerHTML = venuesHtml;
+}
+
+function showScheduleSubtab(sub) {
+  el("schTeamSubview").style.display = sub === "team" ? "block" : "none";
+  el("schDivSubview").style.display = sub === "division" ? "block" : "none";
+  el("schSubTeamBtn").classList.toggle("active", sub === "team");
+  el("schSubDivBtn").classList.toggle("active", sub === "division");
+}
+
+el("schSubTeamBtn").addEventListener("click", () => showScheduleSubtab("team"));
+el("schSubDivBtn").addEventListener("click", () => showScheduleSubtab("division"));
+
+el("schTeamSelect").addEventListener("change", (e) => {
+  schCurrentTeam = e.target.value;
+  el("schTeamResults").innerHTML = "";
+  if (schCurrentTeam) renderTeamSchedule(schCurrentTeam);
+});
+
+async function initSchedule() {
+  el("schLoading").style.display = "block";
+  try {
+    await loadScheduleData();
+    renderDivisionChips();
+    renderPlayoffsAndVenues();
+  } catch (e) {
+    el("schLoading").innerHTML = "無法載入賽程，請重新整理頁面 Could not load the schedule — please refresh the page";
+    return;
+  }
+  el("schLoading").style.display = "none";
 }
 
 // ══════════════════════════ LINEUP TAB LOGIC ═══════════════════════════
@@ -1886,7 +2156,8 @@ async function confirmReset() {
 
 // ══════════════════════════ Boot ═══════════════════════════════════════
 populateTeamSelects();
-showTab(location.hash.replace("#", "") || "lineup", { skipHash: true });
+initSchedule();
+showTab(location.hash.replace("#", "") || "schedule", { skipHash: true });
 </script>
 
 </body>
