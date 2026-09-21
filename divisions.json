@@ -1,0 +1,366 @@
+{
+  "asOf": "2026-09-16",
+  "duprRange": {
+    "min": 2.645,
+    "max": 3.533
+  },
+  "divisionOrder": [
+    "Premier",
+    "Championship",
+    "Challenger",
+    "Development",
+    "Rookie"
+  ],
+  "divisions": [
+    {
+      "code": "Premier",
+      "zh": "超級組",
+      "teams": [
+        {
+          "rank": 1,
+          "team": "The Pickleball Lab",
+          "avgDupr": 3.533,
+          "male": 5,
+          "female": 7,
+          "note": null
+        },
+        {
+          "rank": 2,
+          "team": "我嘅訴求係打波",
+          "avgDupr": 3.415,
+          "male": 6,
+          "female": 6,
+          "note": null
+        },
+        {
+          "rank": 3,
+          "team": "I Dink U",
+          "avgDupr": 3.355,
+          "male": 6,
+          "female": 6,
+          "note": null
+        },
+        {
+          "rank": 4,
+          "team": "PickandMatch",
+          "avgDupr": 3.29,
+          "male": null,
+          "female": null,
+          "note": "roster breakdown not yet on file"
+        },
+        {
+          "rank": 5,
+          "team": "MN Square",
+          "avgDupr": 3.174,
+          "male": 6,
+          "female": 7,
+          "note": null
+        },
+        {
+          "rank": 6,
+          "team": "提燈TEAM",
+          "avgDupr": 3.168,
+          "male": 6,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 7,
+          "team": "Pickle Elite",
+          "avgDupr": 3.159,
+          "male": 5,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 8,
+          "team": "THESE",
+          "avgDupr": 3.128,
+          "male": 8,
+          "female": 5,
+          "note": null
+        }
+      ]
+    },
+    {
+      "code": "Championship",
+      "zh": "精英組",
+      "teams": [
+        {
+          "rank": 1,
+          "team": "Drive You Crazy",
+          "avgDupr": 3.099,
+          "male": 6,
+          "female": 6,
+          "note": "moved up from Premier"
+        },
+        {
+          "rank": 2,
+          "team": "The Dinosaurs",
+          "avgDupr": 3.069,
+          "male": 5,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 3,
+          "team": "PxP",
+          "avgDupr": 3.063,
+          "male": 8,
+          "female": 8,
+          "note": null
+        },
+        {
+          "rank": 4,
+          "team": "PickleCow",
+          "avgDupr": 3.062,
+          "male": 4,
+          "female": 4,
+          "note": null
+        },
+        {
+          "rank": 5,
+          "team": "Sportaday.Club",
+          "avgDupr": 3.038,
+          "male": 5,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 6,
+          "team": "The OWWWL Pickle Team",
+          "avgDupr": 3.031,
+          "male": 5,
+          "female": 4,
+          "note": "reopened, awaiting resubmission"
+        },
+        {
+          "rank": 7,
+          "team": "CSSA",
+          "avgDupr": 3.003,
+          "male": 8,
+          "female": 8,
+          "note": null
+        },
+        {
+          "rank": 8,
+          "team": "ON CLOUD NINE",
+          "avgDupr": 2.977,
+          "male": 7,
+          "female": 7,
+          "note": null
+        }
+      ]
+    },
+    {
+      "code": "Challenger",
+      "zh": "挑戰組",
+      "teams": [
+        {
+          "rank": 1,
+          "team": "Dink More",
+          "avgDupr": 2.944,
+          "male": 5,
+          "female": 5,
+          "note": "moved up from Championship"
+        },
+        {
+          "rank": 2,
+          "team": "Nova",
+          "avgDupr": 2.912,
+          "male": 5,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 3,
+          "team": "零Dink球",
+          "avgDupr": 2.905,
+          "male": 6,
+          "female": 6,
+          "note": null
+        },
+        {
+          "rank": 4,
+          "team": "二喱",
+          "avgDupr": 2.905,
+          "male": 6,
+          "female": 6,
+          "note": null
+        },
+        {
+          "rank": 5,
+          "team": "ChillBallic",
+          "avgDupr": 2.902,
+          "male": 7,
+          "female": 8,
+          "note": null
+        },
+        {
+          "rank": 6,
+          "team": "Pickaboo",
+          "avgDupr": 2.9,
+          "male": 5,
+          "female": 6,
+          "note": null
+        },
+        {
+          "rank": 7,
+          "team": "Big Ballers",
+          "avgDupr": 2.888,
+          "male": 5,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 8,
+          "team": "Lit",
+          "avgDupr": 2.887,
+          "male": 8,
+          "female": 7,
+          "note": null
+        }
+      ]
+    },
+    {
+      "code": "Development",
+      "zh": "新秀組",
+      "teams": [
+        {
+          "rank": 1,
+          "team": "再 · 薩利亞",
+          "avgDupr": 2.868,
+          "male": 8,
+          "female": 8,
+          "note": "moved up from Challenger"
+        },
+        {
+          "rank": 2,
+          "team": "90後",
+          "avgDupr": 2.849,
+          "male": 5,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 3,
+          "team": "Over-drinking Head",
+          "avgDupr": 2.847,
+          "male": 6,
+          "female": 6,
+          "note": null
+        },
+        {
+          "rank": 4,
+          "team": "Pickle Monster",
+          "avgDupr": 2.841,
+          "male": 6,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 5,
+          "team": "WWW",
+          "avgDupr": 2.84,
+          "male": 7,
+          "female": 7,
+          "note": null
+        },
+        {
+          "rank": 6,
+          "team": "The Dinkers",
+          "avgDupr": 2.803,
+          "male": 6,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 7,
+          "team": "TWH Exit A",
+          "avgDupr": 2.791,
+          "male": 5,
+          "female": 4,
+          "note": null
+        },
+        {
+          "rank": 8,
+          "team": "Dink9",
+          "avgDupr": 2.786,
+          "male": 8,
+          "female": 6,
+          "note": null
+        }
+      ]
+    },
+    {
+      "code": "Rookie",
+      "zh": "入門組",
+      "teams": [
+        {
+          "rank": 1,
+          "team": "Catchup",
+          "avgDupr": 2.786,
+          "male": 6,
+          "female": 6,
+          "note": "moved up from Development"
+        },
+        {
+          "rank": 2,
+          "team": "Cyber Dinks",
+          "avgDupr": 2.775,
+          "male": 4,
+          "female": 4,
+          "note": null
+        },
+        {
+          "rank": 3,
+          "team": "激戰魂",
+          "avgDupr": 2.77,
+          "male": 6,
+          "female": 7,
+          "note": null
+        },
+        {
+          "rank": 4,
+          "team": "Never Speed Up",
+          "avgDupr": 2.767,
+          "male": 6,
+          "female": 7,
+          "note": null
+        },
+        {
+          "rank": 5,
+          "team": "Picklefun",
+          "avgDupr": 2.75,
+          "male": 6,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 6,
+          "team": "Dink Don",
+          "avgDupr": 2.75,
+          "male": 4,
+          "female": 4,
+          "note": null
+        },
+        {
+          "rank": 7,
+          "team": "戰魂小隊",
+          "avgDupr": 2.748,
+          "male": 8,
+          "female": 4,
+          "note": null
+        },
+        {
+          "rank": 8,
+          "team": "Pickle 8",
+          "avgDupr": 2.645,
+          "male": 5,
+          "female": 6,
+          "note": null
+        }
+      ]
+    }
+  ]
+}
