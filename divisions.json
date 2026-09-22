@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-09-16",
+  "asOf": "2026-09-22",
   "duprRange": {
     "min": 2.645,
     "max": 3.533
@@ -35,7 +35,7 @@
         {
           "rank": 3,
           "team": "I Dink U",
-          "avgDupr": 3.355,
+          "avgDupr": 3.354,
           "male": 6,
           "female": 6,
           "note": null
@@ -66,17 +66,17 @@
         },
         {
           "rank": 7,
-          "team": "Pickle Elite",
-          "avgDupr": 3.159,
-          "male": 5,
+          "team": "THESE",
+          "avgDupr": 3.166,
+          "male": 8,
           "female": 5,
           "note": null
         },
         {
           "rank": 8,
-          "team": "THESE",
-          "avgDupr": 3.128,
-          "male": 8,
+          "team": "Pickle Elite",
+          "avgDupr": 3.159,
+          "male": 5,
           "female": 5,
           "note": null
         }
@@ -88,6 +88,22 @@
       "teams": [
         {
           "rank": 1,
+          "team": "Sportaday.Club",
+          "avgDupr": 3.137,
+          "male": 5,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 2,
+          "team": "The Dinosaurs",
+          "avgDupr": 3.13,
+          "male": 5,
+          "female": 5,
+          "note": null
+        },
+        {
+          "rank": 3,
           "team": "Drive You Crazy",
           "avgDupr": 3.099,
           "male": 6,
@@ -95,15 +111,15 @@
           "note": "moved up from Premier"
         },
         {
-          "rank": 2,
-          "team": "The Dinosaurs",
-          "avgDupr": 3.069,
+          "rank": 4,
+          "team": "The OWWWL Pickle Team",
+          "avgDupr": 3.09,
           "male": 5,
-          "female": 5,
-          "note": null
+          "female": 4,
+          "note": "resubmitted — average updated; M/F breakdown not yet reconfirmed"
         },
         {
-          "rank": 3,
+          "rank": 5,
           "team": "PxP",
           "avgDupr": 3.063,
           "male": 8,
@@ -111,28 +127,12 @@
           "note": null
         },
         {
-          "rank": 4,
+          "rank": 6,
           "team": "PickleCow",
           "avgDupr": 3.062,
           "male": 4,
           "female": 4,
           "note": null
-        },
-        {
-          "rank": 5,
-          "team": "Sportaday.Club",
-          "avgDupr": 3.038,
-          "male": 5,
-          "female": 5,
-          "note": null
-        },
-        {
-          "rank": 6,
-          "team": "The OWWWL Pickle Team",
-          "avgDupr": 3.031,
-          "male": 5,
-          "female": 4,
-          "note": "reopened, awaiting resubmission"
         },
         {
           "rank": 7,
@@ -315,7 +315,7 @@
         {
           "rank": 3,
           "team": "激戰魂",
-          "avgDupr": 2.77,
+          "avgDupr": 2.771,
           "male": 6,
           "female": 7,
           "note": null
