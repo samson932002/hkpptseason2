@@ -380,6 +380,16 @@
     font-family: inherit;
   }
   .tab-btn.active { background: var(--navy); color: var(--white); }
+  .tabgroup-label {
+    font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.4px; margin: 0 2px 6px;
+  }
+  .tabgroup-label.action { color: #B33; }
+  .tabbar.action-tabbar { border-color: #F3C9C9; background: #FFF8F8; }
+  .tab-btn.action-btn { color: #A33; line-height: 1.5; padding: 8px 8px; }
+  .tab-btn.action-btn .tab-btn-en { display: block; font-size: 10.5px; font-weight: 600; opacity: 0.85; }
+  .tab-btn.action-btn.active { background: #B6FF00; color: #001F3D; }
+  .tabbar + .tabgroup-label { margin-top: 16px; }
 
   /* ── Availability survey ──────────────────────────────────────────── */
   .cap-pill {
@@ -454,6 +464,22 @@
   .file-preview .file-name { font-size: 12.5px; font-weight: 700; color: var(--ink); word-break: break-all; }
   .file-preview .file-remove { margin-left: auto; background: none; border: none; color: #C24747; font-weight: 700; cursor: pointer; font-size: 13px; flex: none; }
   .receipt-link { color: var(--navy); font-weight: 700; font-size: 11.5px; text-decoration: underline; }
+
+  /* ── Waiver / acknowledgment tab ──────────────────────────────────── */
+  .waiver-text {
+    max-height: 260px; overflow-y: auto; border: 1.5px solid var(--line); border-radius: 9px;
+    padding: 12px 14px; font-size: 12px; line-height: 1.7; color: var(--ink); background: #FAFBFD;
+  }
+  .waiver-text ol { margin: 6px 0; padding-left: 20px; }
+  .waiver-text li { margin-bottom: 6px; }
+  .waiver-text hr { border: none; border-top: 1px dashed var(--line); margin: 14px 0; }
+  .waiver-text p { margin: 0 0 6px; }
+  .ack-share-row {
+    display: flex; align-items: flex-start; gap: 8px; margin-top: 14px; font-size: 12px;
+    color: var(--ink); line-height: 1.5; cursor: pointer;
+  }
+  .ack-share-row input[type="checkbox"] { margin-top: 2px; flex: none; width: 16px; height: 16px; }
+  .logo-preview-img { width: 84px; height: 84px; object-fit: contain; border-radius: 8px; flex: none; background: #F4F6F9; border: 1px solid var(--line); }
 
   /* ── Schedule ──────────────────────────────────────────────────────── */
   .sch-subtabs {
@@ -569,6 +595,13 @@
 
 <div class="wrap">
 
+  <div class="tabgroup-label action">⚠️ 需要行動 Action Required</div>
+  <div class="tabbar action-tabbar">
+    <button class="tab-btn action-btn" id="tabLogoBtn" data-tab="logo">🖼️ 隊徽提交<br><span class="tab-btn-en">Team Logo</span></button>
+    <button class="tab-btn action-btn" id="tabAckBtn" data-tab="ack">✍️ 確認聲明<br><span class="tab-btn-en">Acknowledgment</span></button>
+  </div>
+
+  <div class="tabgroup-label">ℹ️ 資訊 Information</div>
   <div class="tabbar">
     <button class="tab-btn active" id="tabScheduleBtn" data-tab="schedule">循環賽 Round-Robin</button>
     <button class="tab-btn" id="tabPlayoffsBtn" data-tab="playoffs">淘汰賽 Playoffs</button>
@@ -577,6 +610,165 @@
     <button class="tab-btn" id="tabSurveyBtn" data-tab="survey" style="display:none;">時間問卷 Availability</button>
     <button class="tab-btn" id="tabPaymentBtn" data-tab="payment" style="display:none;">繳費 Payment</button>
   </div>
+
+  <!-- ══════════════════════════ LOGO TAB ══════════════════════════ -->
+  <div id="logoView" class="tab-view" style="display:none;">
+
+  <div id="logoMainView">
+
+    <div class="card" id="logoDeadlineCard" style="background:#001F3D; border:none;">
+      <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">📅 提交限期：9月27日 Deadline: September 27</p>
+      <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;">請每隊提交一個隊徽（建議使用透明背景嘅PNG檔案），用於網站、宣傳物料及場地數碼背景牆。<br>Please submit one team logo (a transparent-background PNG is recommended) — it will be used on the website, promotional material, and the venue's digital backdrop.</p>
+    </div>
+
+    <div class="card">
+      <h2>1. 選擇你嘅隊伍 Select Your Team</h2>
+      <select id="logoTeamSelect">
+        <option value="">請選擇隊伍 — Select your team…</option>
+      </select>
+    </div>
+
+    <div id="logoLoading" class="card loading-note" style="display:none;">
+      <span class="overlay-spin"></span>載入緊資料… Loading…
+    </div>
+
+    <div id="logoFormSection" style="display:none;">
+
+      <div id="logoSavedBanner" class="card" style="display:none; background:#001F3D; border:none;">
+        <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">✅ 已收到你哋隊嘅隊徽</p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;" id="logoSavedAt"></p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;">如需要重新上載，揀返檔案並提交就可以更新。<br>You can upload a different file any time to replace it.</p>
+      </div>
+
+      <div class="card">
+        <h2>2. 上載隊徽 Upload Logo</h2>
+        <label class="file-drop" id="logoDropLabel">
+          <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/webp">
+          <div>📎 撳呢度揀隊徽相片<br>Tap to choose a logo image</div>
+          <div class="hint">最大 5MB · PNG／JPG／WEBP Max 5MB · PNG/JPG/WEBP</div>
+        </label>
+        <div id="logoPreview" class="file-preview" style="display:none;">
+          <img id="logoPreviewImg" class="logo-preview-img">
+          <div class="file-name" id="logoPreviewName"></div>
+          <button class="file-remove" id="logoRemoveBtn">✕ 移除</button>
+        </div>
+        <button class="submit-btn" id="logoSubmitBtn" style="margin-top:12px;" disabled>上載隊徽 Upload Logo</button>
+      </div>
+    </div>
+
+    <div class="admin-link"><button id="logoAdminOpenBtn">大會專用 Organizer view</button></div>
+  </div>
+
+  <div id="logoAdminPanel" class="admin-panel">
+    <div class="card">
+      <h2>隊徽提交狀態 Logo Status（大會專用）</h2>
+      <button class="refresh-btn" id="logoRefreshBtn">重新整理 Refresh</button>
+      <button class="back-btn" id="logoBackBtn">← 返回表格 Back to form</button>
+      <div id="logoAdminLoading" class="loading-note" style="display:none;">
+        <span class="overlay-spin"></span>載入緊… Loading…
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="logoAdminTable">
+          <thead><tr><th>隊伍</th><th>組別</th><th>狀態</th><th>上載時間</th><th>隊徽</th><th>操作</th></tr></thead>
+          <tbody id="logoAdminRows"></tbody>
+        </table>
+      </div>
+      <p class="meta-note" id="logoSummary"></p>
+    </div>
+  </div>
+
+  </div>
+  <!-- ═══════════════════════ /LOGO TAB ══════════════════════════ -->
+
+  <!-- ══════════════════════════ ACKNOWLEDGMENT TAB ══════════════════════════ -->
+  <div id="ackView" class="tab-view" style="display:none;">
+
+  <div id="ackMainView">
+
+    <div class="card" id="ackInsuranceCard" style="background:#001F3D; border:none;">
+      <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">📌 請留意 Please Note</p>
+      <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;">大會將為所有參賽隊伍提供第三方責任保險。<br>Third-party liability insurance is covered by the organizers for all participating teams.</p>
+    </div>
+
+    <div class="card" id="ackWaiverCard">
+      <h2>⚠️ 責任免除聲明 Waiver &amp; Release</h2>
+      <div class="waiver-text">
+        <p>凡報名、出席或參加此活動者，均確認已閱讀、理解並同意本責任免除聲明中所列條款。</p>
+        <ol>
+          <li>財物遺失或損壞 —— 賽事主辦單位、贊助商及場地管理方無法對任何個人財物的遺失、被盜或損壞承擔責任，包括但不限於運動器材、個人物品或停放在活動場地或鄰近區域的車輛。</li>
+          <li>人身傷害 —— 參與賽事須由參賽者自行承擔風險。主辦單位對於參賽者、觀眾或其他參與者在活動期間或因活動引致的任何傷害、事故或健康問題概不負責。強烈建議參賽者採取必要的預防措施，並確保自身身體狀況適合比賽。</li>
+          <li>隱私及個人資料 —— 參與本次賽事即視為同意主辦單位為活動管理及聯絡目的收集和使用個人資料（如隊伍名單、DUPR評分及聯絡方式）。主辦單位不會在活動範疇以外將此類信息分享給第三方，除非法律另有規定。</li>
+          <li>照片及媒體使用 —— 參與者確認並接受，主辦單位可能會使用活動期間拍攝的照片、影片或其他媒體，用於宣傳或活動紀錄目的，無需額外獲得參與者的同意或支付補償。</li>
+          <li>風險承擔 —— 所有參與者承認與匹克球相關的固有風險，包括體力消耗、跌倒、碰撞或其他無法預測的事件。報名參加此賽事即視為參賽者及與會者自願承擔此類風險。</li>
+        </ol>
+        <hr>
+        <p>By registering, attending, or participating in the event, all individuals confirm that they have read, understood, and agreed to the terms outlined in this exclusion list.</p>
+        <ol>
+          <li>Loss or Damage to Property — The tournament organizers, sponsors, and venue management shall not be held liable for any loss, theft, or damage to personal property, including but not limited to sports equipment, personal effects, or vehicles at or near the event venue.</li>
+          <li>Personal Injury — Participation in the tournament is at the players' own risk. The organizers shall not be held liable for any injuries, accidents, or health-related issues sustained by participants, spectators, or other attendees during or as a result of the event. Participants are strongly encouraged to take necessary precautions and ensure they are physically fit for the competition.</li>
+          <li>Privacy and Personal Data — By participating in the tournament, individuals consent to the collection and use of personal data (e.g., team rosters, DUPR ratings, and contact information) for event management and communication purposes. The organizers will not share this information with third parties outside the scope of the event, except as required by law.</li>
+          <li>Photographs and Media — Participants acknowledge and accept that photographs, videos, or other media captured during the event may be used by the organizers for promotional or documentation purposes without additional consent or compensation.</li>
+          <li>Assumption of Risks — All participants acknowledge the inherent risks associated with pickleball, including physical exertion, falls, collisions, or other unforeseeable incidents. By registering for this tournament, players and attendees voluntarily assume these risks.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>選擇你嘅隊伍 Select Your Team</h2>
+      <select id="ackTeamSelect">
+        <option value="">請選擇隊伍 — Select your team…</option>
+      </select>
+    </div>
+
+    <div id="ackLoading" class="card loading-note" style="display:none;">
+      <span class="overlay-spin"></span>載入緊資料… Loading…
+    </div>
+
+    <div id="ackFormSection" style="display:none;">
+
+      <div id="ackSavedBanner" class="card" style="display:none; background:#001F3D; border:none;">
+        <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">✅ 已收到你哋隊嘅確認</p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;" id="ackSavedAt"></p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;">如需要更新，重新填寫並提交就可以。<br>You can update this any time by resubmitting.</p>
+      </div>
+
+      <div class="card">
+        <h2>隊長確認 Captain Confirmation</h2>
+        <p class="privacy-note">請隊長代表全隊確認已閱讀並同意以上條款，並將以上內容分享畀所有隊員。<br>The captain confirms on behalf of the whole team, having read and agreed to the terms above, and will share this content with all teammates.</p>
+        <label style="display:block; font-size:12.5px; font-weight:700; color:var(--navy); margin-top:12px;">隊長全名 Captain's Full Name</label>
+        <input type="text" id="ackNameInput" placeholder="請輸入全名 Enter your full name">
+        <p class="meta-note" style="text-align:left; margin-top:8px;">日期 Date：<span id="ackTodayDate"></span></p>
+        <label class="ack-share-row">
+          <input type="checkbox" id="ackShareCheckbox">
+          <span>我已經／將會將以上內容分享畀全隊隊員 I have shared / will share the above with all team members</span>
+        </label>
+        <button class="submit-btn" id="ackSubmitBtn" style="margin-top:12px;" disabled>確認並提交 Confirm &amp; Submit</button>
+      </div>
+    </div>
+
+    <div class="admin-link"><button id="ackAdminOpenBtn">大會專用 Organizer view</button></div>
+  </div>
+
+  <div id="ackAdminPanel" class="admin-panel">
+    <div class="card">
+      <h2>確認聲明狀態 Acknowledgment Status（大會專用）</h2>
+      <button class="refresh-btn" id="ackRefreshBtn">重新整理 Refresh</button>
+      <button class="back-btn" id="ackBackBtn">← 返回表格 Back to form</button>
+      <div id="ackAdminLoading" class="loading-note" style="display:none;">
+        <span class="overlay-spin"></span>載入緊… Loading…
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="ackAdminTable">
+          <thead><tr><th>隊伍</th><th>隊長</th><th>日期</th><th>狀態</th><th>操作</th></tr></thead>
+          <tbody id="ackAdminRows"></tbody>
+        </table>
+      </div>
+      <p class="meta-note" id="ackSummary"></p>
+    </div>
+  </div>
+
+  </div>
+  <!-- ═══════════════════════ /ACKNOWLEDGMENT TAB ══════════════════════════ -->
 
   <!-- ══════════════════════════ SCHEDULE TAB ══════════════════════════ -->
   <div id="scheduleView" class="tab-view">
@@ -952,6 +1144,8 @@
 const ROSTER_API = "/api/roster";
 const AVAILABILITY_API = "/api/availability";
 const PAYMENT_API = "/api/payment";
+const LOGO_API = "/api/logo";
+const ACKNOWLEDGMENT_API = "/api/acknowledgment";
 
 const TEAMS = [
   "The OWWWL Pickle Team","激戰魂","The Dinosaurs","Pickle Monster","Lit",
@@ -980,11 +1174,11 @@ let submittedAtDisplay = "";
 let teamReopened = false;
 let adminPasscode = "";
 
-// Shared across both tabs' organizer flows — set right before either
+// Shared across all tabs' organizer flows — set right before any
 // "Organizer view" link opens the (shared) passcode overlay, and read when
-// the passcode is checked, so one overlay/one modal can serve both tabs.
-let adminTarget = "lineup"; // "lineup" | "survey"
-let pendingReset = null; // { tab: "lineup"|"survey", team }
+// the passcode is checked, so one overlay/one modal can serve every tab.
+let adminTarget = "lineup"; // "lineup" | "survey" | "payment" | "logo" | "ack"
+let pendingReset = null; // { tab: "survey"|"payment"|"logo"|"ack", team }
 
 // Surfaced when ADMIN_PASSCODE has no value in the site settings — both
 // functions refuse organizer requests outright rather than falling back.
@@ -993,7 +1187,7 @@ const PASSCODE_UNSET_MSG = "大會密碼未設定，請於網站設定 ADMIN_PAS
 function el(id) { return document.getElementById(id); }
 
 function populateTeamSelects() {
-  [el("teamSelect"), el("survTeamSelect"), el("payTeamSelect"), el("schTeamSelect")].forEach(sel => {
+  [el("teamSelect"), el("survTeamSelect"), el("payTeamSelect"), el("schTeamSelect"), el("logoTeamSelect"), el("ackTeamSelect")].forEach(sel => {
     TEAMS.forEach(t => {
       const opt = document.createElement("option");
       opt.value = t; opt.textContent = t;
@@ -1004,6 +1198,8 @@ function populateTeamSelects() {
 
 // ══════════════════════════ Tab switching ══════════════════════════════
 const TAB_META = {
+  logo: { title: "隊徽提交", subtitle: "Team Logo Submission" },
+  ack: { title: "隊伍確認聲明", subtitle: "Team Acknowledgment" },
   schedule: { title: "循環賽賽程表", subtitle: "Round-Robin Schedule" },
   playoffs: { title: "淘汰賽日期（暫定）", subtitle: "Playoffs Dates (Tentative)" },
   divisions: { title: "組別實力", subtitle: "Division Strength & Promotion/Relegation" },
@@ -1015,12 +1211,16 @@ const TAB_META = {
 function showTab(tab, opts) {
   opts = opts || {};
   if (!TAB_META[tab]) tab = "schedule";
+  el("logoView").style.display = tab === "logo" ? "block" : "none";
+  el("ackView").style.display = tab === "ack" ? "block" : "none";
   el("scheduleView").style.display = tab === "schedule" ? "block" : "none";
   el("playoffsView").style.display = tab === "playoffs" ? "block" : "none";
   el("divisionsView").style.display = tab === "divisions" ? "block" : "none";
   el("lineupView").style.display = tab === "lineup" ? "block" : "none";
   el("surveyView").style.display = tab === "survey" ? "block" : "none";
   el("paymentView").style.display = tab === "payment" ? "block" : "none";
+  el("tabLogoBtn").classList.toggle("active", tab === "logo");
+  el("tabAckBtn").classList.toggle("active", tab === "ack");
   el("tabScheduleBtn").classList.toggle("active", tab === "schedule");
   el("tabPlayoffsBtn").classList.toggle("active", tab === "playoffs");
   el("tabDivisionsBtn").classList.toggle("active", tab === "divisions");
@@ -1034,6 +1234,8 @@ function showTab(tab, opts) {
   }
 }
 
+el("tabLogoBtn").addEventListener("click", () => showTab("logo"));
+el("tabAckBtn").addEventListener("click", () => showTab("ack"));
 el("tabScheduleBtn").addEventListener("click", () => showTab("schedule"));
 el("tabPlayoffsBtn").addEventListener("click", () => showTab("playoffs"));
 el("tabDivisionsBtn").addEventListener("click", () => showTab("divisions"));
@@ -1309,6 +1511,340 @@ async function initDivisions() {
   }
   el("divLoading").style.display = "none";
 }
+
+// ══════════════════════════ LOGO TAB LOGIC ═════════════════════════════
+
+let currentLogoTeam = null;
+let selectedLogoFile = null; // { filename, mimeType, dataBase64 }
+const MAX_LOGO_FILE_BYTES = 5 * 1024 * 1024;
+
+// Looks a team up in the same divisions.json already used by the Divisions
+// tab, so the logo filename's division suffix always matches the team's
+// real division assignment — never hand-maintained separately.
+async function getTeamDivisionZh(team) {
+  await loadDivisionsData();
+  for (const div of (DIVISIONS_DATA.divisions || [])) {
+    if (div.teams.some(t => t.team === team)) return div.zh;
+  }
+  return "";
+}
+
+async function fetchLogoStatus(team) {
+  const res = await fetch(`${LOGO_API}?team=${encodeURIComponent(team)}`, { method: "GET" });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "unknown_error");
+  return data;
+}
+
+async function fetchLogoAdmin(passcode) {
+  const res = await fetch(`${LOGO_API}?admin=1&passcode=${encodeURIComponent(passcode)}`, { method: "GET" });
+  return res.json();
+}
+
+function resetLogoFileInput() {
+  selectedLogoFile = null;
+  el("logoFileInput").value = "";
+  el("logoPreview").style.display = "none";
+  el("logoSubmitBtn").disabled = true;
+}
+
+el("logoFileInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > MAX_LOGO_FILE_BYTES) {
+    showToast("檔案太大，請上載細過5MB嘅檔案 File is too large — please choose one under 5MB", true);
+    resetLogoFileInput();
+    return;
+  }
+  try {
+    const dataBase64 = await readFileAsBase64(file);
+    selectedLogoFile = { filename: file.name, mimeType: file.type, dataBase64 };
+    el("logoPreviewImg").src = `data:${file.type};base64,${dataBase64}`;
+    el("logoPreviewName").textContent = file.name;
+    el("logoPreview").style.display = "flex";
+    el("logoSubmitBtn").disabled = false;
+  } catch (e) {
+    showToast("無法讀取檔案，請再試一次 Could not read that file, please try again", true);
+    resetLogoFileInput();
+  }
+});
+
+el("logoRemoveBtn").addEventListener("click", resetLogoFileInput);
+
+async function loadLogoTeamData(team) {
+  el("logoFormSection").style.display = "none";
+  el("logoLoading").style.display = "block";
+  resetLogoFileInput();
+  try {
+    const status = await fetchLogoStatus(team);
+    if (status.uploaded) {
+      el("logoSavedAt").textContent = `上次上載：${formatSavedAt(status.uploadedAt)}`;
+      el("logoSavedBanner").style.display = "block";
+    } else {
+      el("logoSavedBanner").style.display = "none";
+    }
+  } catch (e) {
+    showToast("無法載入資料，請檢查網絡後重試 Could not load logo info — check your connection", true);
+  }
+  el("logoLoading").style.display = "none";
+  el("logoFormSection").style.display = "block";
+}
+
+el("logoTeamSelect").addEventListener("change", async (e) => {
+  currentLogoTeam = e.target.value;
+  if (!currentLogoTeam) {
+    el("logoFormSection").style.display = "none";
+    el("logoLoading").style.display = "none";
+    return;
+  }
+  await loadLogoTeamData(currentLogoTeam);
+});
+
+el("logoSubmitBtn").addEventListener("click", async () => {
+  if (!currentLogoTeam || !selectedLogoFile) return;
+  try {
+    el("logoSubmitBtn").disabled = true;
+    el("logoSubmitBtn").textContent = "上載緊… Uploading…";
+    const divisionZh = await getTeamDivisionZh(currentLogoTeam);
+    const result = await postAction(LOGO_API, {
+      action: "submit",
+      team: currentLogoTeam,
+      divisionZh,
+      filename: selectedLogoFile.filename,
+      mimeType: selectedLogoFile.mimeType,
+      dataBase64: selectedLogoFile.dataBase64,
+    });
+    if (!result.ok) {
+      const msg = {
+        invalid_type: "檔案格式唔支援，請上載PNG/JPG/WEBP格式嘅相片 Unsupported file type — please upload a PNG/JPG/WEBP image",
+        file_too_large: "檔案太大，請上載細過5MB嘅檔案 File is too large — please choose one under 5MB",
+        not_configured: "上載功能未設定，請聯絡大會 Upload isn't configured yet — please contact the organizer",
+        missing_division: "搵唔到你哋隊嘅組別資料，請聯絡大會 Could not determine your team's division — please contact the organizer",
+      }[result.error] || "上載失敗，請再試一次 Upload failed, please retry";
+      showToast(msg, true);
+      return;
+    }
+    el("logoSavedAt").textContent = `上次上載：${formatSavedAt(result.uploadedAt)}`;
+    el("logoSavedBanner").style.display = "block";
+    resetLogoFileInput();
+    showToast(`✅ ${currentLogoTeam} 嘅隊徽已成功上載！`);
+  } catch (e) {
+    showToast("上載失敗，請檢查網絡後再試一次 Upload failed — check your connection", true);
+  } finally {
+    el("logoSubmitBtn").textContent = "上載隊徽 Upload Logo";
+    el("logoSubmitBtn").disabled = !selectedLogoFile;
+  }
+});
+
+function renderLogoAdminTable(logos) {
+  const byTeam = {};
+  logos.forEach(r => { byTeam[r.team] = r; });
+
+  const tbody = el("logoAdminRows");
+  tbody.innerHTML = "";
+  let uploadedCount = 0;
+  TEAMS.forEach(team => {
+    const r = byTeam[team];
+    if (r) uploadedCount++;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${team}</td>
+      <td>${r ? r.divisionZh : "—"}</td>
+      <td>${r ? "✓ 已上載 Uploaded" : "— 未上載 Not yet"}</td>
+      <td>${r ? formatSavedAt(r.uploadedAt) : "—"}</td>
+      <td>${r ? `<a class="receipt-link" href="${r.driveViewUrl}" target="_blank" rel="noopener">檢視 View</a>` : "—"}</td>
+      <td><button class="reset-btn" data-team="${team.replace(/"/g,'&quot;')}" ${r ? "" : "disabled"}>重置 Reset</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  el("logoSummary").textContent = `已上載：${uploadedCount} / ${TEAMS.length} 支隊伍`;
+
+  tbody.querySelectorAll(".reset-btn").forEach(btn => {
+    btn.addEventListener("click", () => openResetModal("logo", btn.dataset.team));
+  });
+}
+
+async function loadLogoAdminData() {
+  el("logoAdminLoading").style.display = "block";
+  let data;
+  try {
+    data = await fetchLogoAdmin(adminPasscode);
+  } catch (e) {
+    showToast("無法載入隊徽狀態，請檢查網絡後重試 Could not load logo status — check your connection", true);
+    el("logoAdminLoading").style.display = "none";
+    return;
+  }
+  if (!data.ok) {
+    showToast(data.error === "passcode_not_configured"
+      ? PASSCODE_UNSET_MSG
+      : "密碼已失效，請重新登入 Passcode no longer valid — please sign in again", true);
+    el("logoAdminLoading").style.display = "none";
+    el("logoAdminPanel").classList.remove("show");
+    el("logoMainView").style.display = "block";
+    return;
+  }
+  renderLogoAdminTable(data.logos);
+  el("logoAdminLoading").style.display = "none";
+}
+
+el("logoRefreshBtn").addEventListener("click", loadLogoAdminData);
+el("logoBackBtn").addEventListener("click", () => {
+  el("logoAdminPanel").classList.remove("show");
+  el("logoMainView").style.display = "block";
+});
+
+// ══════════════════════════ ACKNOWLEDGMENT TAB LOGIC ═══════════════════
+
+let currentAckTeam = null;
+
+function todayDateDisplay() {
+  const d = new Date();
+  return d.toLocaleDateString("zh-HK", { timeZone: "Asia/Hong_Kong", year: "numeric", month: "2-digit", day: "2-digit" });
+}
+
+async function fetchAckStatus(team) {
+  const res = await fetch(`${ACKNOWLEDGMENT_API}?team=${encodeURIComponent(team)}`, { method: "GET" });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "unknown_error");
+  return data;
+}
+
+async function fetchAckAdmin(passcode) {
+  const res = await fetch(`${ACKNOWLEDGMENT_API}?admin=1&passcode=${encodeURIComponent(passcode)}`, { method: "GET" });
+  return res.json();
+}
+
+function updateAckSubmitEnabled() {
+  const nameFilled = el("ackNameInput").value.trim().length > 0;
+  const shared = el("ackShareCheckbox").checked;
+  el("ackSubmitBtn").disabled = !(nameFilled && shared);
+}
+
+el("ackNameInput").addEventListener("input", updateAckSubmitEnabled);
+el("ackShareCheckbox").addEventListener("change", updateAckSubmitEnabled);
+
+async function loadAckTeamData(team) {
+  el("ackFormSection").style.display = "none";
+  el("ackLoading").style.display = "block";
+  el("ackNameInput").value = "";
+  el("ackShareCheckbox").checked = false;
+  el("ackTodayDate").textContent = todayDateDisplay();
+  try {
+    const status = await fetchAckStatus(team);
+    if (status.acknowledged) {
+      el("ackSavedAt").textContent = `已於 ${formatSavedAt(status.acknowledgedAt)} 由 ${status.captainName} 確認（${status.ackDate}）`;
+      el("ackSavedBanner").style.display = "block";
+      el("ackNameInput").value = status.captainName || "";
+    } else {
+      el("ackSavedBanner").style.display = "none";
+    }
+  } catch (e) {
+    showToast("無法載入資料，請檢查網絡後重試 Could not load acknowledgment info — check your connection", true);
+  }
+  updateAckSubmitEnabled();
+  el("ackLoading").style.display = "none";
+  el("ackFormSection").style.display = "block";
+}
+
+el("ackTeamSelect").addEventListener("change", async (e) => {
+  currentAckTeam = e.target.value;
+  if (!currentAckTeam) {
+    el("ackFormSection").style.display = "none";
+    el("ackLoading").style.display = "none";
+    return;
+  }
+  await loadAckTeamData(currentAckTeam);
+});
+
+el("ackSubmitBtn").addEventListener("click", async () => {
+  if (!currentAckTeam) return;
+  const captainName = el("ackNameInput").value.trim();
+  const shared = el("ackShareCheckbox").checked;
+  if (!captainName || !shared) return;
+  try {
+    el("ackSubmitBtn").disabled = true;
+    el("ackSubmitBtn").textContent = "提交緊… Submitting…";
+    const result = await postAction(ACKNOWLEDGMENT_API, {
+      action: "submit",
+      team: currentAckTeam,
+      captainName,
+      ackDate: el("ackTodayDate").textContent,
+      shared,
+    });
+    if (!result.ok) {
+      const msg = {
+        missing_name: "請輸入隊長全名 Please enter the captain's full name",
+        must_confirm_share: "請確認你會將內容分享畀全隊隊員 Please confirm you'll share this with your teammates",
+      }[result.error] || "提交失敗，請再試一次 Submission failed, please retry";
+      showToast(msg, true);
+      return;
+    }
+    el("ackSavedAt").textContent = `已於 ${formatSavedAt(result.acknowledgedAt)} 由 ${captainName} 確認（${el("ackTodayDate").textContent}）`;
+    el("ackSavedBanner").style.display = "block";
+    showToast(`✅ ${currentAckTeam} 嘅確認聲明已成功提交！`);
+  } catch (e) {
+    showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
+  } finally {
+    el("ackSubmitBtn").textContent = "確認並提交 Confirm & Submit";
+    updateAckSubmitEnabled();
+  }
+});
+
+function renderAckAdminTable(acks) {
+  const byTeam = {};
+  acks.forEach(r => { byTeam[r.team] = r; });
+
+  const tbody = el("ackAdminRows");
+  tbody.innerHTML = "";
+  let confirmedCount = 0;
+  TEAMS.forEach(team => {
+    const r = byTeam[team];
+    if (r) confirmedCount++;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${team}</td>
+      <td>${r ? r.captainName : "—"}</td>
+      <td>${r ? r.ackDate : "—"}</td>
+      <td>${r ? "✓ 已確認 Confirmed" : "— 未確認 Not yet"}</td>
+      <td><button class="reset-btn" data-team="${team.replace(/"/g,'&quot;')}" ${r ? "" : "disabled"}>重置 Reset</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  el("ackSummary").textContent = `已確認：${confirmedCount} / ${TEAMS.length} 支隊伍`;
+
+  tbody.querySelectorAll(".reset-btn").forEach(btn => {
+    btn.addEventListener("click", () => openResetModal("ack", btn.dataset.team));
+  });
+}
+
+async function loadAckAdminData() {
+  el("ackAdminLoading").style.display = "block";
+  let data;
+  try {
+    data = await fetchAckAdmin(adminPasscode);
+  } catch (e) {
+    showToast("無法載入確認狀態，請檢查網絡後重試 Could not load acknowledgment status — check your connection", true);
+    el("ackAdminLoading").style.display = "none";
+    return;
+  }
+  if (!data.ok) {
+    showToast(data.error === "passcode_not_configured"
+      ? PASSCODE_UNSET_MSG
+      : "密碼已失效，請重新登入 Passcode no longer valid — please sign in again", true);
+    el("ackAdminLoading").style.display = "none";
+    el("ackAdminPanel").classList.remove("show");
+    el("ackMainView").style.display = "block";
+    return;
+  }
+  renderAckAdminTable(data.acknowledgments);
+  el("ackAdminLoading").style.display = "none";
+}
+
+el("ackRefreshBtn").addEventListener("click", loadAckAdminData);
+el("ackBackBtn").addEventListener("click", () => {
+  el("ackAdminPanel").classList.remove("show");
+  el("ackMainView").style.display = "block";
+});
 
 // ══════════════════════════ LINEUP TAB LOGIC ═══════════════════════════
 
@@ -2180,6 +2716,8 @@ function amountForClient(team) {
 el("adminOpenBtn").addEventListener("click", () => openAdminOverlay("lineup"));
 el("survAdminOpenBtn").addEventListener("click", () => openAdminOverlay("survey"));
 el("payAdminOpenBtn").addEventListener("click", () => openAdminOverlay("payment"));
+el("logoAdminOpenBtn").addEventListener("click", () => openAdminOverlay("logo"));
+el("ackAdminOpenBtn").addEventListener("click", () => openAdminOverlay("ack"));
 
 function openAdminOverlay(target) {
   adminTarget = target;
@@ -2221,7 +2759,7 @@ async function checkAdminPass() {
       renderHeatGrid(data.slotCounts);
       renderSurveyAdminTable(data.respondedTeams);
       el("syncSheetBtn").disabled = !data.sheetSyncAvailable;
-    } else {
+    } else if (adminTarget === "payment") {
       const data = await fetchPayAdmin(passcode);
       if (!data.ok) {
         showToast(data.error === "passcode_not_configured" ? PASSCODE_UNSET_MSG : "密碼錯誤 Incorrect passcode", true);
@@ -2232,6 +2770,28 @@ async function checkAdminPass() {
       el("paymentMainView").style.display = "none";
       el("paymentAdminPanel").classList.add("show");
       renderPayAdminTable(data.receipts);
+    } else if (adminTarget === "logo") {
+      const data = await fetchLogoAdmin(passcode);
+      if (!data.ok) {
+        showToast(data.error === "passcode_not_configured" ? PASSCODE_UNSET_MSG : "密碼錯誤 Incorrect passcode", true);
+        return;
+      }
+      adminPasscode = passcode;
+      el("adminOverlay").classList.remove("show");
+      el("logoMainView").style.display = "none";
+      el("logoAdminPanel").classList.add("show");
+      renderLogoAdminTable(data.logos);
+    } else {
+      const data = await fetchAckAdmin(passcode);
+      if (!data.ok) {
+        showToast(data.error === "passcode_not_configured" ? PASSCODE_UNSET_MSG : "密碼錯誤 Incorrect passcode", true);
+        return;
+      }
+      adminPasscode = passcode;
+      el("adminOverlay").classList.remove("show");
+      el("ackMainView").style.display = "none";
+      el("ackAdminPanel").classList.add("show");
+      renderAckAdminTable(data.acknowledgments);
     }
   } catch (e) {
     showToast("無法驗證密碼，請檢查網絡後重試 Could not verify passcode — check your connection", true);
@@ -2260,9 +2820,21 @@ function openResetModal(tab, team) {
     goBtn.textContent = "確認重置 Reset";
     goBtn.classList.remove("reopen-confirm");
     goBtn.classList.add("danger");
-  } else {
+  } else if (tab === "payment") {
     el("resetModalTitle").textContent = "確認重置收據 Confirm Receipt Reset";
     el("resetWarnText").textContent = "此操作會永久刪除該隊已上載嘅收據，無法復原。請重新輸入大會密碼以確認。This permanently deletes that team's uploaded receipt and cannot be undone. Re-enter the organizer passcode to confirm.";
+    goBtn.textContent = "確認重置 Reset";
+    goBtn.classList.remove("reopen-confirm");
+    goBtn.classList.add("danger");
+  } else if (tab === "logo") {
+    el("resetModalTitle").textContent = "確認重置隊徽 Confirm Logo Reset";
+    el("resetWarnText").textContent = "此操作會永久刪除該隊已上載嘅隊徽，無法復原。請重新輸入大會密碼以確認。This permanently deletes that team's uploaded logo and cannot be undone. Re-enter the organizer passcode to confirm.";
+    goBtn.textContent = "確認重置 Reset";
+    goBtn.classList.remove("reopen-confirm");
+    goBtn.classList.add("danger");
+  } else {
+    el("resetModalTitle").textContent = "確認重置確認聲明 Confirm Acknowledgment Reset";
+    el("resetWarnText").textContent = "此操作會永久刪除該隊已提交嘅確認聲明，無法復原。請重新輸入大會密碼以確認。This permanently deletes that team's submitted acknowledgment and cannot be undone. Re-enter the organizer passcode to confirm.";
     goBtn.textContent = "確認重置 Reset";
     goBtn.classList.remove("reopen-confirm");
     goBtn.classList.add("danger");
@@ -2289,7 +2861,14 @@ async function confirmReset() {
     showToast("請輸入密碼 Enter the passcode", true);
     return;
   }
-  const api = tab === "lineup" ? ROSTER_API : (tab === "survey" ? AVAILABILITY_API : PAYMENT_API);
+  const API_BY_TAB = {
+    lineup: ROSTER_API,
+    survey: AVAILABILITY_API,
+    payment: PAYMENT_API,
+    logo: LOGO_API,
+    ack: ACKNOWLEDGMENT_API,
+  };
+  const api = API_BY_TAB[tab];
   const action = tab === "lineup" ? "reopen" : "reset";
   const idleLabel = tab === "lineup" ? "確認重開 Reopen" : "確認重置 Reset";
   el("resetGoBtn").disabled = true;
@@ -2305,8 +2884,12 @@ async function confirmReset() {
         loadLineupAdminData();
       } else if (tab === "survey") {
         loadSurveyAdminData();
-      } else {
+      } else if (tab === "payment") {
         loadPayAdminData();
+      } else if (tab === "logo") {
+        loadLogoAdminData();
+      } else {
+        loadAckAdminData();
       }
     } else if (result.error === "invalid_passcode") {
       showToast("密碼錯誤 Incorrect passcode", true);
