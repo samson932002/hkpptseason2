@@ -1186,11 +1186,21 @@ const PASSCODE_UNSET_MSG = "大會密碼未設定，請於網站設定 ADMIN_PAS
 
 function el(id) { return document.getElementById(id); }
 
-function populateTeamSelects() {
+async function populateTeamSelects() {
+  // Sort by team identifier (A1..A8, B1..B8, ... E1..E8) once divisions.json
+  // is available; falls back to the static TEAMS list (unsorted by
+  // identifier) if it fails to load, so the selects still work.
+  let order = TEAMS;
+  try {
+    await loadDivisionsData();
+    if (TEAM_ORDER.length) order = TEAM_ORDER;
+  } catch (e) {
+    // divisions.json unavailable — selects still populate, just unsorted.
+  }
   [el("teamSelect"), el("survTeamSelect"), el("payTeamSelect"), el("schTeamSelect"), el("logoTeamSelect"), el("ackTeamSelect")].forEach(sel => {
-    TEAMS.forEach(t => {
+    order.forEach(t => {
       const opt = document.createElement("option");
-      opt.value = t; opt.textContent = t;
+      opt.value = t; opt.textContent = idLabel(t);
       sel.appendChild(opt);
     });
   });
@@ -1325,7 +1335,7 @@ function renderTeamSchedule(team) {
           <span class="m-time">${m.time}</span>
           ${courtBadge}
         </div>
-        <span class="m-teams"><span class="me">${team}</span><span class="vs">vs</span>${opponent}</span>
+        <span class="m-teams"><span class="me">${idLabel(team)}</span><span class="vs">vs</span>${idLabel(opponent)}</span>
       </div>`;
     });
     html += `</div></div>`;
@@ -1369,7 +1379,7 @@ function renderDivisionSchedule(code) {
   let html = '<div class="card"><div class="sch-table-wrap" style="overflow-x:auto;"><table><thead><tr>' +
     '<th>日期<br>Date</th><th>時間<br>Time</th><th>場地<br>Venue</th><th>球場<br>Court</th><th>隊伍 A<br>Team A</th><th>隊伍 B<br>Team B</th></tr></thead><tbody>';
   matches.forEach(m => {
-    html += `<tr><td>${m.dateLabel}（${m.weekday}）</td><td>${m.time}</td><td>${m.venueZh}</td><td>${m.court || "—"}</td><td>${m.teamA}</td><td>${m.teamB}</td></tr>`;
+    html += `<tr><td>${m.dateLabel}（${m.weekday}）</td><td>${m.time}</td><td>${m.venueZh}</td><td>${m.court || "—"}</td><td>${idLabel(m.teamA)}</td><td>${idLabel(m.teamB)}</td></tr>`;
   });
   html += '</tbody></table></div></div>';
   container.innerHTML = html;
@@ -1428,6 +1438,7 @@ async function initSchedule() {
 
 const DIVISIONS_URL = "divisions.json";
 let DIVISIONS_DATA = null;
+let DIVISIONS_PROMISE = null;
 
 // Fixed display scale for the strength bars (not the data's actual min/max) —
 // keeps bar lengths comparable across divisions and stable if future teams'
@@ -1439,12 +1450,48 @@ const STRENGTH_SCALE_MAX = 4.0;
 // the diagram rather than left as a vague "will be announced later".
 const PROMO_RELEGATE_COUNT = 2;
 
+// Short team identifiers (A1-A8 Premier, B1-B8 Championship, ... E1-E8
+// Rookie) — the letter/number for each team lives in divisions.json
+// (assigned by division + rank) and is indexed here into a flat map so any
+// part of the UI can prefix a team's display name with it. TEAM_ORDER lets
+// select boxes list teams sorted by identifier instead of an arbitrary order.
+let TEAM_ID = {};
+let TEAM_ORDER = [];
+
+function buildTeamIndex() {
+  TEAM_ID = {};
+  TEAM_ORDER = [];
+  (DIVISIONS_DATA.divisionOrder || []).forEach(code => {
+    const div = (DIVISIONS_DATA.divisions || []).find(d => d.code === code);
+    if (!div) return;
+    div.teams.forEach(t => {
+      if (t.id) TEAM_ID[t.team] = t.id;
+      TEAM_ORDER.push(t.team);
+    });
+  });
+}
+
+// Prefixes a team's identifier onto its name for display (e.g. "A1 The
+// Pickleball Lab"). Falls back to the plain name if the identifier index
+// isn't ready yet (e.g. divisions.json hasn't loaded) — never blocks
+// rendering on it.
+function idLabel(team) {
+  const id = TEAM_ID[team];
+  return id ? `${id} ${team}` : team;
+}
+
 async function loadDivisionsData() {
   if (DIVISIONS_DATA) return DIVISIONS_DATA;
-  const res = await fetch(DIVISIONS_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error("divisions_fetch_failed");
-  DIVISIONS_DATA = await res.json();
-  return DIVISIONS_DATA;
+  if (!DIVISIONS_PROMISE) {
+    DIVISIONS_PROMISE = (async () => {
+      const res = await fetch(DIVISIONS_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error("divisions_fetch_failed");
+      DIVISIONS_DATA = await res.json();
+      buildTeamIndex();
+      return DIVISIONS_DATA;
+    })();
+  }
+  return DIVISIONS_PROMISE;
 }
 
 // Reuses the same divisionOrder/DIVISIONS pairing as the Schedule tab's
@@ -1490,7 +1537,7 @@ function renderAllDivisionTables() {
       html += `
         <div class="strength-row">
           <span class="sr-rank">${t.rank}</span>
-          <span class="sr-team">${t.team}</span>
+          <span class="sr-team">${t.id ? `${t.id} ` : ""}${t.team}</span>
           <span class="sr-bar"><span class="sr-fill" style="width:${pct}%;"></span></span>
         </div>`;
     });
@@ -1627,7 +1674,7 @@ el("logoSubmitBtn").addEventListener("click", async () => {
     el("logoSavedAt").textContent = `上次上載：${formatSavedAt(result.uploadedAt)}`;
     el("logoSavedBanner").style.display = "block";
     resetLogoFileInput();
-    showToast(`✅ ${currentLogoTeam} 嘅隊徽已成功上載！`);
+    showToast(`✅ ${idLabel(currentLogoTeam)} 嘅隊徽已成功上載！`);
   } catch (e) {
     showToast("上載失敗，請檢查網絡後再試一次 Upload failed — check your connection", true);
   } finally {
@@ -1648,7 +1695,7 @@ function renderLogoAdminTable(logos) {
     if (r) uploadedCount++;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${team}</td>
+      <td>${idLabel(team)}</td>
       <td>${r ? r.divisionZh : "—"}</td>
       <td>${r ? "✓ 已上載 Uploaded" : "— 未上載 Not yet"}</td>
       <td>${r ? formatSavedAt(r.uploadedAt) : "—"}</td>
@@ -1781,7 +1828,7 @@ el("ackSubmitBtn").addEventListener("click", async () => {
     }
     el("ackSavedAt").textContent = `已於 ${formatSavedAt(result.acknowledgedAt)} 由 ${captainName} 確認（${el("ackTodayDate").textContent}）`;
     el("ackSavedBanner").style.display = "block";
-    showToast(`✅ ${currentAckTeam} 嘅確認聲明已成功提交！`);
+    showToast(`✅ ${idLabel(currentAckTeam)} 嘅確認聲明已成功提交！`);
   } catch (e) {
     showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
   } finally {
@@ -1802,7 +1849,7 @@ function renderAckAdminTable(acks) {
     if (r) confirmedCount++;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${team}</td>
+      <td>${idLabel(team)}</td>
       <td>${r ? r.captainName : "—"}</td>
       <td>${r ? r.ackDate : "—"}</td>
       <td>${r ? "✓ 已確認 Confirmed" : "— 未確認 Not yet"}</td>
@@ -2112,8 +2159,8 @@ el("submitBtn").addEventListener("click", async () => {
       return;
     }
     showToast(wasReopened
-      ? `✅ ${currentTeam} 嘅名單已成功更新！Lineup updated!`
-      : `✅ ${currentTeam} 嘅名單已成功提交！`);
+      ? `✅ ${idLabel(currentTeam)} 嘅名單已成功更新！Lineup updated!`
+      : `✅ ${idLabel(currentTeam)} 嘅名單已成功提交！`);
     alreadySubmitted = true;
     teamReopened = false;
     submittedAtDisplay = formatSavedAt(result.savedAt);
@@ -2182,7 +2229,7 @@ function renderLineupAdminTeams(submittedTeams) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${rank}</td>
-      <td>${r.team}</td>
+      <td>${idLabel(r.team)}</td>
       <td>${r.avg ? r.avg.toFixed(3) : "—"}</td>
       <td>${r.male}M / ${r.female}F</td>
       <td>${div ? `<span class="division-tag" style="background:${div.color};color:${div.text}">${div.name}</span>` : "—"}</td>
@@ -2423,7 +2470,7 @@ function renderSurveyAdminTable(respondedTeams) {
     if (t) respondedCount++;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${team}</td>
+      <td>${idLabel(team)}</td>
       <td>${t ? "✓ 已回覆 Responded" : "— 未回覆 No response"}</td>
       <td>${t ? formatSavedAt(t.submittedAt) : "—"}</td>
       <td><button class="reset-btn" data-team="${team.replace(/"/g,'&quot;')}" ${t ? "" : "disabled"}>重置 Reset</button></td>
@@ -2621,7 +2668,7 @@ el("paySubmitBtn").addEventListener("click", async () => {
     el("paySavedAt").textContent = `上次上載：${formatSavedAt(result.uploadedAt)}`;
     el("paySavedBanner").style.display = "block";
     resetFileInput();
-    showToast(`✅ ${currentPayTeam} 嘅收據已成功上載！`);
+    showToast(`✅ ${idLabel(currentPayTeam)} 嘅收據已成功上載！`);
   } catch (e) {
     showToast("上載失敗，請檢查網絡後再試一次 Upload failed — check your connection", true);
   } finally {
@@ -2646,7 +2693,7 @@ function renderPayAdminTable(receipts) {
     if (exempt) exemptCount++;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${team}</td>
+      <td>${idLabel(team)}</td>
       <td>${exempt ? "免費 Free" : `$${amount.toLocaleString()}`}</td>
       <td>${exempt ? "— 毋需繳費 Exempt" : (r ? "✓ 已上載 Uploaded" : "— 未上載 Not yet")}</td>
       <td>${r ? formatSavedAt(r.uploadedAt) : "—"}</td>

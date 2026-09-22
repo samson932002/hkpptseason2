@@ -22,7 +22,8 @@
           "avgDupr": 3.533,
           "male": 5,
           "female": 7,
-          "note": null
+          "note": null,
+          "id": "A1"
         },
         {
           "rank": 2,
@@ -30,7 +31,8 @@
           "avgDupr": 3.415,
           "male": 6,
           "female": 6,
-          "note": null
+          "note": null,
+          "id": "A2"
         },
         {
           "rank": 3,
@@ -38,7 +40,8 @@
           "avgDupr": 3.354,
           "male": 6,
           "female": 6,
-          "note": null
+          "note": null,
+          "id": "A3"
         },
         {
           "rank": 4,
@@ -46,7 +49,8 @@
           "avgDupr": 3.29,
           "male": null,
           "female": null,
-          "note": "roster breakdown not yet on file"
+          "note": "roster breakdown not yet on file",
+          "id": "A4"
         },
         {
           "rank": 5,
@@ -54,7 +58,8 @@
           "avgDupr": 3.174,
           "male": 6,
           "female": 7,
-          "note": null
+          "note": null,
+          "id": "A5"
         },
         {
           "rank": 6,
@@ -62,7 +67,8 @@
           "avgDupr": 3.168,
           "male": 6,
           "female": 5,
-          "note": null
+          "note": null,
+          "id": "A6"
         },
         {
           "rank": 7,
@@ -70,7 +76,8 @@
           "avgDupr": 3.166,
           "male": 8,
           "female": 5,
-          "note": null
+          "note": null,
+          "id": "A7"
         },
         {
           "rank": 8,
@@ -78,7 +85,8 @@
           "avgDupr": 3.159,
           "male": 5,
           "female": 5,
-          "note": null
+          "note": null,
+          "id": "A8"
         }
       ]
     },
@@ -92,7 +100,8 @@
           "avgDupr": 3.137,
           "male": 5,
           "female": 5,
-          "note": null
+          "note": null,
+          "id": "B1"
         },
         {
           "rank": 2,
@@ -100,7 +109,8 @@
           "avgDupr": 3.13,
           "male": 5,
           "female": 5,
-          "note": null
+          "note": null,
+          "id": "B2"
         },
         {
           "rank": 3,
@@ -108,7 +118,8 @@
           "avgDupr": 3.099,
           "male": 6,
           "female": 6,
-          "note": "moved up from Premier"
+          "note": "moved up from Premier",
+          "id": "B3"
         },
         {
           "rank": 4,
@@ -116,7 +127,8 @@
           "avgDupr": 3.09,
           "male": 5,
           "female": 4,
-          "note": "resubmitted — average updated; M/F breakdown not yet reconfirmed"
+          "note": "resubmitted — average updated; M/F breakdown not yet reconfirmed",
+          "id": "B4"
         },
         {
           "rank": 5,
@@ -124,7 +136,8 @@
           "avgDupr": 3.063,
           "male": 8,
           "female": 8,
-          "note": null
+          "note": null,
+          "id": "B5"
         },
         {
           "rank": 6,
@@ -132,7 +145,8 @@
           "avgDupr": 3.062,
           "male": 4,
           "female": 4,
-          "note": null
+          "note": null,
+          "id": "B6"
         },
         {
           "rank": 7,
@@ -140,7 +154,8 @@
           "avgDupr": 3.003,
           "male": 8,
           "female": 8,
-          "note": null
+          "note": null,
+          "id": "B7"
         },
         {
           "rank": 8,
@@ -148,7 +163,8 @@
           "avgDupr": 2.977,
           "male": 7,
           "female": 7,
-          "note": null
+          "note": null,
+          "id": "B8"
         }
       ]
     },
@@ -162,7 +178,8 @@
           "avgDupr": 2.944,
           "male": 5,
           "female": 5,
-          "note": "moved up from Championship"
+          "note": "moved up from Championship",
+          "id": "C1"
         },
         {
           "rank": 2,
@@ -170,7 +187,8 @@
           "avgDupr": 2.912,
           "male": 5,
           "female": 5,
-          "note": null
+          "note": null,
+          "id": "C2"
         },
         {
           "rank": 3,
@@ -178,7 +196,8 @@
           "avgDupr": 2.905,
           "male": 6,
           "female": 6,
-          "note": null
+          "note": null,
+          "id": "C3"
         },
         {
           "rank": 4,
@@ -186,7 +205,8 @@
           "avgDupr": 2.905,
           "male": 6,
           "female": 6,
-          "note": null
+          "note": null,
+          "id": "C4"
         },
         {
           "rank": 5,
@@ -194,7 +214,8 @@
           "avgDupr": 2.902,
           "male": 7,
           "female": 8,
-          "note": null
+          "note": null,
+          "id": "C5"
         },
         {
           "rank": 6,
@@ -202,7 +223,8 @@
           "avgDupr": 2.9,
           "male": 5,
           "female": 6,
-          "note": null
+          "note": null,
+          "id": "C6"
         },
         {
           "rank": 7,
@@ -210,7 +232,8 @@
           "avgDupr": 2.888,
           "male": 5,
           "female": 5,
-          "note": null
+          "note": null,
+          "id": "C7"
         },
         {
           "rank": 8,
@@ -218,7 +241,8 @@
           "avgDupr": 2.887,
           "male": 8,
           "female": 7,
-          "note": null
+          "note": null,
+          "id": "C8"
         }
       ]
     },
@@ -232,7 +256,8 @@
           "avgDupr": 2.868,
           "male": 8,
           "female": 8,
-          "note": "moved up from Challenger"
+          "note": "moved up from Challenger",
+          "id": "D1"
         },
         {
           "rank": 2,
@@ -240,7 +265,8 @@
           "avgDupr": 2.849,
           "male": 5,
           "female": 5,
-          "note": null
+          "note": null,
+          "id": "D2"
         },
         {
           "rank": 3,
@@ -248,7 +274,8 @@
           "avgDupr": 2.847,
           "male": 6,
           "female": 6,
-          "note": null
+          "note": null,
+          "id": "D3"
         },
         {
           "rank": 4,
@@ -256,7 +283,8 @@
           "avgDupr": 2.841,
           "male": 6,
           "female": 5,
-          "note": null
+          "note": null,
+          "id": "D4"
         },
         {
           "rank": 5,
@@ -264,7 +292,8 @@
           "avgDupr": 2.84,
           "male": 7,
           "female": 7,
-          "note": null
+          "note": null,
+          "id": "D5"
         },
         {
           "rank": 6,
@@ -272,7 +301,8 @@
           "avgDupr": 2.803,
           "male": 6,
           "female": 5,
-          "note": null
+          "note": null,
+          "id": "D6"
         },
         {
           "rank": 7,
@@ -280,7 +310,8 @@
           "avgDupr": 2.791,
           "male": 5,
           "female": 4,
-          "note": null
+          "note": null,
+          "id": "D7"
         },
         {
           "rank": 8,
@@ -288,7 +319,8 @@
           "avgDupr": 2.786,
           "male": 8,
           "female": 6,
-          "note": null
+          "note": null,
+          "id": "D8"
         }
       ]
     },
@@ -302,7 +334,8 @@
           "avgDupr": 2.786,
           "male": 6,
           "female": 6,
-          "note": "moved up from Development"
+          "note": "moved up from Development",
+          "id": "E1"
         },
         {
           "rank": 2,
@@ -310,7 +343,8 @@
           "avgDupr": 2.775,
           "male": 4,
           "female": 4,
-          "note": null
+          "note": null,
+          "id": "E2"
         },
         {
           "rank": 3,
@@ -318,7 +352,8 @@
           "avgDupr": 2.771,
           "male": 6,
           "female": 7,
-          "note": null
+          "note": null,
+          "id": "E3"
         },
         {
           "rank": 4,
@@ -326,7 +361,8 @@
           "avgDupr": 2.767,
           "male": 6,
           "female": 7,
-          "note": null
+          "note": null,
+          "id": "E4"
         },
         {
           "rank": 5,
@@ -334,7 +370,8 @@
           "avgDupr": 2.75,
           "male": 6,
           "female": 5,
-          "note": null
+          "note": null,
+          "id": "E5"
         },
         {
           "rank": 6,
@@ -342,7 +379,8 @@
           "avgDupr": 2.75,
           "male": 4,
           "female": 4,
-          "note": null
+          "note": null,
+          "id": "E6"
         },
         {
           "rank": 7,
@@ -350,7 +388,8 @@
           "avgDupr": 2.748,
           "male": 8,
           "female": 4,
-          "note": null
+          "note": null,
+          "id": "E7"
         },
         {
           "rank": 8,
@@ -358,7 +397,8 @@
           "avgDupr": 2.645,
           "male": 5,
           "female": 6,
-          "note": null
+          "note": null,
+          "id": "E8"
         }
       ]
     }
