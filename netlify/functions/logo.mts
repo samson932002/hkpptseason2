@@ -6,6 +6,11 @@
 // One current logo per team: uploading again replaces the DB row and asks
 // the Drive-side script to trash the previous file for that team.
 //
+// A team without a logo can instead submit with noLogo:true — status
+// becomes 'requested' (no Drive file at all, so no Drive dependency and
+// nothing that can fail) and the organizer designs one for them from the
+// admin table. Uploading a real file afterwards overwrites the request.
+//
 // Deadline (Sep 27) is shown to captains client-side but not enforced here
 // — a late logo is still a logo the organizer wants, not one worth losing.
 
@@ -41,8 +46,9 @@ function gasUrl(): string | undefined {
 type Row = {
   team: string
   division_zh: string
-  drive_file_id: string
-  drive_view_url: string
+  drive_file_id: string | null
+  drive_view_url: string | null
+  status: 'uploaded' | 'requested'
   uploaded_at: string
   updated_at: string
 }
@@ -57,7 +63,7 @@ export default async (req: Request) => {
       if (rejected) return rejected
 
       const rows = (await db.sql<Row>`
-        SELECT team, division_zh, drive_view_url, uploaded_at FROM team_logos
+        SELECT team, division_zh, drive_view_url, status, uploaded_at FROM team_logos
       `) as unknown as Row[]
 
       return Response.json({
@@ -66,6 +72,7 @@ export default async (req: Request) => {
           team: r.team,
           divisionZh: r.division_zh,
           driveViewUrl: r.drive_view_url,
+          status: r.status,
           uploadedAt: r.uploaded_at,
         })),
       })
@@ -77,12 +84,12 @@ export default async (req: Request) => {
     }
 
     const rows = (await db.sql<Row>`
-      SELECT drive_view_url, uploaded_at FROM team_logos WHERE team = ${team}
+      SELECT drive_view_url, status, uploaded_at FROM team_logos WHERE team = ${team}
     `) as unknown as Row[]
 
     return Response.json({
       ok: true,
-      uploaded: rows.length > 0,
+      status: rows[0]?.status || null,
       uploadedAt: rows[0]?.uploaded_at || null,
       driveViewUrl: rows[0]?.drive_view_url || null,
     })
@@ -99,6 +106,7 @@ export default async (req: Request) => {
     if (payload.action === 'submit') {
       const team = typeof payload.team === 'string' ? payload.team.trim() : ''
       const divisionZh = typeof payload.divisionZh === 'string' ? payload.divisionZh.trim() : ''
+      const noLogo = payload.noLogo === true
       const filename = typeof payload.filename === 'string' ? payload.filename : 'logo'
       const mimeType = typeof payload.mimeType === 'string' ? payload.mimeType : ''
       const dataBase64 = typeof payload.dataBase64 === 'string' ? payload.dataBase64 : ''
@@ -109,6 +117,27 @@ export default async (req: Request) => {
       if (!divisionZh) {
         return Response.json({ ok: false, error: 'missing_division' }, { status: 400 })
       }
+
+      // "We don't have a logo — please design one for us": no file, no
+      // Drive dependency, nothing that can fail. The organizer picks these
+      // up from the admin table.
+      if (noLogo) {
+        const rows = (await db.sql<Row>`
+          INSERT INTO team_logos (team, division_zh, drive_file_id, drive_view_url, status)
+          VALUES (${team}, ${divisionZh}, NULL, NULL, 'requested')
+          ON CONFLICT (team) DO UPDATE SET
+            division_zh = EXCLUDED.division_zh,
+            drive_file_id = NULL,
+            drive_view_url = NULL,
+            status = 'requested',
+            uploaded_at = now(),
+            updated_at = now()
+          RETURNING uploaded_at
+        `) as unknown as Row[]
+
+        return Response.json({ ok: true, uploadedAt: rows[0].uploaded_at, status: 'requested' })
+      }
+
       if (!ALLOWED_MIME_TYPES.has(mimeType)) {
         return Response.json({ ok: false, error: 'invalid_type' }, { status: 400 })
       }
@@ -142,18 +171,19 @@ export default async (req: Request) => {
       }
 
       const rows = (await db.sql<Row>`
-        INSERT INTO team_logos (team, division_zh, drive_file_id, drive_view_url)
-        VALUES (${team}, ${divisionZh}, ${driveResult.fileId}, ${driveResult.viewUrl})
+        INSERT INTO team_logos (team, division_zh, drive_file_id, drive_view_url, status)
+        VALUES (${team}, ${divisionZh}, ${driveResult.fileId}, ${driveResult.viewUrl}, 'uploaded')
         ON CONFLICT (team) DO UPDATE SET
           division_zh = EXCLUDED.division_zh,
           drive_file_id = EXCLUDED.drive_file_id,
           drive_view_url = EXCLUDED.drive_view_url,
+          status = 'uploaded',
           uploaded_at = now(),
           updated_at = now()
         RETURNING uploaded_at
       `) as unknown as Row[]
 
-      return Response.json({ ok: true, uploadedAt: rows[0].uploaded_at })
+      return Response.json({ ok: true, uploadedAt: rows[0].uploaded_at, status: 'uploaded' })
     }
 
     if (payload.action === 'reset') {

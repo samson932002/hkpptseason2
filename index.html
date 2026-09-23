@@ -635,23 +635,32 @@
     <div id="logoFormSection" style="display:none;">
 
       <div id="logoSavedBanner" class="card" style="display:none; background:#001F3D; border:none;">
-        <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">✅ 已收到你哋隊嘅隊徽</p>
+        <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;" id="logoSavedTitle">✅ 已收到你哋隊嘅隊徽</p>
         <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;" id="logoSavedAt"></p>
-        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;">如需要重新上載，揀返檔案並提交就可以更新。<br>You can upload a different file any time to replace it.</p>
+        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;" id="logoSavedNote">如需要重新上載，揀返檔案並提交就可以更新。<br>You can upload a different file any time to replace it.</p>
       </div>
 
       <div class="card">
         <h2>2. 上載隊徽 Upload Logo</h2>
-        <label class="file-drop" id="logoDropLabel">
-          <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/webp">
-          <div>📎 撳呢度揀隊徽相片<br>Tap to choose a logo image</div>
-          <div class="hint">最大 5MB · PNG／JPG／WEBP Max 5MB · PNG/JPG/WEBP</div>
+
+        <label class="no-logo-toggle" for="logoNoLogoCheckbox" style="display:flex; align-items:flex-start; gap:8px; padding:10px; margin-bottom:14px; background:var(--bg); border:1px solid var(--line); border-radius:10px; cursor:pointer;">
+          <input type="checkbox" id="logoNoLogoCheckbox" style="margin-top:3px;">
+          <span style="font-size:12.5px; line-height:1.5;">我哋隊暫時冇隊徽，麻煩大會幫手製作<br>We don't have a logo yet — please design one for us<br><span style="color:var(--muted);">大會會為你哋製作一個美觀嘅隊徽，用於社交媒體帖文。Organizers will create an elegant logo for your team for social media posts.</span></span>
         </label>
-        <div id="logoPreview" class="file-preview" style="display:none;">
-          <img id="logoPreviewImg" class="logo-preview-img">
-          <div class="file-name" id="logoPreviewName"></div>
-          <button class="file-remove" id="logoRemoveBtn">✕ 移除</button>
+
+        <div id="logoUploadSection">
+          <label class="file-drop" id="logoDropLabel">
+            <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/webp">
+            <div>📎 撳呢度揀隊徽相片<br>Tap to choose a logo image</div>
+            <div class="hint">最大 5MB · PNG／JPG／WEBP Max 5MB · PNG/JPG/WEBP</div>
+          </label>
+          <div id="logoPreview" class="file-preview" style="display:none;">
+            <img id="logoPreviewImg" class="logo-preview-img">
+            <div class="file-name" id="logoPreviewName"></div>
+            <button class="file-remove" id="logoRemoveBtn">✕ 移除</button>
+          </div>
         </div>
+
         <button class="submit-btn" id="logoSubmitBtn" style="margin-top:12px;" disabled>上載隊徽 Upload Logo</button>
       </div>
     </div>
@@ -1592,8 +1601,21 @@ function resetLogoFileInput() {
   selectedLogoFile = null;
   el("logoFileInput").value = "";
   el("logoPreview").style.display = "none";
-  el("logoSubmitBtn").disabled = true;
 }
+
+// Toggling "we don't have a logo" hides the file picker (no file is needed
+// for that path) and flips the submit button into a plain confirm action.
+function updateLogoSubmitState() {
+  const noLogo = el("logoNoLogoCheckbox").checked;
+  el("logoUploadSection").style.display = noLogo ? "none" : "block";
+  el("logoSubmitBtn").textContent = noLogo ? "確認冇隊徽，交由大會製作 Confirm — No Logo" : "上載隊徽 Upload Logo";
+  el("logoSubmitBtn").disabled = noLogo ? false : !selectedLogoFile;
+}
+
+el("logoNoLogoCheckbox").addEventListener("change", () => {
+  if (el("logoNoLogoCheckbox").checked) resetLogoFileInput();
+  updateLogoSubmitState();
+});
 
 el("logoFileInput").addEventListener("change", async (e) => {
   const file = e.target.files[0];
@@ -1601,6 +1623,7 @@ el("logoFileInput").addEventListener("change", async (e) => {
   if (file.size > MAX_LOGO_FILE_BYTES) {
     showToast("檔案太大，請上載細過5MB嘅檔案 File is too large — please choose one under 5MB", true);
     resetLogoFileInput();
+    updateLogoSubmitState();
     return;
   }
   try {
@@ -1613,26 +1636,47 @@ el("logoFileInput").addEventListener("change", async (e) => {
   } catch (e) {
     showToast("無法讀取檔案，請再試一次 Could not read that file, please try again", true);
     resetLogoFileInput();
+    updateLogoSubmitState();
   }
 });
 
-el("logoRemoveBtn").addEventListener("click", resetLogoFileInput);
+el("logoRemoveBtn").addEventListener("click", () => {
+  resetLogoFileInput();
+  updateLogoSubmitState();
+});
+
+function showLogoSavedBanner(status, uploadedAt) {
+  if (status === "requested") {
+    el("logoSavedTitle").textContent = "✅ 已記錄：大會將會幫你哋製作隊徽";
+    el("logoSavedAt").textContent = `提交時間：${formatSavedAt(uploadedAt)}`;
+    el("logoSavedNote").innerHTML = "如你哋想自行上載隊徽，歡迎隨時提交，會取代呢個安排。<br>You can still upload your own logo anytime — it will replace this request.";
+  } else {
+    el("logoSavedTitle").textContent = "✅ 已收到你哋隊嘅隊徽";
+    el("logoSavedAt").textContent = `上次上載：${formatSavedAt(uploadedAt)}`;
+    el("logoSavedNote").innerHTML = "如需要重新上載，揀返檔案並提交就可以更新。<br>You can upload a different file any time to replace it.";
+  }
+  el("logoSavedBanner").style.display = "block";
+}
 
 async function loadLogoTeamData(team) {
   el("logoFormSection").style.display = "none";
   el("logoLoading").style.display = "block";
   resetLogoFileInput();
+  el("logoNoLogoCheckbox").checked = false;
   try {
     const status = await fetchLogoStatus(team);
-    if (status.uploaded) {
-      el("logoSavedAt").textContent = `上次上載：${formatSavedAt(status.uploadedAt)}`;
-      el("logoSavedBanner").style.display = "block";
+    if (status.status === "requested") {
+      el("logoNoLogoCheckbox").checked = true;
+      showLogoSavedBanner("requested", status.uploadedAt);
+    } else if (status.status === "uploaded") {
+      showLogoSavedBanner("uploaded", status.uploadedAt);
     } else {
       el("logoSavedBanner").style.display = "none";
     }
   } catch (e) {
     showToast("無法載入資料，請檢查網絡後重試 Could not load logo info — check your connection", true);
   }
+  updateLogoSubmitState();
   el("logoLoading").style.display = "none";
   el("logoFormSection").style.display = "block";
 }
@@ -1648,38 +1692,45 @@ el("logoTeamSelect").addEventListener("change", async (e) => {
 });
 
 el("logoSubmitBtn").addEventListener("click", async () => {
-  if (!currentLogoTeam || !selectedLogoFile) return;
+  if (!currentLogoTeam) return;
+  const noLogo = el("logoNoLogoCheckbox").checked;
+  if (!noLogo && !selectedLogoFile) return;
   try {
     el("logoSubmitBtn").disabled = true;
-    el("logoSubmitBtn").textContent = "上載緊… Uploading…";
+    el("logoSubmitBtn").textContent = noLogo ? "提交緊… Submitting…" : "上載緊… Uploading…";
     const divisionZh = await getTeamDivisionZh(currentLogoTeam);
-    const result = await postAction(LOGO_API, {
-      action: "submit",
-      team: currentLogoTeam,
-      divisionZh,
-      filename: selectedLogoFile.filename,
-      mimeType: selectedLogoFile.mimeType,
-      dataBase64: selectedLogoFile.dataBase64,
-    });
+    const payload = noLogo
+      ? { action: "submit", team: currentLogoTeam, divisionZh, noLogo: true }
+      : {
+          action: "submit",
+          team: currentLogoTeam,
+          divisionZh,
+          filename: selectedLogoFile.filename,
+          mimeType: selectedLogoFile.mimeType,
+          dataBase64: selectedLogoFile.dataBase64,
+        };
+    const result = await postAction(LOGO_API, payload);
     if (!result.ok) {
       const msg = {
         invalid_type: "檔案格式唔支援，請上載PNG/JPG/WEBP格式嘅相片 Unsupported file type — please upload a PNG/JPG/WEBP image",
         file_too_large: "檔案太大，請上載細過5MB嘅檔案 File is too large — please choose one under 5MB",
         not_configured: "上載功能未設定，請聯絡大會 Upload isn't configured yet — please contact the organizer",
         missing_division: "搵唔到你哋隊嘅組別資料，請聯絡大會 Could not determine your team's division — please contact the organizer",
-      }[result.error] || "上載失敗，請再試一次 Upload failed, please retry";
+      }[result.error] || "提交失敗，請再試一次 Submission failed, please retry";
       showToast(msg, true);
       return;
     }
-    el("logoSavedAt").textContent = `上次上載：${formatSavedAt(result.uploadedAt)}`;
-    el("logoSavedBanner").style.display = "block";
-    resetLogoFileInput();
-    showToast(`✅ ${idLabel(currentLogoTeam)} 嘅隊徽已成功上載！`);
+    showLogoSavedBanner(result.status, result.uploadedAt);
+    if (noLogo) {
+      showToast(`✅ ${idLabel(currentLogoTeam)} 已確認冇隊徽，大會將會幫手製作！`);
+    } else {
+      resetLogoFileInput();
+      showToast(`✅ ${idLabel(currentLogoTeam)} 嘅隊徽已成功上載！`);
+    }
   } catch (e) {
-    showToast("上載失敗，請檢查網絡後再試一次 Upload failed — check your connection", true);
+    showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
   } finally {
-    el("logoSubmitBtn").textContent = "上載隊徽 Upload Logo";
-    el("logoSubmitBtn").disabled = !selectedLogoFile;
+    updateLogoSubmitState();
   }
 });
 
@@ -1690,21 +1741,29 @@ function renderLogoAdminTable(logos) {
   const tbody = el("logoAdminRows");
   tbody.innerHTML = "";
   let uploadedCount = 0;
+  let requestedCount = 0;
   TEAMS.forEach(team => {
     const r = byTeam[team];
-    if (r) uploadedCount++;
+    if (r && r.status === "requested") requestedCount++;
+    else if (r) uploadedCount++;
+    const statusLabel = !r ? "— 未提交 Not yet"
+      : r.status === "requested" ? "🎨 待製作 Needs Generation"
+      : "✓ 已上載 Uploaded";
+    const viewCell = r && r.status !== "requested" && r.driveViewUrl
+      ? `<a class="receipt-link" href="${r.driveViewUrl}" target="_blank" rel="noopener">檢視 View</a>`
+      : (r && r.status === "requested" ? "— 待製作" : "—");
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${idLabel(team)}</td>
       <td>${r ? r.divisionZh : "—"}</td>
-      <td>${r ? "✓ 已上載 Uploaded" : "— 未上載 Not yet"}</td>
+      <td>${statusLabel}</td>
       <td>${r ? formatSavedAt(r.uploadedAt) : "—"}</td>
-      <td>${r ? `<a class="receipt-link" href="${r.driveViewUrl}" target="_blank" rel="noopener">檢視 View</a>` : "—"}</td>
+      <td>${viewCell}</td>
       <td><button class="reset-btn" data-team="${team.replace(/"/g,'&quot;')}" ${r ? "" : "disabled"}>重置 Reset</button></td>
     `;
     tbody.appendChild(tr);
   });
-  el("logoSummary").textContent = `已上載：${uploadedCount} / ${TEAMS.length} 支隊伍`;
+  el("logoSummary").textContent = `已上載：${uploadedCount} 隊　待製作：${requestedCount} 隊　合共 ${uploadedCount + requestedCount} / ${TEAMS.length} 支隊伍`;
 
   tbody.querySelectorAll(".reset-btn").forEach(btn => {
     btn.addEventListener("click", () => openResetModal("logo", btn.dataset.team));
