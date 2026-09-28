@@ -1346,7 +1346,7 @@ function renderTeamSchedule(team) {
   const container = el("schTeamResults");
   const matches = SCHEDULE_DATA.groupStage.filter(m => m.teamA === team || m.teamB === team);
   if (matches.length === 0) {
-    container.innerHTML = `<div class="card sch-empty">未搵到 ${team} 嘅賽程 No matches found for this team</div>`;
+    container.innerHTML = `<div class="card sch-empty">未搵到 ${teamName(team)} 嘅賽程 No matches found for this team</div>`;
     return;
   }
   const groups = groupMatchesByDate(matches);
@@ -1487,15 +1487,23 @@ const PROMO_RELEGATE_COUNT = 2;
 // select boxes list teams sorted by identifier instead of an arbitrary order.
 let TEAM_ID = {};
 let TEAM_ORDER = [];
+// Public display name per team, when it differs from the team's key. The
+// key (e.g. "Dink9") is what every DB record — roster, logo, acknowledgment,
+// payment, availability — and schedule.json are matched on, so a team that
+// renames itself only gets a "displayName" in divisions.json; the key itself
+// never changes (same decoupling as DIVISION_EN_LABEL for divisions).
+let TEAM_DISPLAY = {};
 
 function buildTeamIndex() {
   TEAM_ID = {};
   TEAM_ORDER = [];
+  TEAM_DISPLAY = {};
   (DIVISIONS_DATA.divisionOrder || []).forEach(code => {
     const div = (DIVISIONS_DATA.divisions || []).find(d => d.code === code);
     if (!div) return;
     div.teams.forEach(t => {
       if (t.id) TEAM_ID[t.team] = t.id;
+      if (t.displayName) TEAM_DISPLAY[t.team] = t.displayName;
       TEAM_ORDER.push(t.team);
     });
   });
@@ -1505,9 +1513,13 @@ function buildTeamIndex() {
 // Pickleball Lab"). Falls back to the plain name if the identifier index
 // isn't ready yet (e.g. divisions.json hasn't loaded) — never blocks
 // rendering on it.
+function teamName(team) {
+  return TEAM_DISPLAY[team] || team;
+}
+
 function idLabel(team) {
   const id = TEAM_ID[team];
-  return id ? `${id} ${team}` : team;
+  return id ? `${id} ${teamName(team)}` : teamName(team);
 }
 
 async function loadDivisionsData() {
@@ -1567,7 +1579,7 @@ function renderAllDivisionTables() {
       html += `
         <div class="strength-row">
           <span class="sr-rank">${t.rank}</span>
-          <span class="sr-team">${t.id ? `${t.id} ` : ""}${t.team}</span>
+          <span class="sr-team">${t.id ? `${t.id} ` : ""}${teamName(t.team)}</span>
           <span class="sr-bar"><span class="sr-fill" style="width:${pct}%;"></span></span>
         </div>`;
     });
@@ -2944,7 +2956,7 @@ async function checkAdminPass() {
 // tab here so the rest of the modal stays generic.
 function openResetModal(tab, team) {
   pendingReset = { tab, team };
-  el("resetTeamLabel").textContent = team;
+  el("resetTeamLabel").textContent = idLabel(team);
   const goBtn = el("resetGoBtn");
   if (tab === "lineup") {
     el("resetModalTitle").textContent = "確認重開名單 Confirm Reopen Lineup";
@@ -3016,8 +3028,8 @@ async function confirmReset() {
     if (result.ok) {
       closeResetModal();
       showToast(tab === "lineup"
-        ? `已重開 ${team} 嘅名單，佢哋可以編輯同重新提交 Reopened ${team}'s lineup for editing`
-        : `已重置 ${team} 嘅資料`);
+        ? `已重開 ${idLabel(team)} 嘅名單，佢哋可以編輯同重新提交 Reopened ${idLabel(team)}'s lineup for editing`
+        : `已重置 ${idLabel(team)} 嘅資料`);
       if (tab === "lineup") {
         loadLineupAdminData();
       } else if (tab === "survey") {
