@@ -290,6 +290,7 @@
   .toast.error { background: #7A2727; }
 
   .meta-note { font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+  .dupr-note { font-size: 12px; color: var(--muted); line-height: 1.6; margin: -4px 0 14px; }
 
   .admin-link {
     text-align: center;
@@ -605,7 +606,7 @@
   <div class="tabbar">
     <button class="tab-btn active" id="tabScheduleBtn" data-tab="schedule">循環賽 Round-Robin</button>
     <button class="tab-btn" id="tabPlayoffsBtn" data-tab="playoffs">淘汰賽 Playoffs</button>
-    <button class="tab-btn" id="tabDivisionsBtn" data-tab="divisions">組別實力 Divisions</button>
+    <button class="tab-btn" id="tabDivisionsBtn" data-tab="divisions">組別 Divisions</button>
     <button class="tab-btn" id="tabLineupBtn" data-tab="lineup" style="display:none;">隊伍名單 Lineup</button>
     <button class="tab-btn" id="tabSurveyBtn" data-tab="survey" style="display:none;">時間問卷 Availability</button>
     <button class="tab-btn" id="tabPaymentBtn" data-tab="payment" style="display:none;">繳費 Payment</button>
@@ -851,6 +852,7 @@
 
     <div class="card" id="divStrengthCard">
       <h2>組別名單 Division &amp; Team List</h2>
+      <p class="dupr-note">綠色長度代表隊伍實力，以隊伍名單中男子及女子各首3位最高DUPR評分嘅平均值計算（top 3男 + top 3女 ÷ 6）。<br>The bar length reflects team strength, calculated from the average DUPR rating of each team's top 3 male and top 3 female players (top 3M + top 3F ÷ 6).</p>
       <div id="divAllTables"></div>
     </div>
 
@@ -1169,12 +1171,31 @@ const TEAMS = [
 const MAX_PLAYERS = 16;
 const NR_VALUE = 2.75;
 const DIVISIONS = [
-  {name:"超級組 Premier", color:"#B6FF00", text:"#001F3D"},
-  {name:"精英組 Championship", color:"#7FC7FF", text:"#001F3D"},
-  {name:"挑戰組 Challenger", color:"#FFC95C", text:"#001F3D"},
-  {name:"新秀組 Development", color:"#C9B7FF", text:"#001F3D"},
-  {name:"入門組 Rookie", color:"#FF9E9E", text:"#001F3D"},
+  // Metal/gem tier colours: icy diamond blue, platinum teal (the usual
+  // tier-system convention, so it reads distinct from silver), gold,
+  // silver grey, bronze. All light enough for navy text.
+  {name:"鑽石組 Diamond", color:"#B3E9FF", text:"#001F3D"},
+  {name:"白金組 Platinum", color:"#A6DED3", text:"#001F3D"},
+  {name:"金組 Gold", color:"#F4CC5A", text:"#001F3D"},
+  {name:"銀組 Silver", color:"#CDD2D8", text:"#001F3D"},
+  {name:"銅組 Bronze", color:"#DDA46F", text:"#001F3D"},
 ];
+
+// The internal division "code" (Premier/Championship/.../Rookie) still keys
+// every data lookup (schedule.json's per-match "division", divisions.json's
+// "code", divisionOrder arrays) and is never renamed — only how it's
+// *displayed* changed, so match/roster data never needs touching when the
+// public-facing name does. Public names are now the metal/gem tiers
+// Diamond 鑽石組 / Platinum 白金組 / Gold 金組 / Silver 銀組 / Bronze 銅組
+// (renamed 2026-09-26; previously Premier/Championship/Challenger/
+// Development I/Development II).
+const DIVISION_EN_LABEL = {
+  Premier: "Diamond",
+  Championship: "Platinum",
+  Challenger: "Gold",
+  Development: "Silver",
+  Rookie: "Bronze",
+};
 
 let currentTeam = null;
 let players = [];
@@ -1221,7 +1242,7 @@ const TAB_META = {
   ack: { title: "隊伍確認聲明", subtitle: "Team Acknowledgment" },
   schedule: { title: "循環賽賽程表", subtitle: "Round-Robin Schedule" },
   playoffs: { title: "淘汰賽日期（暫定）", subtitle: "Playoffs Dates (Tentative)" },
-  divisions: { title: "組別實力", subtitle: "Division Strength & Promotion/Relegation" },
+  divisions: { title: "組別", subtitle: "Divisions & Promotion/Relegation" },
   lineup: { title: "隊伍名單提交表格", subtitle: "Team Lineup Submission Form" },
   survey: { title: "隊伍時間問卷", subtitle: "Team Availability Survey" },
   payment: { title: "繳費收據上載", subtitle: "Team Payment Receipt Upload" },
@@ -1300,7 +1321,7 @@ let schCurrentDivision = null;
 function divisionMeta(code) {
   const idx = (SCHEDULE_DATA.divisionOrder || []).indexOf(code);
   const d = DIVISIONS[idx] || { name: code, color: "#EEF3FA", text: "#001F3D" };
-  return { code, label: d.name, color: d.color, text: d.text, zh: (SCHEDULE_DATA.divisionZh || {})[code] || code };
+  return { code, en: DIVISION_EN_LABEL[code] || code, label: d.name, color: d.color, text: d.text, zh: (SCHEDULE_DATA.divisionZh || {})[code] || code };
 }
 
 async function loadScheduleData() {
@@ -1360,7 +1381,7 @@ function renderDivisionChips() {
     const dm = divisionMeta(code);
     const btn = document.createElement("button");
     btn.className = "division-chip";
-    btn.textContent = `${dm.zh} ${dm.code}`;
+    btn.textContent = `${dm.zh} ${dm.en}`;
     btn.dataset.code = code;
     btn.addEventListener("click", () => {
       schCurrentDivision = code;
@@ -1459,8 +1480,8 @@ const STRENGTH_SCALE_MAX = 4.0;
 // the diagram rather than left as a vague "will be announced later".
 const PROMO_RELEGATE_COUNT = 2;
 
-// Short team identifiers (A1-A8 Premier, B1-B8 Championship, ... E1-E8
-// Rookie) — the letter/number for each team lives in divisions.json
+// Short team identifiers (A1-A8 Diamond, B1-B8 Platinum, ... E1-E8
+// Bronze; internal codes Premier..Rookie) — the letter/number for each team lives in divisions.json
 // (assigned by division + rank) and is indexed here into a flat map so any
 // part of the UI can prefix a team's display name with it. TEAM_ORDER lets
 // select boxes list teams sorted by identifier instead of an arbitrary order.
@@ -1510,7 +1531,7 @@ function divTabMeta(code) {
   const idx = (DIVISIONS_DATA.divisionOrder || []).indexOf(code);
   const d = DIVISIONS[idx] || { name: code, color: "#EEF3FA", text: "#001F3D" };
   const div = (DIVISIONS_DATA.divisions || []).find(x => x.code === code);
-  return { code, label: d.name, color: d.color, text: d.text, zh: (div && div.zh) || code };
+  return { code, en: DIVISION_EN_LABEL[code] || code, label: d.name, color: d.color, text: d.text, zh: (div && div.zh) || code };
 }
 
 function renderPromoRelegationDiagram() {
@@ -1523,7 +1544,7 @@ function renderPromoRelegationDiagram() {
         <span class="promo-down">▼ ${PROMO_RELEGATE_COUNT}隊降級 ${PROMO_RELEGATE_COUNT} Teams Relegate</span>
       </div>` : "";
     return `
-      <div class="promo-tier" style="background:${dm.color}; color:${dm.text};">${dm.zh} ${dm.code}</div>
+      <div class="promo-tier" style="background:${dm.color}; color:${dm.text};">${dm.zh} ${dm.en}</div>
       ${arrowsHtml}
     `;
   }).join("");
@@ -1539,7 +1560,7 @@ function renderAllDivisionTables() {
     const div = (DIVISIONS_DATA.divisions || []).find(x => x.code === code);
     if (!div) return;
     html += `<div class="div-block">
-      <div class="div-block-head" style="background:${dm.color}; color:${dm.text};">${dm.zh} ${dm.code}</div>
+      <div class="div-block-head" style="background:${dm.color}; color:${dm.text};">${dm.zh} ${dm.en}</div>
       <div class="div-block-rows">`;
     div.teams.forEach(t => {
       const pct = t.avgDupr == null ? 0 : Math.min(100, Math.max(4, Math.round(((t.avgDupr - STRENGTH_SCALE_MIN) / span) * 100)));
@@ -1577,6 +1598,17 @@ const MAX_LOGO_FILE_BYTES = 5 * 1024 * 1024;
 // Looks a team up in the same divisions.json already used by the Divisions
 // tab, so the logo filename's division suffix always matches the team's
 // real division assignment — never hand-maintained separately.
+// Synchronous version for rendering, once divisions.json is loaded — used
+// by the logo admin table so a division rename shows up immediately there
+// instead of the name that was stored when the logo was uploaded.
+function currentDivisionZh(team) {
+  if (!DIVISIONS_DATA) return "";
+  for (const div of (DIVISIONS_DATA.divisions || [])) {
+    if (div.teams.some(t => t.team === team)) return div.zh;
+  }
+  return "";
+}
+
 async function getTeamDivisionZh(team) {
   await loadDivisionsData();
   for (const div of (DIVISIONS_DATA.divisions || [])) {
@@ -1755,7 +1787,7 @@ function renderLogoAdminTable(logos) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${idLabel(team)}</td>
-      <td>${r ? r.divisionZh : "—"}</td>
+      <td>${currentDivisionZh(team) || (r ? r.divisionZh : "—")}</td>
       <td>${statusLabel}</td>
       <td>${r ? formatSavedAt(r.uploadedAt) : "—"}</td>
       <td>${viewCell}</td>

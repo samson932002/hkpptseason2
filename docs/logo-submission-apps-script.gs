@@ -7,7 +7,7 @@
 // nowhere else to live.
 //
 // Filenames are exactly "<Team Name>_<Division in Chinese>.<ext>" (e.g.
-// "The Pickleball Lab_超級組.png") per the organizer's request, for easy
+// "The Pickleball Lab_鑽石組.png") per the organizer's request, for easy
 // sorting in Drive — no extra id or timestamp junk, just the file extension
 // so the image still opens correctly.
 //
