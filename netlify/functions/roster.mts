@@ -239,6 +239,12 @@ export default async (req: Request) => {
     if (!team) {
       return Response.json({ ok: false, error: 'missing_team' }, { status: 400 })
     }
+    // A team's own submitted roster is not sensitive to that team — the
+    // match-lineup tab needs the actual player names (not just counts) to
+    // build its per-leg pickers, even when the roster isn't "reopened" for
+    // editing. This is read-only and additive: existing callers that omit
+    // the flag keep getting the original, players-withheld shape.
+    const forLineup = url.searchParams.get('forLineup') === '1'
 
     const dbRows = (await db.sql<DbRow>`
       SELECT players, avg_dupr, male_count, female_count, reopened, submitted_at
@@ -247,13 +253,13 @@ export default async (req: Request) => {
 
     if (dbRows.length > 0) {
       const r = dbRows[0]
-      if (r.reopened) {
+      if (r.reopened || forLineup) {
         // Reopened: the team gets its own full roster back so the form can
         // prefill it for editing. avgDupr is still withheld either way.
         return Response.json({
           ok: true,
           submitted: true,
-          reopened: true,
+          reopened: r.reopened,
           submittedAt: r.submitted_at,
           maleCount: r.male_count,
           femaleCount: r.female_count,
@@ -289,6 +295,7 @@ export default async (req: Request) => {
       submittedAt: (legacyRows[0]['Submitted At'] as string) || null,
       maleCount,
       femaleCount,
+      ...(forLineup ? { players: playersFromLegacyRows(legacyRows) } : {}),
     })
   }
 
