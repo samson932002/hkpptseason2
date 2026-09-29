@@ -583,16 +583,6 @@
     font-weight: 800; font-size: 13.5px; padding: 8px 12px; border-radius: 7px 7px 0 0;
   }
   .div-block-rows { border: 1.5px solid var(--line); border-top: none; border-radius: 0 0 7px 7px; padding: 2px 6px; }
-
-  /* ── Match Lineup / Live Scoring (test feature) ──────────────────────── */
-  .leg-select-row { display: flex; gap: 10px; flex-wrap: wrap; }
-  .leg-select-row select, .leg-select-row input[type="text"] { flex: 1; min-width: 140px; }
-  .leg-log-table { font-size: 12.5px; width: 100%; border-collapse: collapse; }
-  .leg-log-table th, .leg-log-table td { padding: 6px 8px; border-bottom: 1px solid #EEF1F5; text-align: left; }
-  .leg-log-table th { background: var(--navy); color: var(--white); font-size: 11px; }
-  .score-input-row { display: flex; gap: 14px; flex-wrap: wrap; }
-  .score-input-row > div { flex: 1; min-width: 130px; }
-  .score-input-label { display: block; font-weight: 700; font-size: 12.5px; margin-bottom: 4px; color: var(--ink); }
 </style>
 </head>
 <body>
@@ -620,12 +610,6 @@
     <button class="tab-btn" id="tabLineupBtn" data-tab="lineup" style="display:none;">隊伍名單 Lineup</button>
     <button class="tab-btn" id="tabSurveyBtn" data-tab="survey" style="display:none;">時間問卷 Availability</button>
     <button class="tab-btn" id="tabPaymentBtn" data-tab="payment" style="display:none;">繳費 Payment</button>
-  </div>
-
-  <div class="tabgroup-label">🧪 測試功能 Test Feature (Match Day)</div>
-  <div class="tabbar">
-    <button class="tab-btn" id="tabMatchLineupBtn" data-tab="matchlineup">對賽排陣 Match Lineup</button>
-    <button class="tab-btn" id="tabMatchScoreBtn" data-tab="matchscore">現場比分（職員）Live Scoring (Staff)</button>
   </div>
 
   <!-- ══════════════════════════ LOGO TAB ══════════════════════════ -->
@@ -1134,120 +1118,6 @@
   </div>
   <!-- ═══════════════════════ /PAYMENT TAB ══════════════════════════ -->
 
-  <!-- ══════════════════════════ MATCH LINEUP TAB (test feature) ══════════════════════════ -->
-  <div id="matchlineupView" class="tab-view" style="display:none;">
-
-    <div class="card" style="background:#001F3D; border:none;">
-      <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">🧪 測試功能 Test Feature</p>
-      <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;">每場比賽開始前，請提交你隊呢場嘅出場名單（5局：女雙、混雙一、混雙二、混雙三、男雙）。可以隨時重新提交嚟更改。<br>Before each match, submit your team's starting lineup for that match (5 legs: WD, XD1, XD2, XD3, MD). You can resubmit any time to make changes.</p>
-    </div>
-
-    <div class="card">
-      <h2>1. 選擇你隊伍 Select Your Team</h2>
-      <select id="mlTeamSelect">
-        <option value="">請選擇隊伍 — Select your team…</option>
-      </select>
-    </div>
-
-    <div id="mlMatchSection" class="card" style="display:none;">
-      <h2>2. 選擇比賽 Select Match</h2>
-      <select id="mlMatchSelect">
-        <option value="">請選擇比賽 — Select a match…</option>
-      </select>
-    </div>
-
-    <div id="mlLoading" class="card loading-note" style="display:none;">
-      <span class="overlay-spin"></span>載入緊資料… Loading…
-    </div>
-
-    <div id="mlNoRosterNote" class="card" style="display:none; background:#FFF7E6; border-color:#FFD98C;">
-      <p style="margin:0; font-size:12.5px; line-height:1.6;">⚠️ 你隊仲未提交隊伍名單（Lineup 頁），所以未能自動核對球員性別是否符合各局要求，請自行輸入球員姓名並小心核對。<br>Your team hasn't submitted its season roster yet (Lineup tab), so gender eligibility per leg can't be checked automatically — please type player names carefully.</p>
-    </div>
-
-    <div id="mlFormSection" style="display:none;">
-
-      <div id="mlSavedBanner" class="card" style="display:none; background:#001F3D; border:none;">
-        <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">✅ 已收到你隊呢場比賽嘅出場名單</p>
-        <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;" id="mlSavedAt"></p>
-      </div>
-
-      <div id="mlLegsContainer"></div>
-
-      <div class="card">
-        <button class="submit-btn" id="mlSubmitBtn" disabled>提交出場名單 Submit Lineup</button>
-      </div>
-    </div>
-
-  </div>
-  <!-- ═══════════════════════ /MATCH LINEUP TAB ══════════════════════════ -->
-
-  <!-- ══════════════════════════ MATCH SCORE TAB (test feature, staff only) ══════════════════════════ -->
-  <div id="matchscoreView" class="tab-view" style="display:none;">
-
-    <div class="card" style="background:#001F3D; border:none;">
-      <p style="margin:0; color:#B6FF00; font-weight:800; font-size:14px;">🧪 測試功能・大會／場地職員專用 Test Feature — Staff Only</p>
-      <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;">現場職員用嚟即時輸入每局完結後嘅累積比分（一場比賽5局，連續計分至100分為止）。<br>For on-site staff to enter each team's cumulative running score right after every leg (5 legs per match, a continuous race to 100 points).</p>
-    </div>
-
-    <div id="msGate" class="card">
-      <h2>職員登入 Staff Login</h2>
-      <input type="text" id="msPassInput" placeholder="請輸入大會密碼 Enter organizer passcode">
-      <button class="submit-btn" id="msGoBtn" style="margin-top:12px;">進入 Enter</button>
-    </div>
-
-    <div id="msMainView" style="display:none;">
-
-      <div class="card">
-        <h2>1. 搵返比賽 Find Match</h2>
-        <input type="text" id="msFilterInput" placeholder="搜尋隊伍、組別或日期 Search team, division or date" style="margin-bottom:10px;">
-        <select id="msMatchSelect">
-          <option value="">請選擇比賽 — Select a match…</option>
-        </select>
-      </div>
-
-      <div id="msLoading" class="card loading-note" style="display:none;">
-        <span class="overlay-spin"></span>載入緊… Loading…
-      </div>
-
-      <div id="msMatchDetail" style="display:none;">
-
-        <div id="msFinalBanner" class="card" style="display:none; background:#001F3D; border:none;">
-          <p style="margin:0; color:#B6FF00; font-weight:800; font-size:15px;" id="msFinalText"></p>
-        </div>
-
-        <div class="card">
-          <h2 id="msMatchTitle"></h2>
-          <div style="overflow-x:auto;">
-            <table class="leg-log-table">
-              <thead><tr><th>局 Leg</th><th id="msTeamAHead">Team A</th><th id="msTeamBHead">Team B</th><th>時間 Time</th></tr></thead>
-              <tbody id="msLegLogRows"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div id="msEntryCard" class="card">
-          <h2 id="msEntryTitle">輸入比分 Enter Score</h2>
-          <div class="score-input-row">
-            <div>
-              <label class="score-input-label" id="msTeamALabel"></label>
-              <input type="number" id="msTeamAInput" min="0" step="1">
-            </div>
-            <div>
-              <label class="score-input-label" id="msTeamBLabel"></label>
-              <input type="number" id="msTeamBInput" min="0" step="1">
-            </div>
-          </div>
-          <button class="submit-btn" id="msSubmitLegBtn" style="margin-top:12px;">提交比分 Submit Score</button>
-        </div>
-
-        <div class="admin-link"><button id="msResetBtn" style="color:#A33;">重設呢場比賽嘅比分 Reset this match's score</button></div>
-      </div>
-
-    </div>
-
-  </div>
-  <!-- ═══════════════════════ /MATCH SCORE TAB ══════════════════════════ -->
-
 </div>
 
 <div class="admin-overlay" id="adminOverlay">
@@ -1287,8 +1157,6 @@ const AVAILABILITY_API = "/api/availability";
 const PAYMENT_API = "/api/payment";
 const LOGO_API = "/api/logo";
 const ACKNOWLEDGMENT_API = "/api/acknowledgment";
-const MATCH_LINEUP_API = "/api/match-lineup";
-const MATCH_SCORE_API = "/api/match-score";
 
 const TEAMS = [
   "The OWWWL Pickle Team","激戰魂","The Dinosaurs","Pickle Monster","Lit",
@@ -1359,7 +1227,7 @@ async function populateTeamSelects() {
   } catch (e) {
     // divisions.json unavailable — selects still populate, just unsorted.
   }
-  [el("teamSelect"), el("survTeamSelect"), el("payTeamSelect"), el("schTeamSelect"), el("logoTeamSelect"), el("ackTeamSelect"), el("mlTeamSelect")].forEach(sel => {
+  [el("teamSelect"), el("survTeamSelect"), el("payTeamSelect"), el("schTeamSelect"), el("logoTeamSelect"), el("ackTeamSelect")].forEach(sel => {
     order.forEach(t => {
       const opt = document.createElement("option");
       opt.value = t; opt.textContent = idLabel(t);
@@ -1378,8 +1246,6 @@ const TAB_META = {
   lineup: { title: "隊伍名單提交表格", subtitle: "Team Lineup Submission Form" },
   survey: { title: "隊伍時間問卷", subtitle: "Team Availability Survey" },
   payment: { title: "繳費收據上載", subtitle: "Team Payment Receipt Upload" },
-  matchlineup: { title: "對賽排陣", subtitle: "Match Lineup (Test Feature)" },
-  matchscore: { title: "現場比分", subtitle: "Live Scoring — Staff Only (Test Feature)" },
 };
 
 function showTab(tab, opts) {
@@ -1393,8 +1259,6 @@ function showTab(tab, opts) {
   el("lineupView").style.display = tab === "lineup" ? "block" : "none";
   el("surveyView").style.display = tab === "survey" ? "block" : "none";
   el("paymentView").style.display = tab === "payment" ? "block" : "none";
-  el("matchlineupView").style.display = tab === "matchlineup" ? "block" : "none";
-  el("matchscoreView").style.display = tab === "matchscore" ? "block" : "none";
   el("tabLogoBtn").classList.toggle("active", tab === "logo");
   el("tabAckBtn").classList.toggle("active", tab === "ack");
   el("tabScheduleBtn").classList.toggle("active", tab === "schedule");
@@ -1403,8 +1267,6 @@ function showTab(tab, opts) {
   el("tabLineupBtn").classList.toggle("active", tab === "lineup");
   el("tabSurveyBtn").classList.toggle("active", tab === "survey");
   el("tabPaymentBtn").classList.toggle("active", tab === "payment");
-  el("tabMatchLineupBtn").classList.toggle("active", tab === "matchlineup");
-  el("tabMatchScoreBtn").classList.toggle("active", tab === "matchscore");
   el("pageTitle").textContent = TAB_META[tab].title;
   el("pageSubtitle").textContent = TAB_META[tab].subtitle;
   if (!opts.skipHash) {
@@ -1420,8 +1282,6 @@ el("tabDivisionsBtn").addEventListener("click", () => showTab("divisions"));
 el("tabLineupBtn").addEventListener("click", () => showTab("lineup"));
 el("tabSurveyBtn").addEventListener("click", () => showTab("survey"));
 el("tabPaymentBtn").addEventListener("click", () => showTab("payment"));
-el("tabMatchLineupBtn").addEventListener("click", () => showTab("matchlineup"));
-el("tabMatchScoreBtn").addEventListener("click", () => showTab("matchscore"));
 
 // ══════════════════════════ Shared helpers ═════════════════════════════
 function showToast(msg, isError) {
@@ -3199,447 +3059,6 @@ async function confirmReset() {
     el("resetGoBtn").textContent = idleLabel;
   }
 }
-
-// ══════════════════════════ MATCH LINEUP TAB LOGIC (test feature) ══════
-//
-// Distinct from the "隊伍名單 Lineup" tab (roster.mts — the season-long
-// roster): this is the *starting lineup for one specific match*. A match is
-// 5 fixed legs, each a doubles pairing: WD (2F), XD1-3 (1M+1F each), MD
-// (2M). Player pools per slot come from the team's already-submitted season
-// roster when available; if that team hasn't submitted one yet, plain text
-// inputs are used instead and only structural checks (no gender check) run.
-//
-// matchId is a stable, opaque key built client-side from schedule.json +
-// the team identifiers already in divisions.json — see buildMatchId().
-
-const LEG_ORDER = ["WD", "XD1", "XD2", "XD3", "MD"];
-const LEG_LABEL = {
-  WD: "女雙 Women's Doubles (WD)",
-  XD1: "混雙一 Mixed Doubles 1 (XD1)",
-  XD2: "混雙二 Mixed Doubles 2 (XD2)",
-  XD3: "混雙三 Mixed Doubles 3 (XD3)",
-  MD: "男雙 Men's Doubles (MD)",
-};
-const LEG_LABEL_SHORT = { WD: "WD 女雙", XD1: "XD1 混雙1", XD2: "XD2 混雙2", XD3: "XD3 混雙3", MD: "MD 男雙" };
-// Which gender each of a leg's 2 slots must be filled by.
-const LEG_SLOT_GENDER = { WD: ["F", "F"], XD1: ["M", "F"], XD2: ["M", "F"], XD3: ["M", "F"], MD: ["M", "M"] };
-
-function buildMatchId(division, teamA, teamB) {
-  const idA = TEAM_ID[teamA] || teamA;
-  const idB = TEAM_ID[teamB] || teamB;
-  return `${division}__${idA}__${idB}`;
-}
-
-let mlTeam = null;
-let mlMatch = null; // { matchId, division, team, opponent }
-let mlRosterPlayers = null; // [{name, preferredName, gender, ...}] or null when no roster on file
-let mlPicks = {}; // { WD: ["",""], XD1: ["",""], ... } — values are player display names
-
-function resetMlPicks() {
-  mlPicks = {};
-  LEG_ORDER.forEach(leg => { mlPicks[leg] = ["", ""]; });
-}
-
-function playerDisplayName(p) {
-  return ((p.preferredName && String(p.preferredName).trim()) || (p.name && String(p.name).trim()) || "");
-}
-
-function mlPlayersByGender(gender) {
-  if (!mlRosterPlayers) return [];
-  return mlRosterPlayers.filter(p => p.gender === gender).map(playerDisplayName).filter(Boolean);
-}
-
-function mlUsageCount(name) {
-  let count = 0;
-  LEG_ORDER.forEach(leg => { mlPicks[leg].forEach(v => { if (v === name) count++; }); });
-  return count;
-}
-
-function mlUsedInOtherXd(name, currentLeg) {
-  return ["XD1", "XD2", "XD3"].some(leg => leg !== currentLeg && mlPicks[leg].includes(name));
-}
-
-function mlOptionAllowed(name, leg, slot) {
-  if (name === mlPicks[leg][slot]) return true; // always allow keeping the current value
-  const otherSlot = slot === 0 ? 1 : 0;
-  if (mlPicks[leg][otherSlot] === name) return false; // no duplicate within the same leg
-  if (mlUsageCount(name) >= 2) return false; // 2-leg cap per player
-  if (["XD1", "XD2", "XD3"].includes(leg) && mlUsedInOtherXd(name, leg)) return false; // 1 XD leg max
-  return true;
-}
-
-function renderLegCards() {
-  const container = el("mlLegsContainer");
-  let html = "";
-  LEG_ORDER.forEach(leg => {
-    html += `<div class="card leg-card"><h2>${LEG_LABEL[leg]}</h2><div class="leg-select-row">`;
-    [0, 1].forEach(slot => {
-      const gender = LEG_SLOT_GENDER[leg][slot];
-      if (mlRosterPlayers) {
-        html += `<select class="ml-leg-select" data-leg="${leg}" data-slot="${slot}"></select>`;
-      } else {
-        const ph = gender === "M" ? "男球員姓名 Male player name" : "女球員姓名 Female player name";
-        html += `<input type="text" class="ml-leg-input" data-leg="${leg}" data-slot="${slot}" placeholder="${ph}">`;
-      }
-    });
-    html += `</div></div>`;
-  });
-  container.innerHTML = html;
-
-  if (mlRosterPlayers) {
-    container.querySelectorAll(".ml-leg-select").forEach(sel => {
-      sel.addEventListener("change", () => {
-        mlPicks[sel.dataset.leg][Number(sel.dataset.slot)] = sel.value;
-        renderLegSelects();
-      });
-    });
-  } else {
-    container.querySelectorAll(".ml-leg-input").forEach(inp => {
-      inp.addEventListener("input", () => {
-        mlPicks[inp.dataset.leg][Number(inp.dataset.slot)] = inp.value.trim();
-        updateMlSubmitState();
-      });
-    });
-  }
-}
-
-function renderLegSelects() {
-  LEG_ORDER.forEach(leg => {
-    [0, 1].forEach(slot => {
-      const sel = el("mlLegsContainer").querySelector(`.ml-leg-select[data-leg="${leg}"][data-slot="${slot}"]`);
-      if (!sel) return;
-      const gender = LEG_SLOT_GENDER[leg][slot];
-      const pool = mlPlayersByGender(gender);
-      const current = mlPicks[leg][slot];
-      const placeholder = gender === "M" ? "選擇男球員 — Select male player…" : "選擇女球員 — Select female player…";
-      let html = `<option value="">${placeholder}</option>`;
-      pool.forEach(name => {
-        if (!mlOptionAllowed(name, leg, slot)) return;
-        html += `<option value="${name.replace(/"/g, "&quot;")}"${name === current ? " selected" : ""}>${name}</option>`;
-      });
-      sel.innerHTML = html;
-    });
-  });
-  updateMlSubmitState();
-}
-
-function setMlInputValuesFromPicks() {
-  el("mlLegsContainer").querySelectorAll(".ml-leg-input").forEach(inp => {
-    inp.value = mlPicks[inp.dataset.leg][Number(inp.dataset.slot)] || "";
-  });
-}
-
-function updateMlSubmitState() {
-  const allFilled = LEG_ORDER.every(leg => mlPicks[leg][0] && mlPicks[leg][1]);
-  el("mlSubmitBtn").disabled = !allFilled;
-}
-
-function populateMlMatchSelect(team) {
-  const sel = el("mlMatchSelect");
-  sel.innerHTML = '<option value="">請選擇比賽 — Select a match…</option>';
-  const matches = SCHEDULE_DATA.groupStage.filter(m => m.teamA === team || m.teamB === team);
-  matches.forEach((m, idx) => {
-    const opponent = m.teamA === team ? m.teamB : m.teamA;
-    const opt = document.createElement("option");
-    opt.value = String(idx);
-    opt.textContent = `${m.dateLabel}（${m.weekday}） ${m.time} vs ${idLabel(opponent)}`;
-    sel.appendChild(opt);
-  });
-  sel.dataset.matches = JSON.stringify(matches);
-}
-
-el("mlTeamSelect").addEventListener("change", async (e) => {
-  mlTeam = e.target.value;
-  el("mlMatchSection").style.display = "none";
-  el("mlFormSection").style.display = "none";
-  el("mlNoRosterNote").style.display = "none";
-  mlMatch = null;
-  if (!mlTeam) return;
-  try {
-    await loadScheduleData();
-    await loadDivisionsData();
-  } catch (e2) {
-    showToast("無法載入賽程，請重新整理頁面 Could not load the schedule — please refresh the page", true);
-    return;
-  }
-  populateMlMatchSelect(mlTeam);
-  el("mlMatchSection").style.display = "block";
-});
-
-el("mlMatchSelect").addEventListener("change", async (e) => {
-  const idx = e.target.value;
-  el("mlFormSection").style.display = "none";
-  el("mlNoRosterNote").style.display = "none";
-  if (idx === "") { mlMatch = null; return; }
-  const matches = JSON.parse(e.target.dataset.matches || "[]");
-  const m = matches[Number(idx)];
-  const opponent = m.teamA === mlTeam ? m.teamB : m.teamA;
-  mlMatch = { matchId: buildMatchId(m.division, m.teamA, m.teamB), division: m.division, team: mlTeam, opponent };
-  await loadMlFormData();
-});
-
-async function loadMlFormData() {
-  el("mlLoading").style.display = "block";
-  resetMlPicks();
-  // Fetched independently (each with its own fallback) so a hiccup in one
-  // — e.g. the roster endpoint's legacy Sheet being briefly unreachable —
-  // never blocks the lineup form itself from rendering.
-  let rosterRes = null;
-  try {
-    rosterRes = await fetch(`${ROSTER_API}?team=${encodeURIComponent(mlTeam)}&forLineup=1`).then(r => r.json());
-  } catch (e) {
-    rosterRes = null;
-  }
-  mlRosterPlayers = (rosterRes && rosterRes.ok && Array.isArray(rosterRes.players)) ? rosterRes.players : null;
-  el("mlNoRosterNote").style.display = mlRosterPlayers ? "none" : "block";
-
-  renderLegCards();
-
-  let lineupRes = null;
-  try {
-    lineupRes = await fetch(`${MATCH_LINEUP_API}?team=${encodeURIComponent(mlTeam)}&matchId=${encodeURIComponent(mlMatch.matchId)}`).then(r => r.json());
-  } catch (e) {
-    lineupRes = null;
-    showToast("無法載入之前提交嘅名單，請檢查網絡後重試 Could not load a previously-submitted lineup — check your connection", true);
-  }
-
-  if (lineupRes && lineupRes.ok && lineupRes.lineup) {
-    const legs = lineupRes.lineup.legs || {};
-    LEG_ORDER.forEach(leg => {
-      if (Array.isArray(legs[leg]) && legs[leg].length === 2) mlPicks[leg] = [legs[leg][0], legs[leg][1]];
-    });
-    const savedAt = lineupRes.lineup.updated_at || lineupRes.lineup.submitted_at;
-    el("mlSavedBanner").style.display = "block";
-    el("mlSavedAt").textContent = `上次提交／更新時間：${formatSavedAt(savedAt)}`;
-  } else {
-    el("mlSavedBanner").style.display = "none";
-  }
-
-  if (mlRosterPlayers) renderLegSelects();
-  else { setMlInputValuesFromPicks(); updateMlSubmitState(); }
-
-  el("mlLoading").style.display = "none";
-  el("mlFormSection").style.display = "block";
-}
-
-function mlLineupErrorMessage(err) {
-  if (typeof err !== "string") return "提交失敗，請再試一次 Submission failed, please retry";
-  if (err.startsWith("player_over_leg_cap")) return "⚠ 有球員被安排超過2局，請檢查 A player is scheduled for more than 2 legs";
-  if (err.startsWith("player_repeats_in_xd")) return "⚠ 同一位球員唔可以打多過一場混雙，請檢查 A player can't play more than one mixed-doubles leg";
-  if (err.startsWith("wd_requires_female")) return "⚠ 女雙必須係兩位女球員 WD must be two female players";
-  if (err.startsWith("md_requires_male")) return "⚠ 男雙必須係兩位男球員 MD must be two male players";
-  if (err.startsWith("xd_requires_mixed_pair")) return "⚠ 混雙必須係一男一女 Mixed doubles must be one male + one female";
-  if (err.startsWith("duplicate_player_in_leg")) return "⚠ 同一局入面唔可以揀同一位球員兩次 A leg can't have the same player twice";
-  if (err.startsWith("invalid_leg")) return "⚠ 表格資料不完整，請檢查每局都揀咗兩位球員 Incomplete form — check that every leg has two players";
-  return "提交失敗，請再試一次 Submission failed, please retry";
-}
-
-el("mlSubmitBtn").addEventListener("click", async () => {
-  if (!mlTeam || !mlMatch) return;
-  const legs = {};
-  LEG_ORDER.forEach(leg => { legs[leg] = [mlPicks[leg][0], mlPicks[leg][1]]; });
-  const payload = { action: "submit", matchId: mlMatch.matchId, division: mlMatch.division, team: mlTeam, legs };
-  const btn = el("mlSubmitBtn");
-  btn.disabled = true;
-  btn.textContent = "提交緊… Submitting…";
-  try {
-    const result = await postAction(MATCH_LINEUP_API, payload);
-    if (!result.ok) {
-      showToast(mlLineupErrorMessage(result.error), true);
-      return;
-    }
-    const savedAt = result.updatedAt || result.submittedAt;
-    el("mlSavedBanner").style.display = "block";
-    el("mlSavedAt").textContent = `上次提交／更新時間：${formatSavedAt(savedAt)}`;
-    showToast(`✅ ${idLabel(mlTeam)} 對 ${idLabel(mlMatch.opponent)} 嘅出場名單已提交！`);
-  } catch (e) {
-    showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "提交出場名單 Submit Lineup";
-    updateMlSubmitState();
-  }
-});
-
-// ══════════════════════════ LIVE SCORING TAB LOGIC (test feature, staff only) ══
-//
-// Its own lightweight passcode gate (rather than the shared adminOverlay/
-// adminTarget switch used by the other tabs) since this whole tab is
-// staff-only from the moment it opens — there's no captain-facing "main
-// view" to toggle away from first.
-
-let msPasscode = "";
-let msMatches = [];
-let msCurrentMatch = null; // { matchId, division, teamA, teamB, dateLabel, weekday, time, venueZh, court }
-let msCurrentScore = null; // score row from the API, or null if none yet
-
-function buildMsMatches() {
-  msMatches = SCHEDULE_DATA.groupStage.map(m => ({
-    matchId: buildMatchId(m.division, m.teamA, m.teamB),
-    division: m.division, teamA: m.teamA, teamB: m.teamB,
-    dateLabel: m.dateLabel, weekday: m.weekday, time: m.time, venueZh: m.venueZh, court: m.court,
-  }));
-}
-
-function populateMsMatchSelect(filterText) {
-  const sel = el("msMatchSelect");
-  const q = (filterText || "").trim().toLowerCase();
-  sel.innerHTML = '<option value="">請選擇比賽 — Select a match…</option>';
-  msMatches.forEach((m, idx) => {
-    const dm = divisionMeta(m.division);
-    const label = `${m.dateLabel}（${m.weekday}） ${m.time} ${m.venueZh} · ${dm.zh} · ${idLabel(m.teamA)} vs ${idLabel(m.teamB)}`;
-    if (q && !label.toLowerCase().includes(q)) return;
-    const opt = document.createElement("option");
-    opt.value = String(idx);
-    opt.textContent = label;
-    sel.appendChild(opt);
-  });
-}
-
-el("msFilterInput").addEventListener("input", (e) => populateMsMatchSelect(e.target.value));
-
-el("msGoBtn").addEventListener("click", async () => {
-  const passcode = el("msPassInput").value;
-  el("msGoBtn").disabled = true;
-  try {
-    const res = await fetch(`${MATCH_SCORE_API}?admin=1&passcode=${encodeURIComponent(passcode)}`);
-    const data = await res.json();
-    if (!data.ok) {
-      showToast(data.error === "passcode_not_configured" ? PASSCODE_UNSET_MSG : "密碼錯誤 Incorrect passcode", true);
-      return;
-    }
-    msPasscode = passcode;
-    await loadScheduleData();
-    await loadDivisionsData();
-    buildMsMatches();
-    populateMsMatchSelect("");
-    el("msGate").style.display = "none";
-    el("msMainView").style.display = "block";
-  } catch (e) {
-    showToast("無法驗證密碼，請檢查網絡後重試 Could not verify passcode — check your connection", true);
-  } finally {
-    el("msGoBtn").disabled = false;
-  }
-});
-el("msPassInput").addEventListener("keydown", (e) => { if (e.key === "Enter") el("msGoBtn").click(); });
-
-el("msMatchSelect").addEventListener("change", async (e) => {
-  const idx = e.target.value;
-  el("msMatchDetail").style.display = "none";
-  if (idx === "") { msCurrentMatch = null; return; }
-  msCurrentMatch = msMatches[Number(idx)];
-  await loadMsMatchDetail();
-});
-
-async function loadMsMatchDetail() {
-  el("msLoading").style.display = "block";
-  try {
-    const res = await fetch(`${MATCH_SCORE_API}?matchId=${encodeURIComponent(msCurrentMatch.matchId)}`);
-    const data = await res.json();
-    msCurrentScore = (data.ok && data.score) ? data.score : null;
-    renderMsMatchDetail();
-  } catch (e) {
-    showToast("無法載入比分資料，請檢查網絡後重試 Could not load score data — check your connection", true);
-  } finally {
-    el("msLoading").style.display = "none";
-    el("msMatchDetail").style.display = "block";
-  }
-}
-
-function renderMsMatchDetail() {
-  const m = msCurrentMatch;
-  const dm = divisionMeta(m.division);
-  el("msMatchTitle").textContent = `${idLabel(m.teamA)} vs ${idLabel(m.teamB)} · ${dm.zh} · ${m.dateLabel}（${m.weekday}） ${m.time}`;
-  el("msTeamAHead").textContent = idLabel(m.teamA);
-  el("msTeamBHead").textContent = idLabel(m.teamB);
-
-  const legs = msCurrentScore ? msCurrentScore.legs : [];
-  el("msLegLogRows").innerHTML = legs.length
-    ? legs.map(l => `<tr><td>${LEG_LABEL_SHORT[l.leg] || l.leg}</td><td>${l.teamA}</td><td>${l.teamB}</td><td>${formatSavedAt(l.enteredAt)}</td></tr>`).join("")
-    : `<tr><td colspan="4" style="color:var(--muted); text-align:center;">未有比分紀錄 No scores entered yet</td></tr>`;
-
-  const status = msCurrentScore ? msCurrentScore.status : "in_progress";
-  if (status === "final") {
-    const winner = msCurrentScore.winner;
-    el("msFinalBanner").style.display = "block";
-    el("msFinalText").textContent = winner
-      ? `🏆 比賽完結，勝方：${idLabel(winner)} Match final — winner: ${idLabel(winner)}`
-      : `比賽完結（打和） Match final (tied)`;
-    el("msEntryCard").style.display = "none";
-  } else {
-    el("msFinalBanner").style.display = "none";
-    el("msEntryCard").style.display = "block";
-    const nextLeg = LEG_ORDER[legs.length];
-    el("msEntryTitle").textContent = `輸入 ${nextLeg} 完結後嘅累積比分 Enter cumulative score after ${nextLeg}`;
-    el("msTeamALabel").textContent = idLabel(m.teamA);
-    el("msTeamBLabel").textContent = idLabel(m.teamB);
-    const priorA = legs.length ? legs[legs.length - 1].teamA : 0;
-    const priorB = legs.length ? legs[legs.length - 1].teamB : 0;
-    el("msTeamAInput").value = "";
-    el("msTeamAInput").min = String(priorA);
-    el("msTeamBInput").value = "";
-    el("msTeamBInput").min = String(priorB);
-    el("msSubmitLegBtn").textContent = `提交 ${nextLeg} 比分 Submit ${nextLeg} score`;
-    el("msSubmitLegBtn").dataset.leg = nextLeg;
-  }
-}
-
-function msScoreErrorMessage(err, expectedLeg) {
-  if (err === "wrong_leg") return `⚠ 局數對唔上，下一局應該係 ${expectedLeg || "?"} Leg mismatch — the next expected leg is ${expectedLeg || "?"}`;
-  if (err === "score_must_not_decrease") return "⚠ 累積比分唔可以比上一局細 Cumulative score can't be lower than the previous leg";
-  if (err === "match_already_final") return "⚠ 呢場比賽已經完結，請先重設先可以修改 This match is already final — reset it first to make changes";
-  if (err === "invalid_passcode") return "密碼錯誤，請重新登入 Incorrect passcode — please sign in again";
-  if (err === "invalid_score") return "⚠ 請輸入有效嘅比分（非負整數） Enter valid scores (non-negative whole numbers)";
-  return "提交失敗，請再試一次 Submission failed, please retry";
-}
-
-el("msSubmitLegBtn").addEventListener("click", async () => {
-  const leg = el("msSubmitLegBtn").dataset.leg;
-  const teamAScore = parseInt(el("msTeamAInput").value, 10);
-  const teamBScore = parseInt(el("msTeamBInput").value, 10);
-  if (!Number.isInteger(teamAScore) || !Number.isInteger(teamBScore) || teamAScore < 0 || teamBScore < 0) {
-    showToast("請輸入有效嘅比分（非負整數） Enter valid scores (non-negative whole numbers)", true);
-    return;
-  }
-  const m = msCurrentMatch;
-  const btn = el("msSubmitLegBtn");
-  btn.disabled = true;
-  try {
-    const result = await postAction(MATCH_SCORE_API, {
-      action: "enterLeg", passcode: msPasscode,
-      matchId: m.matchId, division: m.division, teamA: m.teamA, teamB: m.teamB,
-      leg, teamAScore, teamBScore,
-    });
-    if (!result.ok) {
-      showToast(msScoreErrorMessage(result.error, result.expectedLeg), true);
-      return;
-    }
-    msCurrentScore = result.score;
-    renderMsMatchDetail();
-    showToast(`✅ ${leg} 比分已提交 Score submitted`);
-  } catch (e) {
-    showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
-  } finally {
-    btn.disabled = false;
-  }
-});
-
-el("msResetBtn").addEventListener("click", async () => {
-  if (!msCurrentMatch) return;
-  if (!confirm("確定要重設呢場比賽嘅比分嗎？此操作無法復原。\nReset this match's score? This cannot be undone.")) return;
-  try {
-    const result = await postAction(MATCH_SCORE_API, { action: "reset", passcode: msPasscode, matchId: msCurrentMatch.matchId });
-    if (!result.ok) {
-      showToast("重設失敗 Reset failed", true);
-      return;
-    }
-    msCurrentScore = null;
-    renderMsMatchDetail();
-    showToast("✅ 已重設 Reset complete");
-  } catch (e) {
-    showToast("重設失敗，請檢查網絡後再試一次 Reset failed — check your connection", true);
-  }
-});
 
 // ══════════════════════════ Boot ═══════════════════════════════════════
 populateTeamSelects();
