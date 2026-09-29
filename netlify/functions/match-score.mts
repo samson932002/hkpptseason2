@@ -12,6 +12,13 @@
 // correcting a leg, or resetting a match) require the same organizer
 // passcode used everywhere else on the site.
 
+// A match can only be scored once BOTH teams have submitted their lineup
+// (match_lineups) — no lineup, no game. Every successful write is also
+// mirrored, best-effort, to the "HKPPT Season 2 - Match Scores" Google Sheet
+// via docs/match-scores-apps-script.gs (MATCH_SCORES_GAS_API_URL). Netlify
+// Database stays the source of truth: a dead or slow sheet never blocks
+// staff from recording a score.
+
 import { getDatabase } from '@netlify/database'
 
 const LEG_ORDER = ['WD', 'XD1', 'XD2', 'XD3', 'MD'] as const
@@ -32,6 +39,58 @@ function rejectPasscode(supplied: unknown): Response | null {
     return Response.json({ ok: false, error: 'invalid_passcode' }, { status: 401 })
   }
   return null
+}
+
+type LineupLegs = Record<string, string[]>
+
+type Meta = {
+  isoDate?: string
+  date?: string
+  time?: string
+  venue?: string
+  court?: string
+  divisionZh?: string
+  teamALabel?: string
+  teamBLabel?: string
+}
+
+function cleanMeta(raw: unknown): Meta {
+  if (!raw || typeof raw !== 'object') return {}
+  const out: Record<string, string> = {}
+  for (const k of ['isoDate', 'date', 'time', 'venue', 'court', 'divisionZh', 'teamALabel', 'teamBLabel']) {
+    const v = (raw as Record<string, unknown>)[k]
+    if (typeof v === 'string' || typeof v === 'number') out[k] = String(v).slice(0, 200)
+  }
+  return out as Meta
+}
+
+function sheetUrl(): string | undefined {
+  return Netlify.env.get('MATCH_SCORES_GAS_API_URL') || undefined
+}
+
+// Fire-and-forget-with-a-timeout, same pattern as the roster/acknowledgment
+// mirrors: awaited so it gets a real chance to run, never allowed to fail
+// the staff member's save.
+async function mirrorToSheet(body: Record<string, unknown>): Promise<void> {
+  const url = sheetUrl()
+  if (!url) return
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(8000),
+    })
+  } catch {
+    // best-effort only
+  }
+}
+
+async function loadLineups(db: ReturnType<typeof getDatabase>, matchId: string): Promise<Map<string, LineupLegs>> {
+  const rows = (await db.sql<{ team: string; legs: LineupLegs }>`
+    SELECT team, legs FROM match_lineups WHERE match_id = ${matchId}
+  `) as unknown as { team: string; legs: LineupLegs }[]
+  return new Map(rows.map((r) => [r.team, r.legs]))
 }
 
 type LegEntry = { leg: Leg; teamA: number; teamB: number; enteredAt: string }
@@ -127,6 +186,14 @@ export default async (req: Request) => {
         return Response.json({ ok: false, error: 'invalid_score' }, { status: 400 })
       }
 
+      // No lineup, no game: both teams must have submitted before any leg
+      // can be recorded.
+      const lineups = await loadLineups(db, matchId)
+      const missing = [teamA, teamB].filter((t) => !lineups.has(t))
+      if (missing.length > 0) {
+        return Response.json({ ok: false, error: 'lineups_missing', missing }, { status: 409 })
+      }
+
       const existing = await loadRow(db, matchId)
       const row = existing || emptyScore(matchId, division, teamA, teamB)
       const legs = [...row.legs]
@@ -172,6 +239,20 @@ export default async (req: Request) => {
         RETURNING match_id, division, team_a, team_b, legs, status, winner, updated_at
       `) as unknown as ScoreRow[]
 
+      await mirrorToSheet({
+        action: 'upsertMatch',
+        matchId,
+        meta: cleanMeta(payload.meta),
+        teamA,
+        teamB,
+        lineupA: lineups.get(teamA) || {},
+        lineupB: lineups.get(teamB) || {},
+        legs: saved[0].legs,
+        status: saved[0].status,
+        winner: saved[0].winner,
+        updatedAt: saved[0].updated_at,
+      })
+
       return Response.json({ ok: true, score: saved[0] })
     }
 
@@ -183,6 +264,7 @@ export default async (req: Request) => {
         return Response.json({ ok: false, error: 'missing_match_id' }, { status: 400 })
       }
       await db.sql`DELETE FROM match_scores WHERE match_id = ${matchId}`
+      await mirrorToSheet({ action: 'clearMatch', matchId })
       return Response.json({ ok: true })
     }
 

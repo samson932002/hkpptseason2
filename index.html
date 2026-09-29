@@ -593,6 +593,27 @@
   .score-input-row { display: flex; gap: 14px; flex-wrap: wrap; }
   .score-input-row > div { flex: 1; min-width: 130px; }
   .score-input-label { display: block; font-weight: 700; font-size: 12.5px; margin-bottom: 4px; color: var(--ink); }
+  .ms-lineup-status { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; font-size: 13px; }
+  .ms-lineup-status .ok { color: #256B2B; font-weight: 700; }
+  .ms-lineup-status .missing { color: #A33; font-weight: 700; }
+  .ms-blocked { background: #FFF1F1; border: 1.5px solid #F2B8B8; border-radius: 9px; padding: 10px 12px; font-size: 12.5px; line-height: 1.6; color: #7A1F1F; margin-top: 8px; }
+  .ms-leg-card { border: 1.5px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 10px; background: var(--white); }
+  .ms-leg-card.current { border-color: var(--navy); box-shadow: 0 0 0 2px rgba(0,31,61,.08); }
+  .ms-leg-card.future { opacity: .55; }
+  .ms-leg-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .ms-leg-name { font-weight: 800; font-size: 14px; color: var(--navy); }
+  .ms-chip { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 10px; background: #EEF3FA; color: var(--navy); }
+  .ms-chip.done { background: #E3F4E4; color: #256B2B; }
+  .ms-chip.live { background: var(--navy); color: var(--lime); }
+  .ms-pairs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ms-pair .team { font-size: 11px; font-weight: 800; color: var(--muted); margin-bottom: 2px; }
+  .ms-pair .players { font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.4; min-height: 18px; }
+  .ms-pair input[type="number"] { margin-top: 8px; font-size: 18px; font-weight: 800; text-align: center; }
+  .ms-pair .cum { margin-top: 6px; font-size: 20px; font-weight: 800; color: var(--navy); }
+  .ms-pair .delta { font-size: 11px; color: var(--muted); }
+  .ms-leg-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .ms-leg-actions button { flex: 1; }
+  .ms-edit-btn { background: none; border: 1.5px solid var(--line); border-radius: 8px; padding: 8px; font-weight: 700; color: var(--navy); cursor: pointer; }
 </style>
 </head>
 <body>
@@ -1171,6 +1192,10 @@
         <p style="margin:6px 0 0; color:#B9C6D9; font-size:12.5px;" id="mlSavedAt"></p>
       </div>
 
+      <div id="mlLockedBanner" class="card" style="display:none; background:#FFF1F1; border-color:#F2B8B8;">
+        <p style="margin:0; font-size:12.5px; line-height:1.6; color:#7A1F1F;">🔒 呢場比賽已經開始，出場名單不可再更改。<br>This match has started — the lineup can no longer be changed.</p>
+      </div>
+
       <div id="mlLegsContainer"></div>
 
       <div class="card">
@@ -1217,28 +1242,12 @@
 
         <div class="card">
           <h2 id="msMatchTitle"></h2>
-          <div style="overflow-x:auto;">
-            <table class="leg-log-table">
-              <thead><tr><th>局 Leg</th><th id="msTeamAHead">Team A</th><th id="msTeamBHead">Team B</th><th>時間 Time</th></tr></thead>
-              <tbody id="msLegLogRows"></tbody>
-            </table>
-          </div>
+          <p class="meta-note" id="msMatchMeta" style="margin:0;"></p>
+          <div class="ms-lineup-status" id="msLineupStatus"></div>
+          <button class="refresh-btn" id="msRefreshBtn">重新整理 Refresh</button>
         </div>
 
-        <div id="msEntryCard" class="card">
-          <h2 id="msEntryTitle">輸入比分 Enter Score</h2>
-          <div class="score-input-row">
-            <div>
-              <label class="score-input-label" id="msTeamALabel"></label>
-              <input type="number" id="msTeamAInput" min="0" step="1">
-            </div>
-            <div>
-              <label class="score-input-label" id="msTeamBLabel"></label>
-              <input type="number" id="msTeamBInput" min="0" step="1">
-            </div>
-          </div>
-          <button class="submit-btn" id="msSubmitLegBtn" style="margin-top:12px;">提交比分 Submit Score</button>
-        </div>
+        <div id="msLegCards"></div>
 
         <div class="admin-link"><button id="msResetBtn" style="color:#A33;">重設呢場比賽嘅比分 Reset this match's score</button></div>
       </div>
@@ -3334,18 +3343,53 @@ function updateMlSubmitState() {
   el("mlSubmitBtn").disabled = !allFilled;
 }
 
+// Both match-day tabs are mostly used on the day itself, so today's matches
+// (Hong Kong time) are listed first. For testing before the season starts,
+// add ?today=2026-10-10 to the page address to pretend it's that date.
+function hkToday() {
+  const override = new URLSearchParams(location.search).get("today");
+  if (override && /^\d{4}-\d{2}-\d{2}$/.test(override)) return override;
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+}
+
+// Splits [{..., date}] into today / upcoming / earlier groups, keeping each
+// item's original index so <option value> still points into the full list.
+function groupByToday(items) {
+  const today = hkToday();
+  const withIdx = items.map((m, idx) => ({ m, idx }));
+  return [
+    { label: "📍 今日比賽 Today", rows: withIdx.filter(x => x.m.date === today) },
+    { label: "即將舉行 Upcoming", rows: withIdx.filter(x => x.m.date > today) },
+    { label: "已完結 Earlier", rows: withIdx.filter(x => x.m.date < today) },
+  ].filter(g => g.rows.length);
+}
+
+function appendGroupedOptions(sel, groups, labelFn) {
+  groups.forEach(g => {
+    const og = document.createElement("optgroup");
+    og.label = g.label;
+    g.rows.forEach(({ m, idx }) => {
+      const opt = document.createElement("option");
+      opt.value = String(idx);
+      opt.textContent = labelFn(m);
+      og.appendChild(opt);
+    });
+    sel.appendChild(og);
+  });
+}
+
 function populateMlMatchSelect(team) {
   const sel = el("mlMatchSelect");
   sel.innerHTML = '<option value="">請選擇比賽 — Select a match…</option>';
   const matches = SCHEDULE_DATA.groupStage.filter(m => m.teamA === team || m.teamB === team);
-  matches.forEach((m, idx) => {
+  const groups = groupByToday(matches);
+  appendGroupedOptions(sel, groups, m => {
     const opponent = m.teamA === team ? m.teamB : m.teamA;
-    const opt = document.createElement("option");
-    opt.value = String(idx);
-    opt.textContent = `${m.dateLabel}（${m.weekday}） ${m.time} vs ${idLabel(opponent)}`;
-    sel.appendChild(opt);
+    return `${m.dateLabel}（${m.weekday}） ${m.time} vs ${idLabel(opponent)}`;
   });
   sel.dataset.matches = JSON.stringify(matches);
+  // On match day, jump straight to the next of today's matches.
+  if (groups.length && groups[0].label.includes("Today")) sel.value = String(groups[0].rows[0].idx);
 }
 
 el("mlTeamSelect").addEventListener("change", async (e) => {
@@ -3364,6 +3408,7 @@ el("mlTeamSelect").addEventListener("change", async (e) => {
   }
   populateMlMatchSelect(mlTeam);
   el("mlMatchSection").style.display = "block";
+  if (el("mlMatchSelect").value !== "") el("mlMatchSelect").dispatchEvent(new Event("change"));
 });
 
 el("mlMatchSelect").addEventListener("change", async (e) => {
@@ -3418,6 +3463,19 @@ async function loadMlFormData() {
   if (mlRosterPlayers) renderLegSelects();
   else { setMlInputValuesFromPicks(); updateMlSubmitState(); }
 
+  // Rulebook 3.7: no lineup changes once the match has started (first leg
+  // score recorded). The server enforces this too; this just says so up front.
+  let started = false;
+  try {
+    const sc = await fetch(`${MATCH_SCORE_API}?matchId=${encodeURIComponent(mlMatch.matchId)}`).then(r => r.json());
+    started = !!(sc && sc.ok && sc.score && Array.isArray(sc.score.legs) && sc.score.legs.length > 0);
+  } catch (e) {
+    started = false;
+  }
+  el("mlLockedBanner").style.display = started ? "block" : "none";
+  el("mlLegsContainer").querySelectorAll("select, input").forEach(x => { x.disabled = started; });
+  if (started) el("mlSubmitBtn").disabled = true;
+
   el("mlLoading").style.display = "none";
   el("mlFormSection").style.display = "block";
 }
@@ -3430,6 +3488,7 @@ function mlLineupErrorMessage(err) {
   if (err.startsWith("md_requires_male")) return "⚠ 男雙必須係兩位男球員 MD must be two male players";
   if (err.startsWith("xd_requires_mixed_pair")) return "⚠ 混雙必須係一男一女 Mixed doubles must be one male + one female";
   if (err.startsWith("duplicate_player_in_leg")) return "⚠ 同一局入面唔可以揀同一位球員兩次 A leg can't have the same player twice";
+  if (err === "match_started") return "🔒 呢場比賽已經開始，出場名單不可再更改 This match has started — the lineup can no longer be changed";
   if (err.startsWith("invalid_leg")) return "⚠ 表格資料不完整，請檢查每局都揀咗兩位球員 Incomplete form — check that every leg has two players";
   return "提交失敗，請再試一次 Submission failed, please retry";
 }
@@ -3472,11 +3531,14 @@ let msPasscode = "";
 let msMatches = [];
 let msCurrentMatch = null; // { matchId, division, teamA, teamB, dateLabel, weekday, time, venueZh, court }
 let msCurrentScore = null; // score row from the API, or null if none yet
+let msLineups = {}; // team -> { WD: [a,b], XD1: [...], ... } for the selected match
+let msLineupTimes = {}; // team -> submitted/updated time
+let msEditingLast = false; // true while staff are correcting the last saved leg
 
 function buildMsMatches() {
   msMatches = SCHEDULE_DATA.groupStage.map(m => ({
     matchId: buildMatchId(m.division, m.teamA, m.teamB),
-    division: m.division, teamA: m.teamA, teamB: m.teamB,
+    division: m.division, teamA: m.teamA, teamB: m.teamB, date: m.date,
     dateLabel: m.dateLabel, weekday: m.weekday, time: m.time, venueZh: m.venueZh, court: m.court,
   }));
 }
@@ -3485,15 +3547,15 @@ function populateMsMatchSelect(filterText) {
   const sel = el("msMatchSelect");
   const q = (filterText || "").trim().toLowerCase();
   sel.innerHTML = '<option value="">請選擇比賽 — Select a match…</option>';
-  msMatches.forEach((m, idx) => {
+  const labelOf = m => {
     const dm = divisionMeta(m.division);
-    const label = `${m.dateLabel}（${m.weekday}） ${m.time} ${m.venueZh} · ${dm.zh} · ${idLabel(m.teamA)} vs ${idLabel(m.teamB)}`;
-    if (q && !label.toLowerCase().includes(q)) return;
-    const opt = document.createElement("option");
-    opt.value = String(idx);
-    opt.textContent = label;
-    sel.appendChild(opt);
-  });
+    const court = m.court ? ` C${m.court}` : "";
+    return `${m.dateLabel}（${m.weekday}） ${m.time} ${m.venueZh}${court} · ${dm.zh} · ${idLabel(m.teamA)} vs ${idLabel(m.teamB)}`;
+  };
+  const groups = groupByToday(msMatches)
+    .map(g => ({ ...g, rows: g.rows.filter(({ m }) => !q || labelOf(m).toLowerCase().includes(q)) }))
+    .filter(g => g.rows.length);
+  appendGroupedOptions(sel, groups, labelOf);
 }
 
 el("msFilterInput").addEventListener("input", (e) => populateMsMatchSelect(e.target.value));
@@ -3533,10 +3595,20 @@ el("msMatchSelect").addEventListener("change", async (e) => {
 
 async function loadMsMatchDetail() {
   el("msLoading").style.display = "block";
+  msEditingLast = false;
   try {
-    const res = await fetch(`${MATCH_SCORE_API}?matchId=${encodeURIComponent(msCurrentMatch.matchId)}`);
-    const data = await res.json();
-    msCurrentScore = (data.ok && data.score) ? data.score : null;
+    const id = encodeURIComponent(msCurrentMatch.matchId);
+    const [scoreData, lineupData] = await Promise.all([
+      fetch(`${MATCH_SCORE_API}?matchId=${id}`).then(r => r.json()),
+      fetch(`${MATCH_LINEUP_API}?matchId=${id}`).then(r => r.json()),
+    ]);
+    msCurrentScore = (scoreData.ok && scoreData.score) ? scoreData.score : null;
+    msLineups = {};
+    msLineupTimes = {};
+    ((lineupData && lineupData.lineups) || []).forEach(l => {
+      msLineups[l.team] = l.legs || {};
+      msLineupTimes[l.team] = l.updated_at || l.submitted_at;
+    });
     renderMsMatchDetail();
   } catch (e) {
     showToast("無法載入比分資料，請檢查網絡後重試 Could not load score data — check your connection", true);
@@ -3546,83 +3618,141 @@ async function loadMsMatchDetail() {
   }
 }
 
+function escapeHtml(v) {
+  return String(v == null ? "" : v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function msPairText(team, leg) {
+  const l = msLineups[team];
+  return l && Array.isArray(l[leg]) ? l[leg].map(escapeHtml).join(" / ") : "—";
+}
+
 function renderMsMatchDetail() {
   const m = msCurrentMatch;
   const dm = divisionMeta(m.division);
-  el("msMatchTitle").textContent = `${idLabel(m.teamA)} vs ${idLabel(m.teamB)} · ${dm.zh} · ${m.dateLabel}（${m.weekday}） ${m.time}`;
-  el("msTeamAHead").textContent = idLabel(m.teamA);
-  el("msTeamBHead").textContent = idLabel(m.teamB);
+  el("msMatchTitle").textContent = `${idLabel(m.teamA)} vs ${idLabel(m.teamB)}`;
+  el("msMatchMeta").textContent = `${dm.zh} ${dm.en} · ${m.dateLabel}（${m.weekday}） ${m.time} · ${m.venueZh}${m.court ? ` Court ${m.court}` : ""}`;
+
+  const hasA = !!msLineups[m.teamA], hasB = !!msLineups[m.teamB];
+  const ready = hasA && hasB;
+  const statusLine = (team, has) => has
+    ? `<div><span class="ok">✓ 已提交 Submitted</span> — ${escapeHtml(idLabel(team))} <span class="meta-note">(${escapeHtml(formatSavedAt(msLineupTimes[team]))})</span></div>`
+    : `<div><span class="missing">✗ 未提交 Not submitted</span> — ${escapeHtml(idLabel(team))}</div>`;
+  el("msLineupStatus").innerHTML = statusLine(m.teamA, hasA) + statusLine(m.teamB, hasB) +
+    (ready ? "" : `<div class="ms-blocked">⛔ 未能開賽：雙方隊伍須先提交出場名單，先可以開始比賽及記錄比分。請隊長喺「對賽排陣」頁提交後，撳「重新整理」。<br>Game cannot begin until both teams have submitted their lineup. Ask the captain to submit on the Match Lineup tab, then press Refresh.</div>`);
 
   const legs = msCurrentScore ? msCurrentScore.legs : [];
-  el("msLegLogRows").innerHTML = legs.length
-    ? legs.map(l => `<tr><td>${LEG_LABEL_SHORT[l.leg] || l.leg}</td><td>${l.teamA}</td><td>${l.teamB}</td><td>${formatSavedAt(l.enteredAt)}</td></tr>`).join("")
-    : `<tr><td colspan="4" style="color:var(--muted); text-align:center;">未有比分紀錄 No scores entered yet</td></tr>`;
-
-  const status = msCurrentScore ? msCurrentScore.status : "in_progress";
-  if (status === "final") {
-    const winner = msCurrentScore.winner;
+  const isFinal = !!(msCurrentScore && msCurrentScore.status === "final");
+  if (isFinal) {
+    const w = msCurrentScore.winner;
     el("msFinalBanner").style.display = "block";
-    el("msFinalText").textContent = winner
-      ? `🏆 比賽完結，勝方：${idLabel(winner)} Match final — winner: ${idLabel(winner)}`
-      : `比賽完結（打和） Match final (tied)`;
-    el("msEntryCard").style.display = "none";
+    el("msFinalText").textContent = w ? `🏆 比賽完結，勝方：${idLabel(w)} Match final — winner: ${idLabel(w)}` : "比賽完結（打和） Match final (tied)";
   } else {
     el("msFinalBanner").style.display = "none";
-    el("msEntryCard").style.display = "block";
-    const nextLeg = LEG_ORDER[legs.length];
-    el("msEntryTitle").textContent = `輸入 ${nextLeg} 完結後嘅累積比分 Enter cumulative score after ${nextLeg}`;
-    el("msTeamALabel").textContent = idLabel(m.teamA);
-    el("msTeamBLabel").textContent = idLabel(m.teamB);
-    const priorA = legs.length ? legs[legs.length - 1].teamA : 0;
-    const priorB = legs.length ? legs[legs.length - 1].teamB : 0;
-    el("msTeamAInput").value = "";
-    el("msTeamAInput").min = String(priorA);
-    el("msTeamBInput").value = "";
-    el("msTeamBInput").min = String(priorB);
-    el("msSubmitLegBtn").textContent = `提交 ${nextLeg} 比分 Submit ${nextLeg} score`;
-    el("msSubmitLegBtn").dataset.leg = nextLeg;
+  }
+
+  const nextIdx = legs.length;
+  let html = "";
+  LEG_ORDER.forEach((leg, i) => {
+    const rec = legs[i];
+    const prev = i > 0 && legs[i - 1] ? legs[i - 1] : { teamA: 0, teamB: 0 };
+    const isLast = rec && i === legs.length - 1;
+    const editing = isLast && msEditingLast && ready;
+    const isNext = !rec && i === nextIdx && !isFinal && ready;
+    let chip, cls = "";
+    if (editing) { chip = '<span class="ms-chip live">更正中 Editing</span>'; cls = "current"; }
+    else if (rec) chip = '<span class="ms-chip done">已記錄 Saved</span>';
+    else if (isNext) { chip = '<span class="ms-chip live">進行中 Now</span>'; cls = "current"; }
+    else if (isFinal) { chip = '<span class="ms-chip">未進行 Not played</span>'; cls = "future"; }
+    else { chip = '<span class="ms-chip">未開始 Upcoming</span>'; cls = "future"; }
+
+    const side = (team, key) => {
+      let body;
+      if (editing || isNext) {
+        const val = editing ? rec[key] : "";
+        body = `<input type="number" min="${prev[key]}" step="1" inputmode="numeric" class="ms-in" data-side="${key}" value="${val}" placeholder="累積 Total">`;
+      } else if (rec) {
+        body = `<div class="cum">${rec[key]}</div><div class="delta">本局 +${rec[key] - prev[key]}</div>`;
+      } else {
+        body = "";
+      }
+      return `<div class="ms-pair"><div class="team">${escapeHtml(idLabel(team))}</div><div class="players">${msPairText(team, leg)}</div>${body}</div>`;
+    };
+
+    let actions = "";
+    if (editing || isNext) {
+      actions = `<div class="ms-leg-actions">${editing ? '<button class="ms-edit-btn" data-act="cancel">取消 Cancel</button>' : ""}<button class="submit-btn ms-save-btn" data-leg="${leg}">儲存 ${leg} 累積比分 Save</button></div>`;
+    } else if (isLast && ready) {
+      actions = `<div class="ms-leg-actions"><button class="ms-edit-btn" data-act="edit">✏️ 更正 ${leg} Edit</button></div>`;
+    }
+
+    html += `<div class="ms-leg-card ${cls}" data-leg="${leg}">
+      <div class="ms-leg-head"><span class="ms-leg-name">${LEG_LABEL[leg]}</span>${chip}</div>
+      <div class="ms-pairs">${side(m.teamA, "teamA")}${side(m.teamB, "teamB")}</div>
+      ${actions}
+    </div>`;
+  });
+  el("msLegCards").innerHTML = html;
+}
+
+async function msSaveLeg(card, leg) {
+  const a = parseInt(card.querySelector('.ms-in[data-side="teamA"]').value, 10);
+  const b = parseInt(card.querySelector('.ms-in[data-side="teamB"]').value, 10);
+  if (!Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0) {
+    showToast("請輸入雙方嘅累積比分（非負整數） Enter both teams' cumulative totals (whole numbers)", true);
+    return;
+  }
+  const m = msCurrentMatch;
+  const dm = divisionMeta(m.division);
+  const btn = card.querySelector(".ms-save-btn");
+  btn.disabled = true;
+  try {
+    const result = await postAction(MATCH_SCORE_API, {
+      action: "enterLeg", passcode: msPasscode,
+      matchId: m.matchId, division: m.division, teamA: m.teamA, teamB: m.teamB,
+      leg, teamAScore: a, teamBScore: b,
+      meta: {
+        isoDate: m.date, date: `${m.dateLabel}（${m.weekday}）`, time: m.time, venue: m.venueZh,
+        court: m.court ? String(m.court) : "", divisionZh: `${dm.zh} ${dm.en}`,
+        teamALabel: idLabel(m.teamA), teamBLabel: idLabel(m.teamB),
+      },
+    });
+    if (!result.ok) {
+      if (result.error === "lineups_missing") await loadMsMatchDetail();
+      showToast(msScoreErrorMessage(result.error, result.expectedLeg), true);
+      return;
+    }
+    msCurrentScore = result.score;
+    msEditingLast = false;
+    renderMsMatchDetail();
+    showToast(`✅ ${leg} 比分已儲存 Saved`);
+  } catch (e) {
+    showToast("儲存失敗，請檢查網絡後再試一次 Save failed — check your connection", true);
+  } finally {
+    btn.disabled = false;
   }
 }
+
+el("msLegCards").addEventListener("click", (e) => {
+  const card = e.target.closest(".ms-leg-card");
+  if (!card) return;
+  if (e.target.closest(".ms-save-btn")) { msSaveLeg(card, card.dataset.leg); return; }
+  const act = e.target.closest("[data-act]");
+  if (act && act.dataset.act === "edit") { msEditingLast = true; renderMsMatchDetail(); }
+  if (act && act.dataset.act === "cancel") { msEditingLast = false; renderMsMatchDetail(); }
+});
+
+el("msRefreshBtn").addEventListener("click", () => { if (msCurrentMatch) loadMsMatchDetail(); });
 
 function msScoreErrorMessage(err, expectedLeg) {
   if (err === "wrong_leg") return `⚠ 局數對唔上，下一局應該係 ${expectedLeg || "?"} Leg mismatch — the next expected leg is ${expectedLeg || "?"}`;
   if (err === "score_must_not_decrease") return "⚠ 累積比分唔可以比上一局細 Cumulative score can't be lower than the previous leg";
   if (err === "match_already_final") return "⚠ 呢場比賽已經完結，請先重設先可以修改 This match is already final — reset it first to make changes";
   if (err === "invalid_passcode") return "密碼錯誤，請重新登入 Incorrect passcode — please sign in again";
+  if (err === "lineups_missing") return "⛔ 未能開賽：仍有隊伍未提交出場名單 Game cannot begin — a team hasn't submitted its lineup";
   if (err === "invalid_score") return "⚠ 請輸入有效嘅比分（非負整數） Enter valid scores (non-negative whole numbers)";
   return "提交失敗，請再試一次 Submission failed, please retry";
 }
-
-el("msSubmitLegBtn").addEventListener("click", async () => {
-  const leg = el("msSubmitLegBtn").dataset.leg;
-  const teamAScore = parseInt(el("msTeamAInput").value, 10);
-  const teamBScore = parseInt(el("msTeamBInput").value, 10);
-  if (!Number.isInteger(teamAScore) || !Number.isInteger(teamBScore) || teamAScore < 0 || teamBScore < 0) {
-    showToast("請輸入有效嘅比分（非負整數） Enter valid scores (non-negative whole numbers)", true);
-    return;
-  }
-  const m = msCurrentMatch;
-  const btn = el("msSubmitLegBtn");
-  btn.disabled = true;
-  try {
-    const result = await postAction(MATCH_SCORE_API, {
-      action: "enterLeg", passcode: msPasscode,
-      matchId: m.matchId, division: m.division, teamA: m.teamA, teamB: m.teamB,
-      leg, teamAScore, teamBScore,
-    });
-    if (!result.ok) {
-      showToast(msScoreErrorMessage(result.error, result.expectedLeg), true);
-      return;
-    }
-    msCurrentScore = result.score;
-    renderMsMatchDetail();
-    showToast(`✅ ${leg} 比分已提交 Score submitted`);
-  } catch (e) {
-    showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
-  } finally {
-    btn.disabled = false;
-  }
-});
 
 el("msResetBtn").addEventListener("click", async () => {
   if (!msCurrentMatch) return;

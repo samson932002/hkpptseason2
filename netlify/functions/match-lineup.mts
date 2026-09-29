@@ -207,6 +207,15 @@ export default async (req: Request) => {
       if (!division) return Response.json({ ok: false, error: 'missing_division' }, { status: 400 })
       if (!team) return Response.json({ ok: false, error: 'missing_team' }, { status: 400 })
 
+      // Rulebook 3.7: a lineup can't change once the match has started. The
+      // first leg score being recorded is the "match has started" signal.
+      const started = (await db.sql<{ n: number | string }>`
+        SELECT jsonb_array_length(legs) AS n FROM match_scores WHERE match_id = ${matchId}
+      `) as unknown as { n: number | string }[]
+      if (started.length > 0 && Number(started[0].n) > 0) {
+        return Response.json({ ok: false, error: 'match_started' }, { status: 409 })
+      }
+
       const shapeCheck = validateLegsShape(payload.legs)
       if (!shapeCheck.ok) {
         return Response.json({ ok: false, error: shapeCheck.error }, { status: 400 })
