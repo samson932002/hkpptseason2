@@ -54,6 +54,8 @@
 
   <div id="mlFormSection" style="display:none;">
 
+    <div id="mlResultCard" class="card ms-summary" style="display:none;"></div>
+
     <div id="mlSavedBanner" class="card note-dark" style="display:none;">
       <p class="title">✅ 已收到你隊呢場比賽嘅出場名單</p>
       <p id="mlSavedAt"></p>
@@ -220,6 +222,131 @@ el("mlTeamSelect").addEventListener("change", async (e) => {
   populateMlMatchSelect(mlTeam);
   el("mlMatchSection").style.display = "block";
   if (el("mlMatchSelect").value !== "") el("mlMatchSelect").dispatchEvent(new Event("change"));
+  annotateMlMatchOptions(mlTeam);
+});
+
+// Marks finished matches in the dropdown: "✍️ 待確認" until this team has
+// confirmed the result, "✅" once it has.
+async function annotateMlMatchOptions(team) {
+  let data;
+  try {
+    data = await fetch(`${MATCH_SCORE_API}?team=${encodeURIComponent(team)}`).then(r => r.json());
+  } catch (e) {
+    return;
+  }
+  if (!data || !data.ok || team !== mlTeam) return;
+  const byId = {};
+  (data.matches || []).forEach(m => { byId[m.matchId] = m; });
+  const sel = el("mlMatchSelect");
+  const matches = JSON.parse(sel.dataset.matches || "[]");
+  sel.querySelectorAll("option[value]").forEach(opt => {
+    if (opt.value === "") return;
+    const m = matches[Number(opt.value)];
+    if (!m) return;
+    const st = byId[buildMatchId(m.division, m.teamA, m.teamB)];
+    opt.textContent = opt.textContent.replace(/^(✍️ 待確認 |✅ |⚠️ )/, "");
+    if (st && st.status === "final") {
+      const c = st.myConfirmation;
+      const prefix = !c ? "✍️ 待確認 " : c.status === "confirmed" ? "✅ " : "⚠️ ";
+      opt.textContent = prefix + opt.textContent;
+    }
+  });
+}
+
+// ── Result confirmation (after staff finish entering all 5 legs) ─────────
+let mlScore = null;
+
+function renderMlResult() {
+  const card = el("mlResultCard");
+  const legs = mlScore && Array.isArray(mlScore.legs) ? mlScore.legs : [];
+  if (!legs.length) { card.style.display = "none"; card.innerHTML = ""; return; }
+  card.style.display = "block";
+  const sched = JSON.parse(el("mlMatchSelect").dataset.matches || "[]")[Number(el("mlMatchSelect").value)] || {};
+  const teamA = sched.teamA, teamB = sched.teamB;
+  const last = legs[legs.length - 1];
+  const idA = TEAM_ID[teamA] || "A", idB = TEAM_ID[teamB] || "B";
+
+  if (mlScore.status !== "final") {
+    card.innerHTML = `<h2>⏱ 比賽進行中 Match in progress</h2>
+      <p class="meta-note" style="margin:0;">${LEG_LABEL_SHORT[last.leg]} 後 after: ${escapeHtml(idLabel(teamA))} ${last.teamA} : ${last.teamB} ${escapeHtml(idLabel(teamB))}</p>
+      <p class="meta-note">比賽完結、職員輸入全部5局後，請返嚟呢度確認比分。Once the match ends and staff have entered all 5 legs, come back here to confirm the result.</p>`;
+    return;
+  }
+
+  let rows = "";
+  LEG_ORDER.forEach((leg, i) => {
+    const r = legs[i];
+    if (!r) return;
+    const T = LEG_TARGET[leg];
+    const w = r.teamA === T ? "A" : r.teamB === T ? "B" : "";
+    rows += `<tr><td class="leg">${LEG_LABEL_SHORT[leg]}</td><td class="${w === "A" ? "won" : ""}">${r.teamA}</td><td class="${w === "B" ? "won" : ""}">${r.teamB}</td></tr>`;
+  });
+  const conf = mlScore.confirmations || {};
+  const mine = conf[mlTeam];
+  const oppTeam = mlTeam === teamA ? teamB : teamA;
+  const opp = conf[oppTeam];
+  const confLine = (c) => !c ? "⏳ 未確認 Not yet confirmed"
+    : c.status === "confirmed" ? `✅ 已確認 Confirmed — ${escapeHtml(c.name)}（${escapeHtml(formatSavedAt(c.at))}）`
+    : `⚠️ 有異議 Disputed — ${escapeHtml(c.name)}：${escapeHtml(c.note)}`;
+
+  let action;
+  if (mine && mine.status === "confirmed") {
+    action = `<div class="ms-check ok">✅ 你隊已確認呢個結果 Your team has confirmed this result — ${escapeHtml(mine.name)}（${escapeHtml(formatSavedAt(mine.at))}）</div>`;
+  } else {
+    action = `${mine ? `<div class="ms-check bad">⚠️ 你隊已提出異議，大會跟進中。如問題已解決，可以喺下面確認。You reported a problem — the organizer is following up. Once resolved, you can confirm below.<br>「${escapeHtml(mine.note)}」</div>` : ""}
+      <label style="display:block; font-size:12.5px; font-weight:700; color:var(--navy); margin:12px 0 6px;">隊長姓名 Captain's name</label>
+      <input type="text" id="mlConfName" maxlength="60" placeholder="請輸入隊長姓名 Enter captain's name">
+      <button class="submit-btn" data-act="confirm" style="margin-top:10px;">✅ 確認比分正確 Confirm this result</button>
+      <button class="dispute-btn" data-act="show-dispute">⚠️ 比分有問題 Report a problem</button>
+      <div id="mlDisputeBox" style="display:none; margin-top:10px;">
+        <textarea id="mlDisputeNote" rows="3" maxlength="500" placeholder="請說明邊局／邊個比分有問題 Which leg / score is wrong?"></textarea>
+        <button class="submit-btn dispute-submit" data-act="dispute" style="margin-top:8px;">提交異議 Submit dispute</button>
+      </div>`;
+  }
+
+  card.innerHTML = `<h2>🏁 比賽結果確認 Confirm Result</h2>
+    <p class="meta-note" style="margin:0 0 8px;">請核對職員輸入嘅比分。確認後如需更改，請聯絡大會。Please check the scores entered by staff. After confirming, contact the organizer for any change.</p>
+    <table><thead><tr><th style="text-align:left;">局 Leg</th><th>${escapeHtml(idA)}</th><th>${escapeHtml(idB)}</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="ms-result"><div class="label">🏆 勝方 WINNER</div><div class="who">${escapeHtml(idLabel(mlScore.winner))}</div>
+      <div class="score">${escapeHtml(idLabel(teamA))} ${last.teamA} : ${last.teamB} ${escapeHtml(idLabel(teamB))}</div></div>
+    <div class="ms-lineup-status" style="margin-top:12px;">
+      <div><b>${escapeHtml(idLabel(mlTeam))}</b>（你隊 you）：${confLine(mine)}</div>
+      <div><b>${escapeHtml(idLabel(oppTeam))}</b>：${confLine(opp)}</div>
+    </div>
+    ${action}`;
+}
+
+async function mlSendConfirmation(decision) {
+  const name = (el("mlConfName") && el("mlConfName").value || "").trim();
+  const note = (el("mlDisputeNote") && el("mlDisputeNote").value || "").trim();
+  if (!name) { showToast("請輸入隊長姓名 Enter the captain's name", true); return; }
+  if (decision === "dispute" && !note) { showToast("請說明問題 Please describe the problem", true); return; }
+  if (decision === "confirm" && !confirm(`確認 ${idLabel(mlScore.winner)} 勝出，比分正確？\nConfirm the result is correct?`)) return;
+  try {
+    const result = await postAction(MATCH_SCORE_API, { action: "confirm", matchId: mlMatch.matchId, team: mlTeam, decision, captainName: name, note });
+    if (!result.ok) {
+      const msg = result.error === "already_confirmed" ? "你隊已經確認咗 Already confirmed"
+        : result.error === "not_final" ? "比賽未完結 The match isn't final yet"
+        : "提交失敗，請再試一次 Submission failed, please retry";
+      showToast(msg, true);
+      if (result.error === "already_confirmed" || result.error === "not_final") await loadMlFormData();
+      return;
+    }
+    mlScore = result.score;
+    renderMlResult();
+    annotateMlMatchOptions(mlTeam);
+    showToast(decision === "confirm" ? "✅ 已確認比分 Result confirmed" : "⚠️ 已提交異議，大會會跟進 Dispute sent — the organizer will follow up");
+  } catch (e) {
+    showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
+  }
+}
+
+el("mlResultCard").addEventListener("click", (e) => {
+  const act = e.target.closest("[data-act]");
+  if (!act) return;
+  if (act.dataset.act === "confirm") mlSendConfirmation("confirm");
+  if (act.dataset.act === "dispute") mlSendConfirmation("dispute");
+  if (act.dataset.act === "show-dispute") el("mlDisputeBox").style.display = "block";
 });
 
 el("mlMatchSelect").addEventListener("change", async (e) => {
@@ -277,12 +404,15 @@ async function loadMlFormData() {
   // Rulebook 3.7: no lineup changes once the match has started (first leg
   // score recorded). The server enforces this too; this just says so up front.
   let started = false;
+  mlScore = null;
   try {
     const sc = await fetch(`${MATCH_SCORE_API}?matchId=${encodeURIComponent(mlMatch.matchId)}`).then(r => r.json());
-    started = !!(sc && sc.ok && sc.score && Array.isArray(sc.score.legs) && sc.score.legs.length > 0);
+    mlScore = (sc && sc.ok && sc.score) ? sc.score : null;
+    started = !!(mlScore && Array.isArray(mlScore.legs) && mlScore.legs.length > 0);
   } catch (e) {
     started = false;
   }
+  renderMlResult();
   el("mlLockedBanner").style.display = started ? "block" : "none";
   el("mlLegsContainer").querySelectorAll("select, input").forEach(x => { x.disabled = started; });
   if (started) el("mlSubmitBtn").disabled = true;

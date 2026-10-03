@@ -594,6 +594,12 @@
   }
   .matchday-link .ml-title { display: block; font-weight: 800; font-size: 15px; }
   .matchday-link .ml-sub { display: block; font-size: 12px; font-weight: 600; margin-top: 2px; }
+  /* Small, low-key link to the helpers' scoring page (/staff, passcode). */
+  .staff-footer { text-align: center; padding: 4px 16px 32px; }
+  .staff-footer a {
+    display: inline-block; font-size: 12px; font-weight: 700; color: var(--muted); text-decoration: none;
+    border: 1px solid var(--line); border-radius: 18px; padding: 6px 14px; background: var(--white);
+  }
 </style>
 </head>
 <body>
@@ -1161,6 +1167,10 @@
       <button class="danger" id="resetGoBtn">確認重置 Reset</button>
     </div>
   </div>
+</div>
+
+<div class="staff-footer">
+  <a href="/staff">🔒 職員入口 Staff login</a>
 </div>
 
 <div class="toast" id="toast"></div>

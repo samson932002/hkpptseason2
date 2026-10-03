@@ -350,10 +350,24 @@ function renderMsSummary(legs, isFinal) {
     result = `<div class="ms-result pending"><div class="label">結果 RESULT</div><div class="who">比賽未開始 Not started</div></div>`;
   }
 
+  let confHtml = "";
+  if (isFinal) {
+    const conf = msCurrentScore.confirmations || {};
+    const line = (team) => {
+      const c = conf[team];
+      const st = !c ? '<span class="meta-note">⏳ 未確認 Waiting for captain</span>'
+        : c.status === "confirmed" ? `<span class="ok">✅ 已確認 Confirmed</span> — ${escapeHtml(c.name)}（${escapeHtml(formatSavedAt(c.at))}）`
+        : `<span class="missing">⚠️ 有異議 Disputed</span> — ${escapeHtml(c.name)}：「${escapeHtml(c.note)}」`;
+      return `<div><b>${escapeHtml(idLabel(team))}</b>：${st}</div>`;
+    };
+    confHtml = `<div class="ms-lineup-status" style="margin-top:12px;"><div style="font-weight:800; color:var(--navy);">隊長確認 Captain confirmation</div>${line(m.teamA)}${line(m.teamB)}
+      <div class="meta-note">隊長喺「比賽日」頁確認比分；撳上面「重新整理」睇最新狀態。更正任何一局都會清除確認，雙方需要重新確認。Captains confirm on the Match Day page — press Refresh above for the latest. Correcting any leg clears both confirmations.</div></div>`;
+  }
+
   el("msSummary").innerHTML = `<h2>比賽結果核對 Result Check</h2>
     <p class="meta-note" style="margin:0 0 8px;">請核對每局先到目標分嘅隊伍同最終勝方係咪正確（有冇輸入錯邊）。Check each leg's winner and the overall winner match what happened on court.</p>
     <table><thead><tr><th style="text-align:left;">局 Leg</th><th>目標</th><th>${escapeHtml(idA)}</th><th>${escapeHtml(idB)}</th><th>先到 Won</th></tr></thead><tbody>${rows}</tbody></table>
-    ${result}`;
+    ${result}${confHtml}`;
 }
 
 // ── Saving ───────────────────────────────────────────────────────────────

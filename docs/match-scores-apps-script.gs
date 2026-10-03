@@ -5,7 +5,8 @@
 //
 //   Matches — one row per match: date/time/venue/court, both teams, the
 //             cumulative score after each leg (WD, XD1, XD2, XD3, MD), the
-//             final score, winner and status. Updated in place every save.
+//             final score, winner and status, plus each captain's
+//             confirmation (or dispute + reason). Updated in place every save.
 //   Legs    — one row per leg played: which two players each team put out,
 //             the cumulative score after the leg, and the points each team
 //             scored IN that leg (for individual / pair stats later).
@@ -51,6 +52,7 @@ const MATCH_HEADERS = [
   '隊伍A Team A', '隊伍B Team B',
   'WD (A-B)', 'XD1 (A-B)', 'XD2 (A-B)', 'XD3 (A-B)', 'MD (A-B)',
   '最終比分 Final (A-B)', '勝方 Winner', '狀態 Status', '更新時間 Updated',
+  '隊伍A確認 Team A Confirmation', '隊伍B確認 Team B Confirmation',
 ];
 
 const LEG_HEADERS = [
@@ -70,6 +72,15 @@ function doPost(e) {
     const p = JSON.parse(e.postData.contents);
     if (p.action === 'upsertMatch') {
       upsertMatch(p);
+      return jsonOut({ ok: true });
+    }
+    if (p.action === 'confirmMatch') {
+      const sh = ensureSheet('Matches', MATCH_HEADERS);
+      const r = findRow(sh, p.matchId);
+      if (r) {
+        const c = p.confirmations || {};
+        sh.getRange(r, MATCH_HEADERS.length - 1, 1, 2).setValues([[confText(c[p.teamA]), confText(c[p.teamB])]]);
+      }
       return jsonOut({ ok: true });
     }
     if (p.action === 'clearMatch') {
@@ -107,6 +118,8 @@ function upsertMatch(p) {
     winnerLabel,
     status,
     fmt(p.updatedAt),
+    confText((p.confirmations || {})[p.teamA]),
+    confText((p.confirmations || {})[p.teamB]),
   ]);
 
   const matches = ensureSheet('Matches', MATCH_HEADERS);
@@ -153,9 +166,15 @@ function setupSchedule() {
     if (existing[id]) return;
     rows.push([id, m.dateLabel + '（' + m.weekday + '）', m.time, m.venueZh, m.court ? String(m.court) : '',
       (zhOf[m.division] || m.division) + ' ' + (DIVISION_EN[m.division] || ''), label(m.teamA), label(m.teamB),
-      '', '', '', '', '', '', '', '未開始 Not started', '']);
+      '', '', '', '', '', '', '', '未開始 Not started', '', '', '']);
   });
   if (rows.length) sh.getRange(sh.getLastRow() + 1, 1, rows.length, MATCH_HEADERS.length).setValues(rows);
+}
+
+function confText(c) {
+  if (!c) return '';
+  if (c.status === 'confirmed') return '✅ 已確認 Confirmed — ' + c.name + ' (' + fmt(c.at) + ')';
+  return '⚠️ 有異議 Disputed — ' + c.name + ' (' + fmt(c.at) + '): ' + (c.note || '');
 }
 
 function ensureSheet(name, headers) {
@@ -170,7 +189,10 @@ function ensureSheet(name, headers) {
       sh = ss.insertSheet(name);
     }
   }
-  if (String(sh.getRange(1, 1).getValue()) !== headers[0]) {
+  // (Re)write the header row whenever it doesn't match — e.g. after new
+  // columns are added to the script.
+  const current = sh.getRange(1, 1, 1, headers.length).getValues()[0].map(String);
+  if (current.join('|') !== headers.join('|')) {
     sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
     sh.setFrozenRows(1);
   }

@@ -134,3 +134,16 @@ select:focus, input:focus { outline: none; border-color: var(--navy); }
 .ms-result.pending .label { color: var(--muted); }
 .ms-result.pending .who { color: var(--navy); }
 .ms-result.pending .score { color: var(--muted); }
+
+/* ── /match: result confirmation ──────────────────────────────────────── */
+textarea { width: 100%; padding: 10px 11px; border: 1.5px solid var(--line); border-radius: 7px; font-size: 14px; font-family: inherit; color: var(--ink); resize: vertical; }
+textarea:focus { outline: none; border-color: var(--navy); }
+.dispute-btn {
+  width: 100%; margin-top: 8px; padding: 11px; background: none; border: 1.5px solid #E0BFBF;
+  color: #A33; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.submit-btn.dispute-submit { background: #A33; color: #fff; }
+
+/* ── Footer staff link (info site + match page) ───────────────────────── */
+.staff-footer { text-align: center; padding: 18px 16px 28px; }
+.staff-footer a { display: inline-block; font-size: 12px; font-weight: 700; color: var(--muted); text-decoration: none; border: 1px solid var(--line); border-radius: 18px; padding: 6px 14px; background: var(--white); }
