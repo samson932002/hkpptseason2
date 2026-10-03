@@ -110,12 +110,13 @@ type ScoreRow = {
   status: 'in_progress' | 'final'
   winner: string | null
   confirmations: Record<string, Confirmation>
+  started_at: string | null
   updated_at: string
 }
 
 async function loadRow(db: ReturnType<typeof getDatabase>, matchId: string): Promise<ScoreRow | null> {
   const rows = (await db.sql<ScoreRow>`
-    SELECT match_id, division, team_a, team_b, legs, status, winner, confirmations, updated_at
+    SELECT match_id, division, team_a, team_b, legs, status, winner, confirmations, started_at, updated_at
     FROM match_scores WHERE match_id = ${matchId}
   `) as unknown as ScoreRow[]
   return rows[0] || null
@@ -131,6 +132,7 @@ function emptyScore(matchId: string, division: string, teamA: string, teamB: str
     status: 'in_progress',
     winner: null,
     confirmations: {},
+    started_at: null,
     updated_at: new Date().toISOString(),
   }
 }
@@ -144,7 +146,7 @@ export default async (req: Request) => {
       const rejected = rejectPasscode(url.searchParams.get('passcode') ?? undefined)
       if (rejected) return rejected
       const rows = (await db.sql<ScoreRow>`
-        SELECT match_id, division, team_a, team_b, legs, status, winner, confirmations, updated_at FROM match_scores
+        SELECT match_id, division, team_a, team_b, legs, status, winner, confirmations, started_at, updated_at FROM match_scores
         ORDER BY updated_at DESC
       `) as unknown as ScoreRow[]
       return Response.json({ ok: true, matches: rows })
@@ -155,14 +157,20 @@ export default async (req: Request) => {
     const teamParam = url.searchParams.get('team') || ''
     if (teamParam) {
       const rows = (await db.sql<ScoreRow>`
-        SELECT match_id, status, confirmations FROM match_scores
+        SELECT match_id, team_a, team_b, legs, status, winner, confirmations, started_at FROM match_scores
         WHERE team_a = ${teamParam} OR team_b = ${teamParam}
       `) as unknown as ScoreRow[]
       return Response.json({
         ok: true,
         matches: rows.map((r) => ({
           matchId: r.match_id,
+          teamA: r.team_a,
+          teamB: r.team_b,
+          legs: r.legs,
           status: r.status,
+          winner: r.winner,
+          confirmations: r.confirmations || {},
+          startedAt: r.started_at,
           myConfirmation: (r.confirmations || {})[teamParam] || null,
         })),
       })
@@ -226,6 +234,11 @@ export default async (req: Request) => {
       }
 
       const existing = await loadRow(db, matchId)
+      // Scores can only be recorded after staff press "Confirm lineups &
+      // start match" (which also freezes both lineups).
+      if (!existing || !existing.started_at) {
+        return Response.json({ ok: false, error: 'not_started' }, { status: 409 })
+      }
       const row = existing || emptyScore(matchId, division, teamA, teamB)
       const legs = [...row.legs]
 
@@ -269,7 +282,7 @@ export default async (req: Request) => {
           -- any score change means captains must re-confirm the new result
           confirmations = '{}'::jsonb,
           updated_at = now()
-        RETURNING match_id, division, team_a, team_b, legs, status, winner, confirmations, updated_at
+        RETURNING match_id, division, team_a, team_b, legs, status, winner, confirmations, started_at, updated_at
       `) as unknown as ScoreRow[]
 
       await mirrorToSheet({
@@ -294,6 +307,52 @@ export default async (req: Request) => {
     // or dispute the final result. A confirmation is final until staff change
     // a score (which clears all confirmations); a dispute can later be
     // changed to a confirmation.
+    // Staff confirm both lineups and start the match. From here on captains
+    // can't change their lineup (match-lineup.mts checks started_at) and leg
+    // scores can be entered. Idempotent: pressing it twice changes nothing.
+    // "Reset" (below) deletes the row, which also re-opens both lineups.
+    if (payload.action === 'startMatch') {
+      const rejected = rejectPasscode(payload.passcode)
+      if (rejected) return rejected
+      const matchId = typeof payload.matchId === 'string' ? payload.matchId.trim() : ''
+      const division = typeof payload.division === 'string' ? payload.division.trim() : ''
+      const teamA = typeof payload.teamA === 'string' ? payload.teamA.trim() : ''
+      const teamB = typeof payload.teamB === 'string' ? payload.teamB.trim() : ''
+      if (!matchId || !division || !teamA || !teamB) {
+        return Response.json({ ok: false, error: 'missing_fields' }, { status: 400 })
+      }
+      const lineups = await loadLineups(db, matchId)
+      const missing = [teamA, teamB].filter((t) => !lineups.has(t))
+      if (missing.length > 0) {
+        return Response.json({ ok: false, error: 'lineups_missing', missing }, { status: 409 })
+      }
+      const saved = (await db.sql<ScoreRow>`
+        INSERT INTO match_scores (match_id, division, team_a, team_b, legs, status, started_at)
+        VALUES (${matchId}, ${division}, ${teamA}, ${teamB}, '[]'::jsonb, 'in_progress', now())
+        ON CONFLICT (match_id) DO UPDATE SET
+          started_at = COALESCE(match_scores.started_at, now()),
+          updated_at = now()
+        RETURNING match_id, division, team_a, team_b, legs, status, winner, confirmations, started_at, updated_at
+      `) as unknown as ScoreRow[]
+
+      await mirrorToSheet({
+        action: 'upsertMatch',
+        matchId,
+        meta: cleanMeta(payload.meta),
+        teamA,
+        teamB,
+        lineupA: lineups.get(teamA) || {},
+        lineupB: lineups.get(teamB) || {},
+        legs: saved[0].legs,
+        status: saved[0].status,
+        winner: saved[0].winner,
+        confirmations: saved[0].confirmations || {},
+        updatedAt: saved[0].updated_at,
+      })
+
+      return Response.json({ ok: true, score: saved[0] })
+    }
+
     if (payload.action === 'confirm') {
       const matchId = typeof payload.matchId === 'string' ? payload.matchId.trim() : ''
       const team = typeof payload.team === 'string' ? payload.team.trim() : ''
@@ -327,7 +386,7 @@ export default async (req: Request) => {
         UPDATE match_scores
         SET confirmations = COALESCE(confirmations, '{}'::jsonb) || jsonb_build_object(${team}::text, ${JSON.stringify(entry)}::jsonb)
         WHERE match_id = ${matchId}
-        RETURNING match_id, division, team_a, team_b, legs, status, winner, confirmations, updated_at
+        RETURNING match_id, division, team_a, team_b, legs, status, winner, confirmations, started_at, updated_at
       `) as unknown as ScoreRow[]
 
       await mirrorToSheet({

@@ -193,6 +193,50 @@ async function loadMsMatchDetail() {
 
 el("msRefreshBtn").addEventListener("click", () => { if (msCurrentMatch) loadMsMatchDetail(); });
 
+// Confirm lineups & start match — freezes both lineups, unlocks scoring.
+el("msLineupStatus").addEventListener("click", async (e) => {
+  if (!e.target.closest("#msStartBtn")) return;
+  const m = msCurrentMatch;
+  if (!confirm(`確認 ${idLabel(m.teamA)} 同 ${idLabel(m.teamB)} 嘅出場名單並開始比賽？開始後隊長不能再更改名單。\nConfirm both lineups and start the match? Captains can't change lineups after this.`)) return;
+  const btn = el("msStartBtn");
+  btn.disabled = true;
+  try {
+    // Re-check the latest lineups first, in case a captain changed theirs
+    // after this page was loaded.
+    const lineupData = await fetch(`${MATCH_LINEUP_API}?matchId=${encodeURIComponent(m.matchId)}`).then(r => r.json());
+    const latest = {};
+    ((lineupData && lineupData.lineups) || []).forEach(l => { latest[l.team] = l.updated_at || l.submitted_at; });
+    const changed = [m.teamA, m.teamB].some(t => latest[t] !== msLineupTimes[t]);
+    if (changed) {
+      showToast("⚠ 有隊長啱啱更新咗名單，已重新載入，請再核對 A captain just updated their lineup — reloaded, please check again", true);
+      await loadMsMatchDetail();
+      return;
+    }
+    const dm = divisionMeta(m.division);
+    const result = await postAction(MATCH_SCORE_API, {
+      action: "startMatch", passcode: msPasscode,
+      matchId: m.matchId, division: m.division, teamA: m.teamA, teamB: m.teamB,
+      meta: {
+        isoDate: m.date, date: `${m.dateLabel}（${m.weekday}）`, time: m.time, venue: m.venueZh,
+        court: m.court ? String(m.court) : "", divisionZh: `${dm.zh} ${dm.en}`,
+        teamALabel: idLabel(m.teamA), teamBLabel: idLabel(m.teamB),
+      },
+    });
+    if (!result.ok) {
+      if (result.error === "lineups_missing") await loadMsMatchDetail();
+      showToast(msScoreErrorMessage(result), true);
+      btn.disabled = false;
+      return;
+    }
+    msCurrentScore = result.score;
+    renderMsMatchDetail();
+    showToast("🟢 比賽開始，名單已鎖定 Match started — lineups locked");
+  } catch (err) {
+    showToast("開始失敗，請檢查網絡後再試一次 Couldn't start — check your connection", true);
+    btn.disabled = false;
+  }
+});
+
 // ── Leg validation ───────────────────────────────────────────────────────
 // Returns { ok, msg, side } — side is "teamA"/"teamB" (who reached the
 // leg's target) when ok.
@@ -267,10 +311,25 @@ function renderMsMatchDetail() {
   const statusLine = (team, has) => has
     ? `<div><span class="ok">✓ 已提交名單 Lineup in</span> — ${escapeHtml(idLabel(team))} <span class="meta-note">(${escapeHtml(formatSavedAt(msLineupTimes[team]))})</span></div>`
     : `<div><span class="missing">✗ 未提交名單 No lineup yet</span> — ${escapeHtml(idLabel(team))}</div>`;
-  el("msLineupStatus").innerHTML = statusLine(m.teamA, hasA) + statusLine(m.teamB, hasB) +
-    (ready ? "" : `<div class="ms-blocked">⛔ 未能開賽：雙方隊伍須先喺「比賽日」頁提交出場名單，先可以開始比賽及記錄比分。隊長提交後請撳「重新整理」。<br>Game cannot begin until both teams have submitted their lineup on the Match Day page. Press Refresh once the captain has submitted.</div>`);
-
   const legs = msCurrentScore ? msCurrentScore.legs : [];
+  // "Started" = staff pressed Confirm lineups & start match (started_at), or
+  // scores already exist. Until then captains can still change lineups and
+  // no scores can be entered.
+  const started = !!(msCurrentScore && (msCurrentScore.started_at || legs.length > 0));
+  let gate;
+  if (!ready) {
+    gate = `<div class="ms-blocked">⛔ 未能開賽：雙方隊伍須先喺「比賽日」頁提交出場名單，先可以開始比賽及記錄比分。隊長提交後請撳「重新整理」。<br>Game cannot begin until both teams have submitted their lineup on the Match Day page. Press Refresh once the captain has submitted.</div>`;
+  } else if (!started) {
+    gate = `<div class="ms-start-box">
+      <div>雙方名單已齊。請同雙方隊長核對下面5局出場球員，確認無誤後撳掣開始比賽。<b>開始後隊長將不能再更改名單。</b><br>Both lineups are in. Check the 5 legs below with both captains, then start the match. <b>Captains can't change lineups after this.</b></div>
+      <button class="submit-btn" id="msStartBtn">✅ 確認名單並開始比賽 Confirm lineups & start match</button>
+    </div>`;
+  } else {
+    const at = msCurrentScore && msCurrentScore.started_at ? `（${escapeHtml(formatSavedAt(msCurrentScore.started_at))}）` : "";
+    gate = `<div class="ms-started">🟢 比賽已開始，名單已鎖定 Match started — lineups locked${at}</div>`;
+  }
+  el("msLineupStatus").innerHTML = statusLine(m.teamA, hasA) + statusLine(m.teamB, hasB) + gate;
+
   const isFinal = !!(msCurrentScore && msCurrentScore.status === "final");
   const nextIdx = legs.length;
 
@@ -280,7 +339,7 @@ function renderMsMatchDetail() {
     const prev = msPrevFor(i);
     const isLast = rec && i === legs.length - 1;
     const editing = isLast && msEditingLast && ready;
-    const isNext = !rec && i === nextIdx && !isFinal && ready;
+    const isNext = !rec && i === nextIdx && !isFinal && ready && started;
     const wonSide = rec && !editing ? msLegWinnerSide(rec, leg) : null;
     let chip, cls = "";
     if (editing) { chip = '<span class="ms-chip live">更正中 Editing</span>'; cls = "current"; }
@@ -414,6 +473,7 @@ function msScoreErrorMessage(r) {
   if (err === "score_must_not_decrease") return "⚠ 累積比分唔可以低過上一局 Running totals can't go down";
   if (err === "match_already_final") return "⚠ 呢場比賽已經完結，請先重設先可以修改 Match is final — reset it first to change it";
   if (err === "invalid_passcode") return "密碼錯誤，請重新登入 Incorrect passcode — please sign in again";
+  if (err === "not_started") return "⚠ 請先撳「確認名單並開始比賽」 Press “Confirm lineups & start match” first";
   if (err === "lineups_missing") return "⛔ 未能開賽：仍有隊伍未提交出場名單 Game cannot begin — a team hasn't submitted its lineup";
   if (err === "invalid_score") return "⚠ 請輸入有效嘅比分（非負整數） Enter valid whole-number scores";
   return "儲存失敗，請再試一次 Save failed, please retry";
@@ -433,7 +493,7 @@ el("msLegCards").addEventListener("click", (e) => {
 
 el("msResetBtn").addEventListener("click", async () => {
   if (!msCurrentMatch) return;
-  if (!confirm("確定要重設呢場比賽嘅比分嗎？此操作無法復原。\nReset this match's score? This cannot be undone.")) return;
+  if (!confirm("確定要重設呢場比賽嗎？所有已輸入嘅比分會刪除，雙方隊長亦可以再次修改名單。此操作無法復原。\nReset this match? All entered scores are deleted and both lineups re-open for changes. This cannot be undone.")) return;
   try {
     const result = await postAction(MATCH_SCORE_API, { action: "reset", passcode: msPasscode, matchId: msCurrentMatch.matchId });
     if (!result.ok) { showToast("重設失敗 Reset failed", true); return; }

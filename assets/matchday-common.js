@@ -143,11 +143,16 @@ const LEG_LABEL_SHORT = { WD: "WD 女雙", XD1: "XD1 混雙1", XD2: "XD2 混雙2
 // Which gender fills each of a leg's 2 slots.
 const LEG_SLOT_GENDER = { WD: ["F", "F"], XD1: ["M", "F"], XD2: ["M", "F"], XD3: ["M", "F"], MD: ["M", "M"] };
 
-// Stable key for a match: "<division code>__<teamA id>__<teamB id>".
+// Stable key for a match: "<teamA id>-<teamB id>", e.g. "A1-A3". Each pair
+// meets once in the round robin, so this is unique, and the letter already
+// says the division (A = Diamond … E = Bronze). No division *name* in the
+// key on purpose, so renaming a division never breaks the link between the
+// website, the database and the scores sheet. (The division argument is
+// kept so callers don't change.)
 function buildMatchId(division, teamA, teamB) {
   const idA = TEAM_ID[teamA] || teamA;
   const idB = TEAM_ID[teamB] || teamB;
-  return `${division}__${idA}__${idB}`;
+  return `${idA}-${idB}`;
 }
 
 // ── "Today first" ordering ───────────────────────────────────────────────

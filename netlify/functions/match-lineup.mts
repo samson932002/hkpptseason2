@@ -8,7 +8,7 @@
 // wait on an organizer.
 //
 // match_id is an opaque string the client builds from schedule.json +
-// divisions.json team identifiers (e.g. "Rookie__E1__E3"). This function
+// divisions.json team identifiers (e.g. "E1-E3"). This function
 // never tries to reconstruct or validate it against schedule.json — it's
 // just the key the lineup is filed under.
 //
@@ -207,12 +207,13 @@ export default async (req: Request) => {
       if (!division) return Response.json({ ok: false, error: 'missing_division' }, { status: 400 })
       if (!team) return Response.json({ ok: false, error: 'missing_team' }, { status: 400 })
 
-      // Rulebook 3.7: a lineup can't change once the match has started. The
-      // first leg score being recorded is the "match has started" signal.
-      const started = (await db.sql<{ n: number | string }>`
-        SELECT jsonb_array_length(legs) AS n FROM match_scores WHERE match_id = ${matchId}
-      `) as unknown as { n: number | string }[]
-      if (started.length > 0 && Number(started[0].n) > 0) {
+      // Rulebook 3.7: a lineup can't change once the match has started —
+      // i.e. once staff press "Confirm lineups & start match" on /staff
+      // (started_at), or, defensively, once any leg score exists.
+      const started = (await db.sql<{ n: number | string; started_at: string | null }>`
+        SELECT jsonb_array_length(legs) AS n, started_at FROM match_scores WHERE match_id = ${matchId}
+      `) as unknown as { n: number | string; started_at: string | null }[]
+      if (started.length > 0 && (started[0].started_at || Number(started[0].n) > 0)) {
         return Response.json({ ok: false, error: 'match_started' }, { status: 409 })
       }
 

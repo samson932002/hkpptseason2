@@ -105,7 +105,7 @@ function upsertMatch(p) {
   legs.forEach(function (l) { byLeg[l.leg] = l; });
   const last = legs.length ? legs[legs.length - 1] : null;
   const winnerLabel = p.winner ? (p.winner === p.teamA ? aLabel : bLabel) : '';
-  const status = p.status === 'final' ? '已完結 Final' : '進行中 In progress';
+  const status = p.status === 'final' ? '已完結 Final' : (legs.length ? '進行中 In progress' : '已開始 Started');
 
   const row = [
     p.matchId, meta.date || meta.isoDate || '', meta.time || '', meta.venue || '', meta.court || '',
@@ -162,7 +162,7 @@ function setupSchedule() {
   if (n > 0) sh.getRange(2, 1, n, 1).getValues().forEach(function (r) { existing[r[0]] = true; });
   const rows = [];
   schedule.groupStage.forEach(function (m) {
-    const id = m.division + '__' + (idOf[m.teamA] || m.teamA) + '__' + (idOf[m.teamB] || m.teamB);
+    const id = (idOf[m.teamA] || m.teamA) + '-' + (idOf[m.teamB] || m.teamB);
     if (existing[id]) return;
     rows.push([id, m.dateLabel + '（' + m.weekday + '）', m.time, m.venueZh, m.court ? String(m.court) : '',
       (zhOf[m.division] || m.division) + ' ' + (DIVISION_EN[m.division] || ''), label(m.teamA), label(m.teamB),
@@ -175,6 +175,22 @@ function confText(c) {
   if (!c) return '';
   if (c.status === 'confirmed') return '✅ 已確認 Confirmed — ' + c.name + ' (' + fmt(c.at) + ')';
   return '⚠️ 有異議 Disputed — ' + c.name + ' (' + fmt(c.at) + '): ' + (c.note || '');
+}
+
+// One-off fix for sheets filled before Match IDs changed from
+// "Premier__A1__A3" to "A1-A3": converts column A on both tabs in place.
+// Pick "migrateMatchIds" in the function dropdown and press Run once.
+function migrateMatchIds() {
+  ['Matches', 'Legs'].forEach(function (name) {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+    if (!sh || sh.getLastRow() < 2) return;
+    const range = sh.getRange(2, 1, sh.getLastRow() - 1, 1);
+    const ids = range.getValues().map(function (r) {
+      const m = String(r[0]).match(/^[A-Za-z]+__(.+?)__(.+)$/);
+      return [m ? m[1] + '-' + m[2] : r[0]];
+    });
+    range.setValues(ids);
+  });
 }
 
 function ensureSheet(name, headers) {

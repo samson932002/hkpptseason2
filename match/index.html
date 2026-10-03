@@ -13,63 +13,101 @@
 <div class="topbar">
   <img class="logo" src="/assets/hkppt-logo.png" alt="HKPPT logo">
   <div class="brand">HKPPT SEASON 2</div>
-  <h1>對賽排陣</h1>
-  <p>Match Lineup Submission</p>
+  <h1>比賽日</h1>
+  <p>Match Day — Lineups &amp; Result Confirmation</p>
 </div>
 <div class="page-banner match">⚡ 比賽日 MATCH DAY — 隊長專用 For Captains</div>
 <div class="page-nav"><a href="/">← 返回賽事資訊 Back to tournament info</a></div>
 
 <div class="wrap">
 
-  <div class="card note-dark">
-    <p class="title">📋 每場比賽前提交出場名單 Submit before every match</p>
-    <p>請喺每場比賽開始前，提交你隊呢場嘅出場名單（5局：女雙、混雙一、混雙二、混雙三、男雙）。比賽開始前可以隨時重新提交更改；開始後名單即鎖定。<b style="color:#fff;">雙方未交名單，比賽不能開始。</b><br>Submit your team's lineup for each match (5 legs: WD, XD1, XD2, XD3, MD). You can resubmit any time until the match starts — then it locks. <b style="color:#fff;">A match can't start until both teams have submitted.</b></p>
-  </div>
-
   <div id="mlBootError" class="card warn-card" style="display:none;">
     <p>無法載入賽程，請重新整理頁面。Could not load the schedule — please refresh the page.</p>
   </div>
 
   <div class="card">
-    <h2>1. 選擇你隊伍 Select Your Team</h2>
+    <h2>選擇你隊伍 Select Your Team</h2>
     <select id="mlTeamSelect">
       <option value="">請選擇隊伍 — Select your team…</option>
     </select>
   </div>
 
-  <div id="mlMatchSection" class="card" style="display:none;">
-    <h2>2. 選擇比賽 Select Match</h2>
-    <select id="mlMatchSelect">
-      <option value="">請選擇比賽 — Select a match…</option>
-    </select>
+  <!-- Two separate jobs for captains, as two big tabs -->
+  <div class="mode-tabs" id="mlModeTabs" style="display:none;">
+    <button class="mode-tab active" data-mode="lineup">
+      <span class="mt-icon">📋</span>
+      <span class="mt-title">賽前：提交出場名單</span>
+      <span class="mt-sub">Before match: Submit Lineup</span>
+    </button>
+    <button class="mode-tab" data-mode="confirm">
+      <span class="mt-icon">✍️</span>
+      <span class="mt-title">賽後：確認比賽結果</span>
+      <span class="mt-sub">After match: Confirm Result</span>
+      <span class="mt-badge" id="mlPendingBadge" style="display:none;"></span>
+    </button>
   </div>
 
-  <div id="mlLoading" class="card loading-note" style="display:none;">
-    <span class="overlay-spin"></span>載入緊資料… Loading…
+  <div id="mlPendingBanner" class="card pending-card" style="display:none;"></div>
+
+  <!-- ══════════ MODE 1: SUBMIT LINEUP ══════════ -->
+  <div id="mlLineupMode" style="display:none;">
+
+    <div class="card note-dark">
+      <p class="title">📋 每場比賽前提交出場名單 Submit before every match</p>
+      <p>提交你隊呢場嘅出場名單（5局：女雙、混雙一、混雙二、混雙三、男雙）。喺職員確認名單並開始比賽之前，可以隨時重新提交更改；開始後名單即鎖定。<b style="color:#fff;">雙方未交名單，比賽不能開始。</b><br>Submit your team's lineup for this match (5 legs: WD, XD1, XD2, XD3, MD). You can resubmit until staff confirm lineups and start the match — then it locks. <b style="color:#fff;">A match can't start until both teams have submitted.</b></p>
+    </div>
+
+    <div id="mlMatchSection" class="card" style="display:none;">
+      <h2>選擇比賽 Select Match</h2>
+      <select id="mlMatchSelect">
+        <option value="">請選擇比賽 — Select a match…</option>
+      </select>
+    </div>
+
+    <div id="mlLoading" class="card loading-note" style="display:none;">
+      <span class="overlay-spin"></span>載入緊資料… Loading…
+    </div>
+
+    <div id="mlNoRosterNote" class="card warn-card" style="display:none;">
+      <p>⚠️ 大會未有你隊嘅隊伍名單紀錄，所以未能自動核對球員性別是否符合各局要求。請自行輸入球員姓名並小心核對，並聯絡大會。<br>Your team's season roster isn't on file, so gender eligibility per leg can't be checked automatically — please type player names carefully and contact the organizer.</p>
+    </div>
+
+    <div id="mlFormSection" style="display:none;">
+
+      <div id="mlMatchStatus" class="card" style="display:none;"></div>
+
+      <div id="mlSavedBanner" class="card note-dark" style="display:none;">
+        <p class="title">✅ 已收到你隊呢場比賽嘅出場名單</p>
+        <p id="mlSavedAt"></p>
+      </div>
+
+      <div id="mlLockedBanner" class="card lock-card" style="display:none;">
+        <p>🔒 大會已確認名單並開始比賽，出場名單不可再更改。<br>The organizer has confirmed lineups and started this match — the lineup can no longer be changed.</p>
+      </div>
+
+      <div id="mlLegsContainer"></div>
+
+      <div class="card">
+        <button class="submit-btn" id="mlSubmitBtn" disabled>提交出場名單 Submit Lineup</button>
+      </div>
+    </div>
   </div>
 
-  <div id="mlNoRosterNote" class="card warn-card" style="display:none;">
-    <p>⚠️ 大會未有你隊嘅隊伍名單紀錄，所以未能自動核對球員性別是否符合各局要求。請自行輸入球員姓名並小心核對，並聯絡大會。<br>Your team's season roster isn't on file, so gender eligibility per leg can't be checked automatically — please type player names carefully and contact the organizer.</p>
-  </div>
+  <!-- ══════════ MODE 2: CONFIRM RESULT ══════════ -->
+  <div id="mlConfirmMode" style="display:none;">
 
-  <div id="mlFormSection" style="display:none;">
+    <div class="card note-dark">
+      <p class="title">✍️ 賽後確認比賽結果 Confirm each result after the match</p>
+      <p>職員輸入晒5局比分後，請隊長喺呢度核對並確認。如比分有問題，請「報告問題」，大會會跟進。<br>Once staff have entered all 5 legs, the captain checks and confirms the result here. If something's wrong, report a problem and the organizer will follow up.</p>
+    </div>
+
+    <div id="mlConfirmLoading" class="card loading-note" style="display:none;">
+      <span class="overlay-spin"></span>載入緊… Loading…
+    </div>
+
+    <div id="mlConfirmList"></div>
 
     <div id="mlResultCard" class="card ms-summary" style="display:none;"></div>
-
-    <div id="mlSavedBanner" class="card note-dark" style="display:none;">
-      <p class="title">✅ 已收到你隊呢場比賽嘅出場名單</p>
-      <p id="mlSavedAt"></p>
-    </div>
-
-    <div id="mlLockedBanner" class="card lock-card" style="display:none;">
-      <p>🔒 呢場比賽已經開始，出場名單不可再更改。<br>This match has started — the lineup can no longer be changed.</p>
-    </div>
-
-    <div id="mlLegsContainer"></div>
-
-    <div class="card">
-      <button class="submit-btn" id="mlSubmitBtn" disabled>提交出場名單 Submit Lineup</button>
-    </div>
   </div>
 
 </div>
@@ -210,8 +248,16 @@ el("mlTeamSelect").addEventListener("change", async (e) => {
   el("mlMatchSection").style.display = "none";
   el("mlFormSection").style.display = "none";
   el("mlNoRosterNote").style.display = "none";
+  el("mlResultCard").style.display = "none";
   mlMatch = null;
-  if (!mlTeam) return;
+  mlConfirmMatchId = null;
+  if (!mlTeam) {
+    el("mlModeTabs").style.display = "none";
+    el("mlLineupMode").style.display = "none";
+    el("mlConfirmMode").style.display = "none";
+    el("mlPendingBanner").style.display = "none";
+    return;
+  }
   try {
     await loadScheduleData();
     await loadDivisionsData();
@@ -221,55 +267,163 @@ el("mlTeamSelect").addEventListener("change", async (e) => {
   }
   populateMlMatchSelect(mlTeam);
   el("mlMatchSection").style.display = "block";
+  el("mlModeTabs").style.display = "grid";
+  setMlMode(mlMode);
   if (el("mlMatchSelect").value !== "") el("mlMatchSelect").dispatchEvent(new Event("change"));
-  annotateMlMatchOptions(mlTeam);
+  loadMlTeamResults();
 });
 
-// Marks finished matches in the dropdown: "✍️ 待確認" until this team has
-// confirmed the result, "✅" once it has.
-async function annotateMlMatchOptions(team) {
-  let data;
+// ══════════ Mode switching (Submit Lineup / Confirm Result) ══════════
+// Kept as two clearly separate jobs: lineups before a match, result
+// confirmation after it. Open the page with #confirm (e.g. a WhatsApp link)
+// to land straight on the confirmation tab.
+let mlMode = location.hash === "#confirm" ? "confirm" : "lineup";
+
+function setMlMode(mode) {
+  mlMode = mode;
+  document.querySelectorAll("#mlModeTabs .mode-tab").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+  el("mlLineupMode").style.display = mode === "lineup" ? "block" : "none";
+  el("mlConfirmMode").style.display = mode === "confirm" ? "block" : "none";
+  renderMlPendingBanner();
+  try { history.replaceState(null, "", mode === "confirm" ? "#confirm" : location.pathname + location.search); } catch (e) { /* ignore */ }
+}
+
+el("mlModeTabs").addEventListener("click", (e) => {
+  const b = e.target.closest(".mode-tab");
+  if (b) setMlMode(b.dataset.mode);
+});
+
+// Small status card in the lineup tab for a match that has started/finished.
+function renderMlMatchStatus(score) {
+  const card = el("mlMatchStatus");
+  const legs = score && Array.isArray(score.legs) ? score.legs : [];
+  if (score && score.status === "final") {
+    card.style.display = "block";
+    card.className = "card pending-card";
+    card.innerHTML = `<p>🏁 <b>呢場比賽已完結。</b>請到「賽後：確認比賽結果」核對及確認比分。<br><b>This match has finished.</b> Please check and confirm the result under “After match: Confirm Result”.</p>
+      <button class="submit-btn" data-goto-confirm="${escapeHtml(mlMatch.matchId)}" style="margin-top:10px;">✍️ 前往確認比賽結果 Go to Confirm Result →</button>`;
+  } else if (score && (score.started_at || legs.length)) {
+    card.style.display = "block";
+    card.className = "card";
+    card.innerHTML = `<h2 style="margin-bottom:6px;">🟢 比賽進行中 Match in progress</h2><p class="meta-note" style="margin:0;">名單已鎖定。比賽完結後，請到「賽後：確認比賽結果」確認比分。Lineups are locked. After the match, confirm the result under “After match: Confirm Result”.</p>`;
+  } else {
+    card.style.display = "none";
+    card.innerHTML = "";
+  }
+}
+
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-goto-confirm]");
+  if (!b) return;
+  setMlMode("confirm");
+  const id = b.dataset.gotoConfirm;
+  if (id && id !== "1") openMlConfirm(id);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+// ══════════ Confirm Result ══════════
+let mlTeamResults = []; // [{ matchId, teamA, teamB, legs, status, winner, confirmations, startedAt, myConfirmation }]
+let mlConfirmMatchId = null;
+
+function mlScheduleFor(matchId) {
+  return SCHEDULE_DATA.groupStage.find(m => buildMatchId(m.division, m.teamA, m.teamB) === matchId) || null;
+}
+
+function mlIsPending(r) {
+  return r.status === "final" && (!r.myConfirmation || r.myConfirmation.status !== "confirmed");
+}
+
+async function loadMlTeamResults() {
+  const team = mlTeam;
+  el("mlConfirmLoading").style.display = "block";
+  let data = null;
   try {
     data = await fetch(`${MATCH_SCORE_API}?team=${encodeURIComponent(team)}`).then(r => r.json());
   } catch (e) {
-    return;
+    data = null;
   }
-  if (!data || !data.ok || team !== mlTeam) return;
-  const byId = {};
-  (data.matches || []).forEach(m => { byId[m.matchId] = m; });
-  const sel = el("mlMatchSelect");
-  const matches = JSON.parse(sel.dataset.matches || "[]");
-  sel.querySelectorAll("option[value]").forEach(opt => {
-    if (opt.value === "") return;
-    const m = matches[Number(opt.value)];
-    if (!m) return;
-    const st = byId[buildMatchId(m.division, m.teamA, m.teamB)];
-    opt.textContent = opt.textContent.replace(/^(✍️ 待確認 |✅ |⚠️ )/, "");
-    if (st && st.status === "final") {
-      const c = st.myConfirmation;
-      const prefix = !c ? "✍️ 待確認 " : c.status === "confirmed" ? "✅ " : "⚠️ ";
-      opt.textContent = prefix + opt.textContent;
-    }
-  });
+  if (team !== mlTeam) return;
+  el("mlConfirmLoading").style.display = "none";
+  mlTeamResults = (data && data.ok && data.matches) || [];
+  renderMlConfirmList();
+  renderMlPendingBanner();
+  if (mlConfirmMatchId) openMlConfirm(mlConfirmMatchId);
 }
 
-// ── Result confirmation (after staff finish entering all 5 legs) ─────────
-let mlScore = null;
+function renderMlPendingBanner() {
+  const n = mlTeamResults.filter(mlIsPending).length;
+  const badge = el("mlPendingBadge");
+  badge.style.display = n ? "inline-block" : "none";
+  badge.textContent = String(n);
+  const banner = el("mlPendingBanner");
+  if (n && mlMode === "lineup") {
+    banner.style.display = "block";
+    banner.innerHTML = `<p>✍️ <b>你隊有 ${n} 場比賽結果待確認。</b>You have ${n} match result${n > 1 ? "s" : ""} waiting for your confirmation.</p>
+      <button class="submit-btn" data-goto-confirm="1" style="margin-top:10px;">前往確認比賽結果 Go to Confirm Result →</button>`;
+  } else {
+    banner.style.display = "none";
+  }
+}
 
-function renderMlResult() {
+function renderMlConfirmList() {
+  const list = el("mlConfirmList");
+  const rows = mlTeamResults
+    .map(r => ({ r, m: mlScheduleFor(r.matchId) }))
+    .filter(x => x.m && (x.r.status === "final" || x.r.startedAt || (x.r.legs || []).length));
+  if (!rows.length) {
+    list.innerHTML = `<div class="card"><p class="meta-note" style="margin:0; text-align:center;">暫時未有已完結嘅比賽。比賽完結、職員輸入晒比分後會喺呢度出現。<br>No finished matches yet — they appear here once staff have entered all 5 legs.</p></div>`;
+    return;
+  }
+  const rank = x => mlIsPending(x.r) ? 0 : x.r.status !== "final" ? 1 : 2;
+  rows.sort((a, b) => rank(a) - rank(b) || (b.m.date + b.m.time).localeCompare(a.m.date + a.m.time));
+  list.innerHTML = rows.map(({ r, m }) => {
+    const opp = m.teamA === mlTeam ? m.teamB : m.teamA;
+    const legs = r.legs || [];
+    const last = legs[legs.length - 1];
+    const mine = r.myConfirmation;
+    let chip, cls;
+    if (r.status !== "final") { chip = '<span class="ms-chip">🟢 進行中 In progress</span>'; cls = "inprogress"; }
+    else if (!mine) { chip = '<span class="ms-chip live">✍️ 待確認 To confirm</span>'; cls = "pending"; }
+    else if (mine.status === "disputed") { chip = '<span class="ms-chip warn">⚠️ 已報告問題 Reported</span>'; cls = "pending"; }
+    else { chip = '<span class="ms-chip done">✅ 已確認 Confirmed</span>'; cls = ""; }
+    const scoreTxt = last ? `${m.teamA === mlTeam ? last.teamA : last.teamB} : ${m.teamA === mlTeam ? last.teamB : last.teamA}` : "—";
+    const res = r.status === "final" && r.winner ? (r.winner === mlTeam ? "勝 Won" : "負 Lost") : "";
+    return `<button class="result-item ${cls}${r.matchId === mlConfirmMatchId ? " selected" : ""}" data-open="${escapeHtml(r.matchId)}">
+      <span class="ri-top"><span class="ri-date">${m.dateLabel}（${m.weekday}） ${m.time}</span>${chip}</span>
+      <span class="ri-vs">vs ${escapeHtml(idLabel(opp))}</span>
+      <span class="ri-score">${scoreTxt} ${res}</span>
+    </button>`;
+  }).join("");
+}
+
+el("mlConfirmList").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-open]");
+  if (b) openMlConfirm(b.dataset.open);
+});
+
+function openMlConfirm(matchId) {
+  mlConfirmMatchId = matchId;
+  renderMlConfirmList();
+  const r = mlTeamResults.find(x => x.matchId === matchId);
+  const m = mlScheduleFor(matchId);
   const card = el("mlResultCard");
-  const legs = mlScore && Array.isArray(mlScore.legs) ? mlScore.legs : [];
-  if (!legs.length) { card.style.display = "none"; card.innerHTML = ""; return; }
+  if (!r || !m) { card.style.display = "none"; return; }
   card.style.display = "block";
-  const sched = JSON.parse(el("mlMatchSelect").dataset.matches || "[]")[Number(el("mlMatchSelect").value)] || {};
+  renderMlResultCard(card, r, m);
+  setTimeout(() => card.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+}
+
+function renderMlResultCard(card, score, sched) {
   const teamA = sched.teamA, teamB = sched.teamB;
+  const legs = score.legs || [];
   const last = legs[legs.length - 1];
   const idA = TEAM_ID[teamA] || "A", idB = TEAM_ID[teamB] || "B";
+  const head = `<p class="meta-note" style="margin:0 0 8px;">${sched.dateLabel}（${sched.weekday}） ${sched.time} · ${escapeHtml(sched.venueZh)} — ${escapeHtml(idLabel(teamA))} vs ${escapeHtml(idLabel(teamB))}</p>`;
 
-  if (mlScore.status !== "final") {
-    card.innerHTML = `<h2>⏱ 比賽進行中 Match in progress</h2>
-      <p class="meta-note" style="margin:0;">${LEG_LABEL_SHORT[last.leg]} 後 after: ${escapeHtml(idLabel(teamA))} ${last.teamA} : ${last.teamB} ${escapeHtml(idLabel(teamB))}</p>
-      <p class="meta-note">比賽完結、職員輸入全部5局後，請返嚟呢度確認比分。Once the match ends and staff have entered all 5 legs, come back here to confirm the result.</p>`;
+  if (score.status !== "final") {
+    card.innerHTML = `<h2>🟢 比賽進行中 Match in progress</h2>${head}
+      ${last ? `<p class="meta-note" style="margin:0;">${LEG_LABEL_SHORT[last.leg]} 後 after: ${escapeHtml(idLabel(teamA))} ${last.teamA} : ${last.teamB} ${escapeHtml(idLabel(teamB))}</p>` : ""}
+      <p class="meta-note">比賽完結、職員輸入晒5局後，就可以喺度確認。You can confirm once the match ends and all 5 legs are entered.</p>`;
     return;
   }
 
@@ -281,33 +435,33 @@ function renderMlResult() {
     const w = r.teamA === T ? "A" : r.teamB === T ? "B" : "";
     rows += `<tr><td class="leg">${LEG_LABEL_SHORT[leg]}</td><td class="${w === "A" ? "won" : ""}">${r.teamA}</td><td class="${w === "B" ? "won" : ""}">${r.teamB}</td></tr>`;
   });
-  const conf = mlScore.confirmations || {};
+  const conf = score.confirmations || {};
   const mine = conf[mlTeam];
   const oppTeam = mlTeam === teamA ? teamB : teamA;
   const opp = conf[oppTeam];
   const confLine = (c) => !c ? "⏳ 未確認 Not yet confirmed"
     : c.status === "confirmed" ? `✅ 已確認 Confirmed — ${escapeHtml(c.name)}（${escapeHtml(formatSavedAt(c.at))}）`
-    : `⚠️ 有異議 Disputed — ${escapeHtml(c.name)}：${escapeHtml(c.note)}`;
+    : `⚠️ 已報告問題 Reported — ${escapeHtml(c.name)}：${escapeHtml(c.note)}`;
 
   let action;
   if (mine && mine.status === "confirmed") {
     action = `<div class="ms-check ok">✅ 你隊已確認呢個結果 Your team has confirmed this result — ${escapeHtml(mine.name)}（${escapeHtml(formatSavedAt(mine.at))}）</div>`;
   } else {
-    action = `${mine ? `<div class="ms-check bad">⚠️ 你隊已提出異議，大會跟進中。如問題已解決，可以喺下面確認。You reported a problem — the organizer is following up. Once resolved, you can confirm below.<br>「${escapeHtml(mine.note)}」</div>` : ""}
+    action = `${mine ? `<div class="ms-check bad">⚠️ 你隊已報告問題，大會跟進中。如問題已解決，可以喺下面確認。You reported a problem — the organizer is following up. Once resolved, you can confirm below.<br>「${escapeHtml(mine.note)}」</div>` : ""}
       <label style="display:block; font-size:12.5px; font-weight:700; color:var(--navy); margin:12px 0 6px;">隊長姓名 Captain's name</label>
       <input type="text" id="mlConfName" maxlength="60" placeholder="請輸入隊長姓名 Enter captain's name">
       <button class="submit-btn" data-act="confirm" style="margin-top:10px;">✅ 確認比分正確 Confirm this result</button>
       <button class="dispute-btn" data-act="show-dispute">⚠️ 比分有問題 Report a problem</button>
       <div id="mlDisputeBox" style="display:none; margin-top:10px;">
         <textarea id="mlDisputeNote" rows="3" maxlength="500" placeholder="請說明邊局／邊個比分有問題 Which leg / score is wrong?"></textarea>
-        <button class="submit-btn dispute-submit" data-act="dispute" style="margin-top:8px;">提交異議 Submit dispute</button>
+        <button class="submit-btn dispute-submit" data-act="dispute" style="margin-top:8px;">提交問題 Submit report</button>
       </div>`;
   }
 
-  card.innerHTML = `<h2>🏁 比賽結果確認 Confirm Result</h2>
+  card.innerHTML = `<h2>🏁 確認比賽結果 Confirm Result</h2>${head}
     <p class="meta-note" style="margin:0 0 8px;">請核對職員輸入嘅比分。確認後如需更改，請聯絡大會。Please check the scores entered by staff. After confirming, contact the organizer for any change.</p>
     <table><thead><tr><th style="text-align:left;">局 Leg</th><th>${escapeHtml(idA)}</th><th>${escapeHtml(idB)}</th></tr></thead><tbody>${rows}</tbody></table>
-    <div class="ms-result"><div class="label">🏆 勝方 WINNER</div><div class="who">${escapeHtml(idLabel(mlScore.winner))}</div>
+    <div class="ms-result"><div class="label">🏆 勝方 WINNER</div><div class="who">${escapeHtml(idLabel(score.winner))}</div>
       <div class="score">${escapeHtml(idLabel(teamA))} ${last.teamA} : ${last.teamB} ${escapeHtml(idLabel(teamB))}</div></div>
     <div class="ms-lineup-status" style="margin-top:12px;">
       <div><b>${escapeHtml(idLabel(mlTeam))}</b>（你隊 you）：${confLine(mine)}</div>
@@ -317,25 +471,29 @@ function renderMlResult() {
 }
 
 async function mlSendConfirmation(decision) {
+  const r = mlTeamResults.find(x => x.matchId === mlConfirmMatchId);
+  if (!r) return;
   const name = (el("mlConfName") && el("mlConfName").value || "").trim();
   const note = (el("mlDisputeNote") && el("mlDisputeNote").value || "").trim();
   if (!name) { showToast("請輸入隊長姓名 Enter the captain's name", true); return; }
   if (decision === "dispute" && !note) { showToast("請說明問題 Please describe the problem", true); return; }
-  if (decision === "confirm" && !confirm(`確認 ${idLabel(mlScore.winner)} 勝出，比分正確？\nConfirm the result is correct?`)) return;
+  if (decision === "confirm" && !confirm(`確認 ${idLabel(r.winner)} 勝出，比分正確？\nConfirm the result is correct?`)) return;
   try {
-    const result = await postAction(MATCH_SCORE_API, { action: "confirm", matchId: mlMatch.matchId, team: mlTeam, decision, captainName: name, note });
+    const result = await postAction(MATCH_SCORE_API, { action: "confirm", matchId: r.matchId, team: mlTeam, decision, captainName: name, note });
     if (!result.ok) {
       const msg = result.error === "already_confirmed" ? "你隊已經確認咗 Already confirmed"
         : result.error === "not_final" ? "比賽未完結 The match isn't final yet"
         : "提交失敗，請再試一次 Submission failed, please retry";
       showToast(msg, true);
-      if (result.error === "already_confirmed" || result.error === "not_final") await loadMlFormData();
+      await loadMlTeamResults();
       return;
     }
-    mlScore = result.score;
-    renderMlResult();
-    annotateMlMatchOptions(mlTeam);
-    showToast(decision === "confirm" ? "✅ 已確認比分 Result confirmed" : "⚠️ 已提交異議，大會會跟進 Dispute sent — the organizer will follow up");
+    const sc = result.score;
+    Object.assign(r, { legs: sc.legs, status: sc.status, winner: sc.winner, confirmations: sc.confirmations || {}, myConfirmation: (sc.confirmations || {})[mlTeam] || null });
+    renderMlConfirmList();
+    renderMlPendingBanner();
+    openMlConfirm(r.matchId);
+    showToast(decision === "confirm" ? "✅ 已確認比分 Result confirmed" : "⚠️ 已提交問題，大會會跟進 Report sent — the organizer will follow up");
   } catch (e) {
     showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
   }
@@ -404,15 +562,15 @@ async function loadMlFormData() {
   // Rulebook 3.7: no lineup changes once the match has started (first leg
   // score recorded). The server enforces this too; this just says so up front.
   let started = false;
-  mlScore = null;
+  let mlScore = null;
   try {
     const sc = await fetch(`${MATCH_SCORE_API}?matchId=${encodeURIComponent(mlMatch.matchId)}`).then(r => r.json());
     mlScore = (sc && sc.ok && sc.score) ? sc.score : null;
-    started = !!(mlScore && Array.isArray(mlScore.legs) && mlScore.legs.length > 0);
+    started = !!(mlScore && (mlScore.started_at || (Array.isArray(mlScore.legs) && mlScore.legs.length > 0)));
   } catch (e) {
     started = false;
   }
-  renderMlResult();
+  renderMlMatchStatus(mlScore);
   el("mlLockedBanner").style.display = started ? "block" : "none";
   el("mlLegsContainer").querySelectorAll("select, input").forEach(x => { x.disabled = started; });
   if (started) el("mlSubmitBtn").disabled = true;

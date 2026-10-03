@@ -147,3 +147,38 @@ textarea:focus { outline: none; border-color: var(--navy); }
 /* ── Footer staff link (info site + match page) ───────────────────────── */
 .staff-footer { text-align: center; padding: 18px 16px 28px; }
 .staff-footer a { display: inline-block; font-size: 12px; font-weight: 700; color: var(--muted); text-decoration: none; border: 1px solid var(--line); border-radius: 18px; padding: 6px 14px; background: var(--white); }
+
+/* ── /staff: confirm lineups & start match ─────────────────────────────── */
+.ms-start-box { margin-top: 8px; background: #F2FFD6; border: 1.5px solid var(--lime-deep); border-radius: 9px; padding: 10px 12px; font-size: 12.5px; line-height: 1.6; color: var(--navy); }
+.ms-start-box .submit-btn { margin-top: 10px; }
+.ms-started { margin-top: 8px; background: #E3F4E4; border-radius: 9px; padding: 8px 12px; font-size: 12.5px; font-weight: 700; color: #256B2B; }
+
+/* ── /match: two clearly separate jobs ────────────────────────────────── */
+.mode-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.mode-tab {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 14px 8px; border: 2px solid var(--line); border-radius: 12px; background: var(--white);
+  cursor: pointer; font-family: inherit; color: var(--navy);
+}
+.mode-tab .mt-icon { font-size: 22px; }
+.mode-tab .mt-title { font-size: 14px; font-weight: 800; }
+.mode-tab .mt-sub { font-size: 11px; color: var(--muted); font-weight: 600; }
+.mode-tab.active { border-color: var(--navy); background: var(--navy); color: var(--white); }
+.mode-tab.active .mt-sub { color: var(--lime); }
+.mode-tab .mt-badge {
+  position: absolute; top: -8px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px;
+  border-radius: 11px; background: #E5484D; color: #fff; font-size: 12px; font-weight: 800; line-height: 22px;
+}
+.pending-card { background: #FFF7E6; border: 1.5px solid #FFC95C; }
+.pending-card p { margin: 0; font-size: 13px; line-height: 1.6; color: #6B4A00; }
+.ms-chip.warn { background: #FFF1F1; color: #A33; }
+.result-item {
+  display: block; width: 100%; text-align: left; background: var(--white); border: 1.5px solid var(--line);
+  border-radius: 10px; padding: 12px; margin-bottom: 10px; cursor: pointer; font-family: inherit; color: var(--ink);
+}
+.result-item.pending { border-color: #FFC95C; background: #FFFBF0; }
+.result-item.selected { border-color: var(--navy); box-shadow: 0 0 0 2px rgba(0,31,61,.1); }
+.result-item .ri-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.result-item .ri-date { font-size: 12px; color: var(--muted); font-weight: 700; }
+.result-item .ri-vs { display: block; margin-top: 4px; font-size: 14px; font-weight: 800; color: var(--navy); }
+.result-item .ri-score { display: block; margin-top: 2px; font-size: 13px; color: var(--ink); }
