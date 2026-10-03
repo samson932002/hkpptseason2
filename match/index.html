@@ -326,8 +326,20 @@ document.addEventListener("click", (e) => {
 let mlTeamResults = []; // [{ matchId, teamA, teamB, legs, status, winner, confirmations, startedAt, myConfirmation }]
 let mlConfirmMatchId = null;
 
-function mlScheduleFor(matchId) {
-  return SCHEDULE_DATA.groupStage.find(m => buildMatchId(m.division, m.teamA, m.teamB) === matchId) || null;
+// Finds the schedule entry for a score row. Matched by Match ID first, then
+// by the two teams (each pair meets once in the round robin) so a row saved
+// under an older Match ID format (e.g. "Premier__A3__A5" from before the
+// switch to "A3-A5") still shows up. Team A/B always follow the score row,
+// since the leg scores are stored in that order. If nothing matches, a
+// minimal entry built from the row is returned so the result is never hidden.
+function mlScheduleFor(r) {
+  if (!r) return null;
+  const gs = SCHEDULE_DATA.groupStage;
+  const m = gs.find(x => buildMatchId(x.division, x.teamA, x.teamB) === r.matchId)
+    || gs.find(x => (x.teamA === r.teamA && x.teamB === r.teamB) || (x.teamA === r.teamB && x.teamB === r.teamA));
+  if (m) return Object.assign({}, m, { teamA: r.teamA || m.teamA, teamB: r.teamB || m.teamB });
+  if (!r.teamA || !r.teamB) return null;
+  return { teamA: r.teamA, teamB: r.teamB, date: "", dateLabel: "", weekday: "", time: "", venueZh: "" };
 }
 
 function mlIsPending(r) {
@@ -369,7 +381,7 @@ function renderMlPendingBanner() {
 function renderMlConfirmList() {
   const list = el("mlConfirmList");
   const rows = mlTeamResults
-    .map(r => ({ r, m: mlScheduleFor(r.matchId) }))
+    .map(r => ({ r, m: mlScheduleFor(r) }))
     .filter(x => x.m && (x.r.status === "final" || x.r.startedAt || (x.r.legs || []).length));
   if (!rows.length) {
     list.innerHTML = `<div class="card"><p class="meta-note" style="margin:0; text-align:center;">暫時未有已完結嘅比賽。比賽完結、職員輸入晒比分後會喺呢度出現。<br>No finished matches yet — they appear here once staff have entered all 5 legs.</p></div>`;
@@ -390,7 +402,7 @@ function renderMlConfirmList() {
     const scoreTxt = last ? `${m.teamA === mlTeam ? last.teamA : last.teamB} : ${m.teamA === mlTeam ? last.teamB : last.teamA}` : "—";
     const res = r.status === "final" && r.winner ? (r.winner === mlTeam ? "勝 Won" : "負 Lost") : "";
     return `<button class="result-item ${cls}${r.matchId === mlConfirmMatchId ? " selected" : ""}" data-open="${escapeHtml(r.matchId)}">
-      <span class="ri-top"><span class="ri-date">${m.dateLabel}（${m.weekday}） ${m.time}</span>${chip}</span>
+      <span class="ri-top"><span class="ri-date">${m.dateLabel ? `${m.dateLabel}（${m.weekday}） ${m.time}` : ""}</span>${chip}</span>
       <span class="ri-vs">vs ${escapeHtml(idLabel(opp))}</span>
       <span class="ri-score">${scoreTxt} ${res}</span>
     </button>`;
@@ -406,7 +418,7 @@ function openMlConfirm(matchId) {
   mlConfirmMatchId = matchId;
   renderMlConfirmList();
   const r = mlTeamResults.find(x => x.matchId === matchId);
-  const m = mlScheduleFor(matchId);
+  const m = mlScheduleFor(r);
   const card = el("mlResultCard");
   if (!r || !m) { card.style.display = "none"; return; }
   card.style.display = "block";
@@ -419,7 +431,7 @@ function renderMlResultCard(card, score, sched) {
   const legs = score.legs || [];
   const last = legs[legs.length - 1];
   const idA = TEAM_ID[teamA] || "A", idB = TEAM_ID[teamB] || "B";
-  const head = `<p class="meta-note" style="margin:0 0 8px;">${sched.dateLabel}（${sched.weekday}） ${sched.time} · ${escapeHtml(sched.venueZh)} — ${escapeHtml(idLabel(teamA))} vs ${escapeHtml(idLabel(teamB))}</p>`;
+  const head = `<p class="meta-note" style="margin:0 0 8px;">${sched.dateLabel ? `${sched.dateLabel}（${sched.weekday}） ${sched.time} · ${escapeHtml(sched.venueZh)} — ` : ""}${escapeHtml(idLabel(teamA))} vs ${escapeHtml(idLabel(teamB))}</p>`;
 
   if (score.status !== "final") {
     card.innerHTML = `<h2>🟢 比賽進行中 Match in progress</h2>${head}
