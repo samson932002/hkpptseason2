@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HKPPT Season 2 — 比賽日 Match Day</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="stylesheet" href="/assets/matchday.css">
+</head>
+<body>
+
+<div class="topbar">
+  <img class="logo" src="/assets/hkppt-logo.png" alt="HKPPT logo">
+  <div class="brand">HKPPT SEASON 2</div>
+  <h1>對賽排陣</h1>
+  <p>Match Lineup Submission</p>
+</div>
+<div class="page-banner match">⚡ 比賽日 MATCH DAY — 隊長專用 For Captains</div>
+<div class="page-nav"><a href="/">← 返回賽事資訊 Back to tournament info</a></div>
+
+<div class="wrap">
+
+  <div class="card note-dark">
+    <p class="title">📋 每場比賽前提交出場名單 Submit before every match</p>
+    <p>請喺每場比賽開始前，提交你隊呢場嘅出場名單（5局：女雙、混雙一、混雙二、混雙三、男雙）。比賽開始前可以隨時重新提交更改；開始後名單即鎖定。<b style="color:#fff;">雙方未交名單，比賽不能開始。</b><br>Submit your team's lineup for each match (5 legs: WD, XD1, XD2, XD3, MD). You can resubmit any time until the match starts — then it locks. <b style="color:#fff;">A match can't start until both teams have submitted.</b></p>
+  </div>
+
+  <div id="mlBootError" class="card warn-card" style="display:none;">
+    <p>無法載入賽程，請重新整理頁面。Could not load the schedule — please refresh the page.</p>
+  </div>
+
+  <div class="card">
+    <h2>1. 選擇你隊伍 Select Your Team</h2>
+    <select id="mlTeamSelect">
+      <option value="">請選擇隊伍 — Select your team…</option>
+    </select>
+  </div>
+
+  <div id="mlMatchSection" class="card" style="display:none;">
+    <h2>2. 選擇比賽 Select Match</h2>
+    <select id="mlMatchSelect">
+      <option value="">請選擇比賽 — Select a match…</option>
+    </select>
+  </div>
+
+  <div id="mlLoading" class="card loading-note" style="display:none;">
+    <span class="overlay-spin"></span>載入緊資料… Loading…
+  </div>
+
+  <div id="mlNoRosterNote" class="card warn-card" style="display:none;">
+    <p>⚠️ 大會未有你隊嘅隊伍名單紀錄，所以未能自動核對球員性別是否符合各局要求。請自行輸入球員姓名並小心核對，並聯絡大會。<br>Your team's season roster isn't on file, so gender eligibility per leg can't be checked automatically — please type player names carefully and contact the organizer.</p>
+  </div>
+
+  <div id="mlFormSection" style="display:none;">
+
+    <div id="mlSavedBanner" class="card note-dark" style="display:none;">
+      <p class="title">✅ 已收到你隊呢場比賽嘅出場名單</p>
+      <p id="mlSavedAt"></p>
+    </div>
+
+    <div id="mlLockedBanner" class="card lock-card" style="display:none;">
+      <p>🔒 呢場比賽已經開始，出場名單不可再更改。<br>This match has started — the lineup can no longer be changed.</p>
+    </div>
+
+    <div id="mlLegsContainer"></div>
+
+    <div class="card">
+      <button class="submit-btn" id="mlSubmitBtn" disabled>提交出場名單 Submit Lineup</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/assets/matchday-common.js"></script>
+<script>
+// ══════════════════════════ MATCH DAY — CAPTAIN LINEUP ══════════════════
+//
+// The starting lineup for one specific match (not the season roster). A
+// match is 5 fixed legs, each a doubles pairing: WD (2F), XD1-3 (1M+1F),
+// MD (2M). Player pools come from the team's submitted season roster when
+// available; otherwise plain text inputs (server skips the gender check).
+
+let mlTeam = null;
+let mlMatch = null; // { matchId, division, team, opponent }
+let mlRosterPlayers = null; // [{name, preferredName, gender, ...}] or null when no roster on file
+let mlPicks = {}; // { WD: ["",""], XD1: ["",""], ... } — values are player display names
+
+function resetMlPicks() {
+  mlPicks = {};
+  LEG_ORDER.forEach(leg => { mlPicks[leg] = ["", ""]; });
+}
+
+function playerDisplayName(p) {
+  return ((p.preferredName && String(p.preferredName).trim()) || (p.name && String(p.name).trim()) || "");
+}
+
+function mlPlayersByGender(gender) {
+  if (!mlRosterPlayers) return [];
+  return mlRosterPlayers.filter(p => p.gender === gender).map(playerDisplayName).filter(Boolean);
+}
+
+function mlUsageCount(name) {
+  let count = 0;
+  LEG_ORDER.forEach(leg => { mlPicks[leg].forEach(v => { if (v === name) count++; }); });
+  return count;
+}
+
+function mlUsedInOtherXd(name, currentLeg) {
+  return ["XD1", "XD2", "XD3"].some(leg => leg !== currentLeg && mlPicks[leg].includes(name));
+}
+
+function mlOptionAllowed(name, leg, slot) {
+  if (name === mlPicks[leg][slot]) return true; // always allow keeping the current value
+  const otherSlot = slot === 0 ? 1 : 0;
+  if (mlPicks[leg][otherSlot] === name) return false; // no duplicate within the same leg
+  if (mlUsageCount(name) >= 2) return false; // 2-leg cap per player
+  if (["XD1", "XD2", "XD3"].includes(leg) && mlUsedInOtherXd(name, leg)) return false; // 1 XD leg max
+  return true;
+}
+
+function renderLegCards() {
+  const container = el("mlLegsContainer");
+  let html = "";
+  LEG_ORDER.forEach(leg => {
+    html += `<div class="card leg-card"><h2>${LEG_LABEL[leg]}</h2><div class="leg-select-row">`;
+    [0, 1].forEach(slot => {
+      const gender = LEG_SLOT_GENDER[leg][slot];
+      if (mlRosterPlayers) {
+        html += `<select class="ml-leg-select" data-leg="${leg}" data-slot="${slot}"></select>`;
+      } else {
+        const ph = gender === "M" ? "男球員姓名 Male player name" : "女球員姓名 Female player name";
+        html += `<input type="text" class="ml-leg-input" data-leg="${leg}" data-slot="${slot}" placeholder="${ph}">`;
+      }
+    });
+    html += `</div></div>`;
+  });
+  container.innerHTML = html;
+
+  if (mlRosterPlayers) {
+    container.querySelectorAll(".ml-leg-select").forEach(sel => {
+      sel.addEventListener("change", () => {
+        mlPicks[sel.dataset.leg][Number(sel.dataset.slot)] = sel.value;
+        renderLegSelects();
+      });
+    });
+  } else {
+    container.querySelectorAll(".ml-leg-input").forEach(inp => {
+      inp.addEventListener("input", () => {
+        mlPicks[inp.dataset.leg][Number(inp.dataset.slot)] = inp.value.trim();
+        updateMlSubmitState();
+      });
+    });
+  }
+}
+
+function renderLegSelects() {
+  LEG_ORDER.forEach(leg => {
+    [0, 1].forEach(slot => {
+      const sel = el("mlLegsContainer").querySelector(`.ml-leg-select[data-leg="${leg}"][data-slot="${slot}"]`);
+      if (!sel) return;
+      const gender = LEG_SLOT_GENDER[leg][slot];
+      const pool = mlPlayersByGender(gender);
+      const current = mlPicks[leg][slot];
+      const placeholder = gender === "M" ? "選擇男球員 — Select male player…" : "選擇女球員 — Select female player…";
+      let html = `<option value="">${placeholder}</option>`;
+      pool.forEach(name => {
+        if (!mlOptionAllowed(name, leg, slot)) return;
+        html += `<option value="${escapeHtml(name)}"${name === current ? " selected" : ""}>${escapeHtml(name)}</option>`;
+      });
+      sel.innerHTML = html;
+    });
+  });
+  updateMlSubmitState();
+}
+
+function setMlInputValuesFromPicks() {
+  el("mlLegsContainer").querySelectorAll(".ml-leg-input").forEach(inp => {
+    inp.value = mlPicks[inp.dataset.leg][Number(inp.dataset.slot)] || "";
+  });
+}
+
+function updateMlSubmitState() {
+  const allFilled = LEG_ORDER.every(leg => mlPicks[leg][0] && mlPicks[leg][1]);
+  el("mlSubmitBtn").disabled = !allFilled;
+}
+
+function populateMlMatchSelect(team) {
+  const sel = el("mlMatchSelect");
+  sel.innerHTML = '<option value="">請選擇比賽 — Select a match…</option>';
+  const matches = SCHEDULE_DATA.groupStage.filter(m => m.teamA === team || m.teamB === team);
+  const groups = groupByToday(matches);
+  appendGroupedOptions(sel, groups, m => {
+    const opponent = m.teamA === team ? m.teamB : m.teamA;
+    return `${m.dateLabel}（${m.weekday}） ${m.time} vs ${idLabel(opponent)}`;
+  });
+  sel.dataset.matches = JSON.stringify(matches);
+  // On match day, jump straight to the next of today's matches.
+  if (groups.length && groups[0].key === "today") sel.value = String(groups[0].rows[0].idx);
+}
+
+el("mlTeamSelect").addEventListener("change", async (e) => {
+  mlTeam = e.target.value;
+  // Remember the captain's team on this phone so match day is one tap.
+  try { localStorage.setItem("hkppt_match_team", mlTeam || ""); } catch (err) { /* storage unavailable — fine */ }
+  el("mlMatchSection").style.display = "none";
+  el("mlFormSection").style.display = "none";
+  el("mlNoRosterNote").style.display = "none";
+  mlMatch = null;
+  if (!mlTeam) return;
+  try {
+    await loadScheduleData();
+    await loadDivisionsData();
+  } catch (e2) {
+    showToast("無法載入賽程，請重新整理頁面 Could not load the schedule — please refresh the page", true);
+    return;
+  }
+  populateMlMatchSelect(mlTeam);
+  el("mlMatchSection").style.display = "block";
+  if (el("mlMatchSelect").value !== "") el("mlMatchSelect").dispatchEvent(new Event("change"));
+});
+
+el("mlMatchSelect").addEventListener("change", async (e) => {
+  const idx = e.target.value;
+  el("mlFormSection").style.display = "none";
+  el("mlNoRosterNote").style.display = "none";
+  if (idx === "") { mlMatch = null; return; }
+  const matches = JSON.parse(e.target.dataset.matches || "[]");
+  const m = matches[Number(idx)];
+  const opponent = m.teamA === mlTeam ? m.teamB : m.teamA;
+  mlMatch = { matchId: buildMatchId(m.division, m.teamA, m.teamB), division: m.division, team: mlTeam, opponent };
+  await loadMlFormData();
+});
+
+async function loadMlFormData() {
+  el("mlLoading").style.display = "block";
+  resetMlPicks();
+  // Fetched independently (each with its own fallback) so a hiccup in one
+  // — e.g. the roster endpoint's legacy Sheet being briefly unreachable —
+  // never blocks the lineup form itself from rendering.
+  let rosterRes = null;
+  try {
+    rosterRes = await fetch(`${ROSTER_API}?team=${encodeURIComponent(mlTeam)}&forLineup=1`).then(r => r.json());
+  } catch (e) {
+    rosterRes = null;
+  }
+  mlRosterPlayers = (rosterRes && rosterRes.ok && Array.isArray(rosterRes.players)) ? rosterRes.players : null;
+  el("mlNoRosterNote").style.display = mlRosterPlayers ? "none" : "block";
+
+  renderLegCards();
+
+  let lineupRes = null;
+  try {
+    lineupRes = await fetch(`${MATCH_LINEUP_API}?team=${encodeURIComponent(mlTeam)}&matchId=${encodeURIComponent(mlMatch.matchId)}`).then(r => r.json());
+  } catch (e) {
+    lineupRes = null;
+    showToast("無法載入之前提交嘅名單，請檢查網絡後重試 Could not load a previously-submitted lineup — check your connection", true);
+  }
+
+  if (lineupRes && lineupRes.ok && lineupRes.lineup) {
+    const legs = lineupRes.lineup.legs || {};
+    LEG_ORDER.forEach(leg => {
+      if (Array.isArray(legs[leg]) && legs[leg].length === 2) mlPicks[leg] = [legs[leg][0], legs[leg][1]];
+    });
+    const savedAt = lineupRes.lineup.updated_at || lineupRes.lineup.submitted_at;
+    el("mlSavedBanner").style.display = "block";
+    el("mlSavedAt").textContent = `上次提交／更新時間：${formatSavedAt(savedAt)}`;
+  } else {
+    el("mlSavedBanner").style.display = "none";
+  }
+
+  if (mlRosterPlayers) renderLegSelects();
+  else { setMlInputValuesFromPicks(); updateMlSubmitState(); }
+
+  // Rulebook 3.7: no lineup changes once the match has started (first leg
+  // score recorded). The server enforces this too; this just says so up front.
+  let started = false;
+  try {
+    const sc = await fetch(`${MATCH_SCORE_API}?matchId=${encodeURIComponent(mlMatch.matchId)}`).then(r => r.json());
+    started = !!(sc && sc.ok && sc.score && Array.isArray(sc.score.legs) && sc.score.legs.length > 0);
+  } catch (e) {
+    started = false;
+  }
+  el("mlLockedBanner").style.display = started ? "block" : "none";
+  el("mlLegsContainer").querySelectorAll("select, input").forEach(x => { x.disabled = started; });
+  if (started) el("mlSubmitBtn").disabled = true;
+
+  el("mlLoading").style.display = "none";
+  el("mlFormSection").style.display = "block";
+}
+
+function mlLineupErrorMessage(err) {
+  if (typeof err !== "string") return "提交失敗，請再試一次 Submission failed, please retry";
+  if (err.startsWith("player_over_leg_cap")) return "⚠ 有球員被安排超過2局，請檢查 A player is scheduled for more than 2 legs";
+  if (err.startsWith("player_repeats_in_xd")) return "⚠ 同一位球員唔可以打多過一場混雙，請檢查 A player can't play more than one mixed-doubles leg";
+  if (err.startsWith("wd_requires_female")) return "⚠ 女雙必須係兩位女球員 WD must be two female players";
+  if (err.startsWith("md_requires_male")) return "⚠ 男雙必須係兩位男球員 MD must be two male players";
+  if (err.startsWith("xd_requires_mixed_pair")) return "⚠ 混雙必須係一男一女 Mixed doubles must be one male + one female";
+  if (err.startsWith("duplicate_player_in_leg")) return "⚠ 同一局入面唔可以揀同一位球員兩次 A leg can't have the same player twice";
+  if (err === "match_started") return "🔒 呢場比賽已經開始，出場名單不可再更改 This match has started — the lineup can no longer be changed";
+  if (err.startsWith("invalid_leg")) return "⚠ 表格資料不完整，請檢查每局都揀咗兩位球員 Incomplete form — check that every leg has two players";
+  return "提交失敗，請再試一次 Submission failed, please retry";
+}
+
+el("mlSubmitBtn").addEventListener("click", async () => {
+  if (!mlTeam || !mlMatch) return;
+  const legs = {};
+  LEG_ORDER.forEach(leg => { legs[leg] = [mlPicks[leg][0], mlPicks[leg][1]]; });
+  const payload = { action: "submit", matchId: mlMatch.matchId, division: mlMatch.division, team: mlTeam, legs };
+  const btn = el("mlSubmitBtn");
+  btn.disabled = true;
+  btn.textContent = "提交緊… Submitting…";
+  try {
+    const result = await postAction(MATCH_LINEUP_API, payload);
+    if (!result.ok) {
+      showToast(mlLineupErrorMessage(result.error), true);
+      return;
+    }
+    const savedAt = result.updatedAt || result.submittedAt;
+    el("mlSavedBanner").style.display = "block";
+    el("mlSavedAt").textContent = `上次提交／更新時間：${formatSavedAt(savedAt)}`;
+    showToast(`✅ ${idLabel(mlTeam)} 對 ${idLabel(mlMatch.opponent)} 嘅出場名單已提交！`);
+  } catch (e) {
+    showToast("提交失敗，請檢查網絡後再試一次 Submission failed — check your connection", true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "提交出場名單 Submit Lineup";
+    updateMlSubmitState();
+  }
+});
+
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+(async function initMatchPage() {
+  try {
+    await Promise.all([loadScheduleData(), loadDivisionsData()]);
+  } catch (e) {
+    el("mlBootError").style.display = "block";
+    return;
+  }
+  const sel = el("mlTeamSelect");
+  TEAM_ORDER.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = idLabel(t);
+    sel.appendChild(opt);
+  });
+  let saved = "";
+  try { saved = localStorage.getItem("hkppt_match_team") || ""; } catch (e) { saved = ""; }
+  if (saved && TEAM_ORDER.includes(saved)) {
+    sel.value = saved;
+    sel.dispatchEvent(new Event("change"));
+  }
+})();
+</script>
+</body>
+</html>

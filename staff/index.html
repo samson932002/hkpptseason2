@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>HKPPT Season 2 — 職員計分 Staff Scoring</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="stylesheet" href="/assets/matchday.css">
+</head>
+<body>
+
+<div class="topbar">
+  <img class="logo" src="/assets/hkppt-logo.png" alt="HKPPT logo">
+  <div class="brand">HKPPT SEASON 2</div>
+  <h1>現場計分</h1>
+  <p>Live Scoring</p>
+</div>
+<div class="page-banner staff">🔒 職員專用 STAFF ONLY — 請勿分享此連結 Do not share this link</div>
+
+<div class="wrap">
+
+  <div id="msGate" class="card">
+    <h2>職員登入 Staff Login</h2>
+    <input type="password" id="msPassInput" placeholder="請輸入大會密碼 Enter organizer passcode" autocomplete="current-password">
+    <button class="submit-btn" id="msGoBtn" style="margin-top:12px;">進入 Enter</button>
+  </div>
+
+  <div id="msMainView" style="display:none;">
+
+    <div class="card note-dark">
+      <p class="title">📝 點樣記分 How to score</p>
+      <p>每局完結後，輸入雙方嘅<b style="color:#fff;">累積比分</b>並儲存。每局都有一隊必須剛好到達該局目標分：女雙 20、混雙一 40、混雙二 60、混雙三 80、男雙 100。<br>After each leg, enter both teams' <b style="color:#fff;">running totals</b> and save. One team must be exactly on that leg's target: WD 20, XD1 40, XD2 60, XD3 80, MD 100.</p>
+    </div>
+
+    <div class="card">
+      <h2>1. 搵返比賽 Find Match</h2>
+      <input type="text" id="msFilterInput" placeholder="搜尋隊伍、組別、場地或日期 Search team, division, venue or date" style="margin-bottom:10px;">
+      <select id="msMatchSelect">
+        <option value="">請選擇比賽 — Select a match…</option>
+      </select>
+    </div>
+
+    <div id="msLoading" class="card loading-note" style="display:none;">
+      <span class="overlay-spin"></span>載入緊… Loading…
+    </div>
+
+    <div id="msMatchDetail" style="display:none;">
+
+      <div class="card">
+        <h2 id="msMatchTitle" style="margin-bottom:4px;"></h2>
+        <p class="meta-note" id="msMatchMeta" style="margin:0;"></p>
+        <div class="ms-lineup-status" id="msLineupStatus"></div>
+        <button class="refresh-btn" id="msRefreshBtn">重新整理 Refresh</button>
+      </div>
+
+      <div id="msLegCards"></div>
+
+      <div class="card ms-summary" id="msSummary"></div>
+
+      <div style="text-align:center; margin-top:6px;">
+        <button class="link-btn" id="msResetBtn" style="color:#A33;">重設呢場比賽嘅比分 Reset this match's score</button>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:18px;">
+      <button class="link-btn" id="msSignOutBtn">登出 Sign out</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/assets/matchday-common.js"></script>
+<script>
+// ══════════════════════════ STAFF — LIVE SCORING ════════════════════════
+//
+// Helpers record each team's running total after every leg. Rules enforced
+// here AND on the server (match-score.mts):
+//   • no lineup, no game — both teams must have submitted on /match first;
+//   • leg targets are fixed (WD 20, XD1 40, XD2 60, XD3 80, MD 100): after a
+//     leg, exactly one team is on that target and the other is below it;
+//   • running totals never go down.
+// A result card at the bottom shows who won each leg and the current leader
+// / winner, so a score typed on the wrong side is obvious straight away.
+
+const PASS_KEY = "hkppt_staff_pass";
+let msPasscode = "";
+let msMatches = [];
+let msCurrentMatch = null;
+let msCurrentScore = null; // { legs, status, winner } or null
+let msLineups = {};        // team -> { WD: [a,b], ... }
+let msLineupTimes = {};
+let msEditingLast = false;
+
+function buildMsMatches() {
+  msMatches = SCHEDULE_DATA.groupStage.map(m => ({
+    matchId: buildMatchId(m.division, m.teamA, m.teamB),
+    division: m.division, teamA: m.teamA, teamB: m.teamB, date: m.date,
+    dateLabel: m.dateLabel, weekday: m.weekday, time: m.time, venueZh: m.venueZh, court: m.court,
+  }));
+}
+
+function msLabelOf(m) {
+  const dm = divisionMeta(m.division);
+  const court = m.court ? ` C${m.court}` : "";
+  return `${m.dateLabel}（${m.weekday}） ${m.time} ${m.venueZh}${court} · ${dm.zh} · ${idLabel(m.teamA)} vs ${idLabel(m.teamB)}`;
+}
+
+function populateMsMatchSelect(filterText) {
+  const sel = el("msMatchSelect");
+  const q = (filterText || "").trim().toLowerCase();
+  sel.innerHTML = '<option value="">請選擇比賽 — Select a match…</option>';
+  const groups = groupByToday(msMatches)
+    .map(g => ({ ...g, rows: g.rows.filter(({ m }) => !q || msLabelOf(m).toLowerCase().includes(q)) }))
+    .filter(g => g.rows.length);
+  appendGroupedOptions(sel, groups, msLabelOf);
+}
+
+// ── Login (same organizer passcode as everywhere else) ───────────────────
+async function msTryLogin(passcode, silent) {
+  const res = await fetch(`${MATCH_SCORE_API}?admin=1&passcode=${encodeURIComponent(passcode)}`);
+  const data = await res.json();
+  if (!data.ok) {
+    if (!silent) showToast(data.error === "passcode_not_configured" ? PASSCODE_UNSET_MSG : "密碼錯誤 Incorrect passcode", true);
+    try { sessionStorage.removeItem(PASS_KEY); } catch (e) { /* ignore */ }
+    return false;
+  }
+  msPasscode = passcode;
+  // Remembered only for this browser tab, so a refresh mid-match doesn't
+  // log the helper out; closing the tab forgets it.
+  try { sessionStorage.setItem(PASS_KEY, passcode); } catch (e) { /* ignore */ }
+  await Promise.all([loadScheduleData(), loadDivisionsData()]);
+  buildMsMatches();
+  populateMsMatchSelect("");
+  el("msGate").style.display = "none";
+  el("msMainView").style.display = "block";
+  return true;
+}
+
+el("msGoBtn").addEventListener("click", async () => {
+  el("msGoBtn").disabled = true;
+  try {
+    await msTryLogin(el("msPassInput").value, false);
+  } catch (e) {
+    showToast("無法驗證密碼，請檢查網絡後重試 Could not verify passcode — check your connection", true);
+  } finally {
+    el("msGoBtn").disabled = false;
+  }
+});
+el("msPassInput").addEventListener("keydown", (e) => { if (e.key === "Enter") el("msGoBtn").click(); });
+el("msSignOutBtn").addEventListener("click", () => {
+  try { sessionStorage.removeItem(PASS_KEY); } catch (e) { /* ignore */ }
+  location.reload();
+});
+
+el("msFilterInput").addEventListener("input", (e) => populateMsMatchSelect(e.target.value));
+
+el("msMatchSelect").addEventListener("change", async (e) => {
+  const idx = e.target.value;
+  el("msMatchDetail").style.display = "none";
+  if (idx === "") { msCurrentMatch = null; return; }
+  msCurrentMatch = msMatches[Number(idx)];
+  await loadMsMatchDetail();
+});
+
+async function loadMsMatchDetail() {
+  el("msLoading").style.display = "block";
+  msEditingLast = false;
+  try {
+    const id = encodeURIComponent(msCurrentMatch.matchId);
+    const [scoreData, lineupData] = await Promise.all([
+      fetch(`${MATCH_SCORE_API}?matchId=${id}`).then(r => r.json()),
+      fetch(`${MATCH_LINEUP_API}?matchId=${id}`).then(r => r.json()),
+    ]);
+    msCurrentScore = (scoreData.ok && scoreData.score) ? scoreData.score : null;
+    msLineups = {};
+    msLineupTimes = {};
+    ((lineupData && lineupData.lineups) || []).forEach(l => {
+      msLineups[l.team] = l.legs || {};
+      msLineupTimes[l.team] = l.updated_at || l.submitted_at;
+    });
+    renderMsMatchDetail();
+    el("msMatchDetail").style.display = "block";
+  } catch (e) {
+    showToast("無法載入比賽資料，請檢查網絡後重試 Could not load match data — check your connection", true);
+  } finally {
+    el("msLoading").style.display = "none";
+  }
+}
+
+el("msRefreshBtn").addEventListener("click", () => { if (msCurrentMatch) loadMsMatchDetail(); });
+
+// ── Leg validation ───────────────────────────────────────────────────────
+// Returns { ok, msg, side } — side is "teamA"/"teamB" (who reached the
+// leg's target) when ok.
+function msCheckLeg(leg, a, b, prev) {
+  const T = LEG_TARGET[leg];
+  const m = msCurrentMatch;
+  if (!Number.isInteger(a) || !Number.isInteger(b)) {
+    return { ok: false, idle: true, msg: `輸入雙方累積比分 — 其中一隊必須剛好 ${T} 分。Enter both totals — one team must be exactly ${T}.` };
+  }
+  if (a < 0 || b < 0) return { ok: false, msg: "比分唔可以係負數 Scores can't be negative." };
+  if (a < prev.teamA || b < prev.teamB) {
+    return { ok: false, msg: `累積比分唔可以低過上一局（${idLabel(m.teamA)} ≥ ${prev.teamA}，${idLabel(m.teamB)} ≥ ${prev.teamB}）。Running totals can't go down.` };
+  }
+  if (a > T || b > T) return { ok: false, msg: `呢局完結時冇隊可以超過 ${T} 分。No team can be above ${T} when this leg ends.` };
+  if (a === T && b === T) return { ok: false, msg: `兩隊唔可以同時係 ${T} 分 — 先到嗰隊完結呢局。Both teams can't be on ${T} — the leg ends when the first team gets there.` };
+  if (a !== T && b !== T) return { ok: false, msg: `其中一隊必須剛好 ${T} 分（呢局喺有隊到 ${T} 分時完結）。One team must be exactly ${T} — the leg ends when a team reaches ${T}.` };
+  const side = a === T ? "teamA" : "teamB";
+  const team = side === "teamA" ? m.teamA : m.teamB;
+  const tail = leg === "MD" ? ` → 🏆 勝出全場 wins the match（${a} : ${b}）` : `（${a} : ${b}）`;
+  return { ok: true, side, msg: `✔ ${idLabel(team)} 先到 ${T} 分，贏咗呢局 reached ${T} first${tail}` };
+}
+
+function msReadCard(card) {
+  const a = parseInt(card.querySelector('.ms-in[data-side="teamA"]').value, 10);
+  const b = parseInt(card.querySelector('.ms-in[data-side="teamB"]').value, 10);
+  return { a, b };
+}
+
+function msPrevFor(legIdx) {
+  const legs = msCurrentScore ? msCurrentScore.legs : [];
+  return legIdx > 0 && legs[legIdx - 1] ? legs[legIdx - 1] : { teamA: 0, teamB: 0 };
+}
+
+function msUpdateCheck(card) {
+  const leg = card.dataset.leg;
+  const { a, b } = msReadCard(card);
+  const res = msCheckLeg(leg, a, b, msPrevFor(LEG_ORDER.indexOf(leg)));
+  const box = card.querySelector(".ms-check");
+  box.className = "ms-check " + (res.ok ? "ok" : res.idle ? "idle" : "bad");
+  box.textContent = res.msg;
+  const btn = card.querySelector(".ms-save-btn");
+  btn.disabled = !res.ok;
+  if (leg === "MD" && res.ok) {
+    const w = res.side === "teamA" ? msCurrentMatch.teamA : msCurrentMatch.teamB;
+    btn.textContent = `確認勝方 Confirm winner: ${idLabel(w)}（${a} : ${b}）`;
+  } else {
+    btn.textContent = `儲存 ${leg} 累積比分 Save`;
+  }
+}
+
+// ── Rendering ────────────────────────────────────────────────────────────
+function msPairText(team, leg) {
+  const l = msLineups[team];
+  return l && Array.isArray(l[leg]) ? l[leg].map(escapeHtml).join(" / ") : "—";
+}
+
+function msLegWinnerSide(rec, leg) {
+  const T = LEG_TARGET[leg];
+  if (rec.teamA === T && rec.teamB !== T) return "teamA";
+  if (rec.teamB === T && rec.teamA !== T) return "teamB";
+  return rec.teamA === rec.teamB ? null : (rec.teamA > rec.teamB ? "teamA" : "teamB");
+}
+
+function renderMsMatchDetail() {
+  const m = msCurrentMatch;
+  const dm = divisionMeta(m.division);
+  el("msMatchTitle").textContent = `${idLabel(m.teamA)} vs ${idLabel(m.teamB)}`;
+  el("msMatchMeta").textContent = `${dm.zh} ${dm.en} · ${m.dateLabel}（${m.weekday}） ${m.time} · ${m.venueZh}${m.court ? ` Court ${m.court}` : ""}`;
+
+  const hasA = !!msLineups[m.teamA], hasB = !!msLineups[m.teamB];
+  const ready = hasA && hasB;
+  const statusLine = (team, has) => has
+    ? `<div><span class="ok">✓ 已提交名單 Lineup in</span> — ${escapeHtml(idLabel(team))} <span class="meta-note">(${escapeHtml(formatSavedAt(msLineupTimes[team]))})</span></div>`
+    : `<div><span class="missing">✗ 未提交名單 No lineup yet</span> — ${escapeHtml(idLabel(team))}</div>`;
+  el("msLineupStatus").innerHTML = statusLine(m.teamA, hasA) + statusLine(m.teamB, hasB) +
+    (ready ? "" : `<div class="ms-blocked">⛔ 未能開賽：雙方隊伍須先喺「比賽日」頁提交出場名單，先可以開始比賽及記錄比分。隊長提交後請撳「重新整理」。<br>Game cannot begin until both teams have submitted their lineup on the Match Day page. Press Refresh once the captain has submitted.</div>`);
+
+  const legs = msCurrentScore ? msCurrentScore.legs : [];
+  const isFinal = !!(msCurrentScore && msCurrentScore.status === "final");
+  const nextIdx = legs.length;
+
+  let html = "";
+  LEG_ORDER.forEach((leg, i) => {
+    const rec = legs[i];
+    const prev = msPrevFor(i);
+    const isLast = rec && i === legs.length - 1;
+    const editing = isLast && msEditingLast && ready;
+    const isNext = !rec && i === nextIdx && !isFinal && ready;
+    const wonSide = rec && !editing ? msLegWinnerSide(rec, leg) : null;
+    let chip, cls = "";
+    if (editing) { chip = '<span class="ms-chip live">更正中 Editing</span>'; cls = "current"; }
+    else if (rec) chip = '<span class="ms-chip done">已記錄 Saved</span>';
+    else if (isNext) { chip = '<span class="ms-chip live">進行中 Now</span>'; cls = "current"; }
+    else if (isFinal) { chip = '<span class="ms-chip">未進行 Not played</span>'; cls = "future"; }
+    else { chip = '<span class="ms-chip">未開始 Upcoming</span>'; cls = "future"; }
+
+    const side = (team, key) => {
+      let body = "";
+      if (editing || isNext) {
+        const val = editing ? rec[key] : "";
+        body = `<input type="number" min="${prev[key]}" max="${LEG_TARGET[leg]}" step="1" inputmode="numeric" class="ms-in" data-side="${key}" value="${val}" placeholder="累積 Total">`;
+      } else if (rec) {
+        body = `<div class="cum${wonSide === key ? " won" : ""}">${rec[key]}${wonSide === key ? " ✔" : ""}</div><div class="delta">本局 +${rec[key] - prev[key]}</div>`;
+      }
+      return `<div class="ms-pair"><div class="team">${escapeHtml(idLabel(team))}</div><div class="players">${msPairText(team, leg)}</div>${body}</div>`;
+    };
+
+    let actions = "";
+    if (editing || isNext) {
+      actions = `<div class="ms-check idle"></div>
+        <div class="ms-leg-actions">${editing ? '<button class="ms-edit-btn" data-act="cancel">取消 Cancel</button>' : ""}<button class="submit-btn ms-save-btn" disabled>儲存 ${leg} 累積比分 Save</button></div>`;
+    } else if (isLast && ready) {
+      actions = `<div class="ms-leg-actions"><button class="ms-edit-btn" data-act="edit">✏️ 更正 ${leg} Edit</button></div>`;
+    }
+
+    html += `<div class="ms-leg-card ${cls}" data-leg="${leg}">
+      <div class="ms-leg-head"><span class="ms-leg-name">${LEG_LABEL[leg]}<span class="ms-leg-target">目標 Target: ${LEG_TARGET[leg]}</span></span>${chip}</div>
+      <div class="ms-pairs">${side(m.teamA, "teamA")}${side(m.teamB, "teamB")}</div>
+      ${actions}
+    </div>`;
+  });
+  el("msLegCards").innerHTML = html;
+  el("msLegCards").querySelectorAll(".ms-leg-card .ms-check").forEach(box => msUpdateCheck(box.closest(".ms-leg-card")));
+
+  renderMsSummary(legs, isFinal);
+}
+
+function renderMsSummary(legs, isFinal) {
+  const m = msCurrentMatch;
+  const idA = TEAM_ID[m.teamA] || "A", idB = TEAM_ID[m.teamB] || "B";
+  let rows = "";
+  LEG_ORDER.forEach((leg, i) => {
+    const rec = legs[i];
+    if (!rec) {
+      rows += `<tr><td class="leg">${LEG_LABEL_SHORT[leg]}</td><td>${LEG_TARGET[leg]}</td><td>—</td><td>—</td><td>—</td></tr>`;
+      return;
+    }
+    const w = msLegWinnerSide(rec, leg);
+    rows += `<tr><td class="leg">${LEG_LABEL_SHORT[leg]}</td><td>${LEG_TARGET[leg]}</td>
+      <td class="${w === "teamA" ? "won" : ""}">${rec.teamA}</td><td class="${w === "teamB" ? "won" : ""}">${rec.teamB}</td>
+      <td>${w ? (w === "teamA" ? idA : idB) : "—"}</td></tr>`;
+  });
+
+  let result;
+  const last = legs[legs.length - 1];
+  if (isFinal && msCurrentScore.winner) {
+    result = `<div class="ms-result"><div class="label">🏆 勝方 WINNER</div><div class="who">${escapeHtml(idLabel(msCurrentScore.winner))}</div>
+      <div class="score">${escapeHtml(idLabel(m.teamA))} ${last.teamA} : ${last.teamB} ${escapeHtml(idLabel(m.teamB))}</div></div>`;
+  } else if (last) {
+    const lead = last.teamA === last.teamB ? null : (last.teamA > last.teamB ? m.teamA : m.teamB);
+    result = `<div class="ms-result pending"><div class="label">目前形勢 CURRENT（${LEG_LABEL_SHORT[legs[legs.length - 1].leg]} 後 after）</div>
+      <div class="who">${lead ? `領先 Leading: ${escapeHtml(idLabel(lead))}` : "平手 Level"}</div>
+      <div class="score">${escapeHtml(idLabel(m.teamA))} ${last.teamA} : ${last.teamB} ${escapeHtml(idLabel(m.teamB))}</div></div>`;
+  } else {
+    result = `<div class="ms-result pending"><div class="label">結果 RESULT</div><div class="who">比賽未開始 Not started</div></div>`;
+  }
+
+  el("msSummary").innerHTML = `<h2>比賽結果核對 Result Check</h2>
+    <p class="meta-note" style="margin:0 0 8px;">請核對每局先到目標分嘅隊伍同最終勝方係咪正確（有冇輸入錯邊）。Check each leg's winner and the overall winner match what happened on court.</p>
+    <table><thead><tr><th style="text-align:left;">局 Leg</th><th>目標</th><th>${escapeHtml(idA)}</th><th>${escapeHtml(idB)}</th><th>先到 Won</th></tr></thead><tbody>${rows}</tbody></table>
+    ${result}`;
+}
+
+// ── Saving ───────────────────────────────────────────────────────────────
+async function msSaveLeg(card) {
+  const leg = card.dataset.leg;
+  const { a, b } = msReadCard(card);
+  const check = msCheckLeg(leg, a, b, msPrevFor(LEG_ORDER.indexOf(leg)));
+  if (!check.ok) { showToast(check.msg, true); return; }
+  const m = msCurrentMatch;
+  const dm = divisionMeta(m.division);
+  const btn = card.querySelector(".ms-save-btn");
+  btn.disabled = true;
+  try {
+    const result = await postAction(MATCH_SCORE_API, {
+      action: "enterLeg", passcode: msPasscode,
+      matchId: m.matchId, division: m.division, teamA: m.teamA, teamB: m.teamB,
+      leg, teamAScore: a, teamBScore: b,
+      meta: {
+        isoDate: m.date, date: `${m.dateLabel}（${m.weekday}）`, time: m.time, venue: m.venueZh,
+        court: m.court ? String(m.court) : "", divisionZh: `${dm.zh} ${dm.en}`,
+        teamALabel: idLabel(m.teamA), teamBLabel: idLabel(m.teamB),
+      },
+    });
+    if (!result.ok) {
+      if (result.error === "lineups_missing") await loadMsMatchDetail();
+      showToast(msScoreErrorMessage(result), true);
+      btn.disabled = false;
+      return;
+    }
+    msCurrentScore = result.score;
+    msEditingLast = false;
+    renderMsMatchDetail();
+    showToast(result.score.status === "final" ? `🏆 比賽完結 Match final — ${idLabel(result.score.winner)}` : `✅ ${leg} 已儲存 Saved`);
+  } catch (e) {
+    showToast("儲存失敗，請檢查網絡後再試一次 Save failed — check your connection", true);
+    btn.disabled = false;
+  }
+}
+
+function msScoreErrorMessage(r) {
+  const err = r.error;
+  if (err === "wrong_leg") return `⚠ 局數對唔上，下一局應該係 ${r.expectedLeg || "?"} Leg mismatch — next leg is ${r.expectedLeg || "?"}`;
+  if (err === "invalid_leg_total") return `⚠ 其中一隊必須剛好 ${r.target} 分 One team must be exactly ${r.target}`;
+  if (err === "score_must_not_decrease") return "⚠ 累積比分唔可以低過上一局 Running totals can't go down";
+  if (err === "match_already_final") return "⚠ 呢場比賽已經完結，請先重設先可以修改 Match is final — reset it first to change it";
+  if (err === "invalid_passcode") return "密碼錯誤，請重新登入 Incorrect passcode — please sign in again";
+  if (err === "lineups_missing") return "⛔ 未能開賽：仍有隊伍未提交出場名單 Game cannot begin — a team hasn't submitted its lineup";
+  if (err === "invalid_score") return "⚠ 請輸入有效嘅比分（非負整數） Enter valid whole-number scores";
+  return "儲存失敗，請再試一次 Save failed, please retry";
+}
+
+el("msLegCards").addEventListener("input", (e) => {
+  if (e.target.classList.contains("ms-in")) msUpdateCheck(e.target.closest(".ms-leg-card"));
+});
+el("msLegCards").addEventListener("click", (e) => {
+  const card = e.target.closest(".ms-leg-card");
+  if (!card) return;
+  if (e.target.closest(".ms-save-btn")) { msSaveLeg(card); return; }
+  const act = e.target.closest("[data-act]");
+  if (act && act.dataset.act === "edit") { msEditingLast = true; renderMsMatchDetail(); }
+  if (act && act.dataset.act === "cancel") { msEditingLast = false; renderMsMatchDetail(); }
+});
+
+el("msResetBtn").addEventListener("click", async () => {
+  if (!msCurrentMatch) return;
+  if (!confirm("確定要重設呢場比賽嘅比分嗎？此操作無法復原。\nReset this match's score? This cannot be undone.")) return;
+  try {
+    const result = await postAction(MATCH_SCORE_API, { action: "reset", passcode: msPasscode, matchId: msCurrentMatch.matchId });
+    if (!result.ok) { showToast("重設失敗 Reset failed", true); return; }
+    msCurrentScore = null;
+    msEditingLast = false;
+    renderMsMatchDetail();
+    showToast("✅ 已重設 Reset complete");
+  } catch (e) {
+    showToast("重設失敗，請檢查網絡後再試一次 Reset failed — check your connection", true);
+  }
+});
+
+// ── Boot: auto sign-in if this tab already logged in ─────────────────────
+(async function initStaffPage() {
+  let saved = "";
+  try { saved = sessionStorage.getItem(PASS_KEY) || ""; } catch (e) { saved = ""; }
+  if (saved) {
+    try { await msTryLogin(saved, true); } catch (e) { /* stay on the login card */ }
+  }
+})();
+</script>
+</body>
+</html>

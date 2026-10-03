@@ -24,6 +24,10 @@ import { getDatabase } from '@netlify/database'
 const LEG_ORDER = ['WD', 'XD1', 'XD2', 'XD3', 'MD'] as const
 type Leg = (typeof LEG_ORDER)[number]
 const TARGET_POINTS = 100
+// Rulebook 3.3: a leg ends the moment either team reaches that leg's fixed
+// target, so after a leg exactly one team is on the target and the other is
+// below it. (A team can pass 40 during XD2 without ending it — only 60 does.)
+const LEG_TARGET: Record<Leg, number> = { WD: 20, XD1: 40, XD2: 60, XD3: 80, MD: 100 }
 
 function configuredPasscode(): string | undefined {
   const value = Netlify.env.get('ADMIN_PASSCODE')
@@ -192,6 +196,11 @@ export default async (req: Request) => {
       const missing = [teamA, teamB].filter((t) => !lineups.has(t))
       if (missing.length > 0) {
         return Response.json({ ok: false, error: 'lineups_missing', missing }, { status: 409 })
+      }
+
+      const target = LEG_TARGET[leg]
+      if (Math.max(teamAScore, teamBScore) !== target || Math.min(teamAScore, teamBScore) >= target) {
+        return Response.json({ ok: false, error: 'invalid_leg_total', target }, { status: 400 })
       }
 
       const existing = await loadRow(db, matchId)

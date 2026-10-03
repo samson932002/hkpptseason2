@@ -1,7 +1,7 @@
 // HKPPT Season 2 — Match score mirror (Google Sheet)
 //
-// Receives a copy of every score the on-site staff save in the website's
-// "現場比分 Live Scoring" tab and keeps two tabs in THIS spreadsheet up to date:
+// Receives a copy of every score the helpers save on the website's
+// /staff page (現場計分 Live Scoring) and keeps two tabs in THIS spreadsheet up to date:
 //
 //   Matches — one row per match: date/time/venue/court, both teams, the
 //             cumulative score after each leg (WD, XD1, XD2, XD3, MD), the

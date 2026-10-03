@@ -1,0 +1,136 @@
+/* HKPPT Season 2 — shared styles for /match and /staff.
+   Same palette and base components as the information site (index.html),
+   plus a per-page banner colour so nobody mixes the pages up:
+   /match = lime "比賽日 MATCH DAY", /staff = orange "職員專用 STAFF ONLY". */
+
+:root {
+  --navy: #001F3D;
+  --navy-deep: #001327;
+  --lime: #B6FF00;
+  --lime-deep: #8FCC00;
+  --ink: #1B1F2E;
+  --muted: #5B6172;
+  --line: #DCE3EC;
+  --bg: #F4F7FB;
+  --white: #FFFFFF;
+  --staff: #FF8A3D;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", "PingFang HK", "Microsoft JhengHei", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header + page-type banner ─────────────────────────────────────────── */
+.topbar { background: var(--navy-deep); color: var(--white); padding: 18px 20px 18px; text-align: center; }
+.topbar .logo { height: 52px; width: auto; display: block; margin: 0 auto 6px; }
+.topbar .brand { font-weight: 800; letter-spacing: 0.06em; color: var(--lime); font-size: 12px; text-transform: uppercase; }
+.topbar h1 { margin: 6px 0 4px; font-size: 21px; font-weight: 800; }
+.topbar p { margin: 0; font-size: 12.5px; color: #B9C6D9; }
+.page-banner {
+  text-align: center; font-weight: 800; font-size: 13px; letter-spacing: 0.04em;
+  padding: 9px 12px; color: var(--navy-deep);
+}
+.page-banner.match { background: var(--lime); }
+.page-banner.staff { background: var(--staff); }
+.page-nav { text-align: center; padding: 10px 16px 0; font-size: 12.5px; }
+.page-nav a { color: var(--navy); font-weight: 700; }
+
+.wrap { max-width: 640px; margin: 0 auto; padding: 16px 16px 60px; }
+.card { background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+.card h2 { font-size: 15px; margin: 0 0 12px; color: var(--navy); }
+.note-dark { background: var(--navy); border: none; }
+.note-dark p { margin: 0; color: #B9C6D9; font-size: 12.5px; line-height: 1.6; }
+.note-dark p.title { color: var(--lime); font-weight: 800; font-size: 14px; margin-bottom: 6px; }
+
+select, input[type="text"], input[type="number"], input[type="password"] {
+  width: 100%; padding: 10px 11px; border: 1.5px solid var(--line); border-radius: 7px;
+  font-size: 15px; font-family: inherit; color: var(--ink); background: var(--white);
+}
+select:disabled, input:disabled { background: #F3F5F8; color: var(--muted); }
+select:focus, input:focus { outline: none; border-color: var(--navy); }
+
+.submit-btn {
+  width: 100%; padding: 14px; background: var(--lime); color: var(--navy-deep); border: none;
+  border-radius: 8px; font-size: 15.5px; font-weight: 800; cursor: pointer; margin-top: 6px;
+}
+.submit-btn:hover { background: var(--lime-deep); }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.refresh-btn {
+  background: var(--navy); color: white; border: none; padding: 8px 14px;
+  border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+}
+.link-btn { background: none; border: none; color: var(--muted); font-size: 11.5px; text-decoration: underline; cursor: pointer; }
+.meta-note { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px);
+  background: var(--navy-deep); color: var(--white); padding: 12px 20px; border-radius: 8px;
+  font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.25s ease; pointer-events: none;
+  max-width: 90vw; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.25); z-index: 80;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: #7A2727; }
+
+.loading-note { text-align: center; font-size: 13px; color: var(--muted); padding: 14px 0; }
+.overlay-spin {
+  display: inline-block; width: 13px; height: 13px; border-radius: 50%;
+  border: 2px solid rgba(0,31,61,0.2); border-top-color: var(--navy);
+  animation: spin 0.7s linear infinite; vertical-align: -2px; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── /match: lineup form ──────────────────────────────────────────────── */
+.leg-select-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.leg-select-row select, .leg-select-row input[type="text"] { flex: 1; min-width: 140px; }
+.warn-card { background: #FFF7E6; border-color: #FFD98C; }
+.warn-card p { margin: 0; font-size: 12.5px; line-height: 1.6; }
+.lock-card { background: #FFF1F1; border-color: #F2B8B8; }
+.lock-card p { margin: 0; font-size: 12.5px; line-height: 1.6; color: #7A1F1F; }
+
+/* ── /staff: scoring ──────────────────────────────────────────────────── */
+.ms-lineup-status { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; font-size: 13px; }
+.ms-lineup-status .ok { color: #256B2B; font-weight: 700; }
+.ms-lineup-status .missing { color: #A33; font-weight: 700; }
+.ms-blocked { background: #FFF1F1; border: 1.5px solid #F2B8B8; border-radius: 9px; padding: 10px 12px; font-size: 12.5px; line-height: 1.6; color: #7A1F1F; margin-top: 8px; }
+.ms-leg-card { border: 1.5px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 10px; background: var(--white); }
+.ms-leg-card.current { border-color: var(--navy); box-shadow: 0 0 0 2px rgba(0,31,61,.08); }
+.ms-leg-card.future { opacity: .55; }
+.ms-leg-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
+.ms-leg-name { font-weight: 800; font-size: 14px; color: var(--navy); }
+.ms-leg-target { font-size: 11px; color: var(--muted); font-weight: 700; display: block; }
+.ms-chip { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 10px; background: #EEF3FA; color: var(--navy); white-space: nowrap; }
+.ms-chip.done { background: #E3F4E4; color: #256B2B; }
+.ms-chip.live { background: var(--navy); color: var(--lime); }
+.ms-pairs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ms-pair .team { font-size: 11px; font-weight: 800; color: var(--muted); margin-bottom: 2px; }
+.ms-pair .players { font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.4; min-height: 18px; }
+.ms-pair input[type="number"] { margin-top: 8px; font-size: 18px; font-weight: 800; text-align: center; }
+.ms-pair .cum { margin-top: 6px; font-size: 20px; font-weight: 800; color: var(--navy); }
+.ms-pair .cum.won { color: #256B2B; }
+.ms-pair .delta { font-size: 11px; color: var(--muted); }
+.ms-check { margin-top: 10px; font-size: 12.5px; font-weight: 700; padding: 8px 10px; border-radius: 8px; line-height: 1.5; }
+.ms-check.idle { background: #F4F7FB; color: var(--muted); font-weight: 500; }
+.ms-check.ok { background: #E3F4E4; color: #256B2B; }
+.ms-check.bad { background: #FFF1F1; color: #A33; }
+.ms-leg-actions { display: flex; gap: 8px; margin-top: 10px; }
+.ms-leg-actions button { flex: 1; }
+.ms-edit-btn { background: none; border: 1.5px solid var(--line); border-radius: 8px; padding: 8px; font-weight: 700; color: var(--navy); cursor: pointer; }
+
+.ms-summary h2 { margin-bottom: 8px; }
+.ms-summary table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ms-summary th, .ms-summary td { padding: 7px 6px; border-bottom: 1px solid #EEF1F5; text-align: center; }
+.ms-summary th { font-size: 11px; color: var(--muted); font-weight: 800; }
+.ms-summary td.leg { text-align: left; font-weight: 700; }
+.ms-summary td.won { color: #256B2B; font-weight: 800; }
+.ms-result { margin-top: 12px; border-radius: 10px; padding: 12px 14px; background: var(--navy); color: var(--white); }
+.ms-result .label { font-size: 11.5px; color: #B9C6D9; font-weight: 700; }
+.ms-result .who { font-size: 17px; font-weight: 800; color: var(--lime); margin-top: 2px; }
+.ms-result .score { font-size: 13px; color: var(--white); margin-top: 2px; }
+.ms-result.pending { background: #EEF3FA; color: var(--navy); }
+.ms-result.pending .label { color: var(--muted); }
+.ms-result.pending .who { color: var(--navy); }
+.ms-result.pending .score { color: var(--muted); }
