@@ -98,7 +98,7 @@
 
     <div class="card note-dark">
       <p class="title">✍️ 賽後確認比賽結果 Confirm each result after the match</p>
-      <p>職員輸入晒5局比分後，請隊長喺呢度核對並確認。如比分有問題，請「報告問題」，大會會跟進。<br>Once staff have entered all 5 legs, the captain checks and confirms the result here. If something's wrong, report a problem and the organizer will follow up.</p>
+      <p>職員輸入晒5局比分後，請隊長喺呢度核對並確認。如發現比分有錯，請即時聯絡<b>在場職員</b>協助更正。<br>Once staff have entered all 5 legs, the captain checks and confirms the result here. If you spot a scoring error, please ask the <b>on-site staff</b> for help right away.</p>
     </div>
 
     <div id="mlConfirmLoading" class="card loading-note" style="display:none;">
@@ -464,15 +464,11 @@ function renderMlResultCard(card, score, sched) {
       <label style="display:block; font-size:12.5px; font-weight:700; color:var(--navy); margin:12px 0 6px;">隊長姓名 Captain's name</label>
       <input type="text" id="mlConfName" maxlength="60" placeholder="請輸入隊長姓名 Enter captain's name">
       <button class="submit-btn" data-act="confirm" style="margin-top:10px;">✅ 確認比分正確 Confirm this result</button>
-      <button class="dispute-btn" data-act="show-dispute">⚠️ 比分有問題 Report a problem</button>
-      <div id="mlDisputeBox" style="display:none; margin-top:10px;">
-        <textarea id="mlDisputeNote" rows="3" maxlength="500" placeholder="請說明邊局／邊個比分有問題 Which leg / score is wrong?"></textarea>
-        <button class="submit-btn dispute-submit" data-act="dispute" style="margin-top:8px;">提交問題 Submit report</button>
-      </div>`;
+      <div class="card warn-card" style="margin:12px 0 0;"><p>⚠️ <b>比分有錯？</b>請即時聯絡<b>在場職員</b>協助更正，更正後再喺度確認。<br><b>Scoring error?</b> Please ask the <b>on-site staff</b> to correct it, then confirm here.</p></div>`;
   }
 
   card.innerHTML = `<h2>🏁 確認比賽結果 Confirm Result</h2>${head}
-    <p class="meta-note" style="margin:0 0 8px;">請核對職員輸入嘅比分。確認後如需更改，請聯絡大會。Please check the scores entered by staff. After confirming, contact the organizer for any change.</p>
+    <p class="meta-note" style="margin:0 0 8px;">請核對職員輸入嘅比分。如有錯誤，請喺確認前聯絡在場職員更正。Please check the scores entered by staff. If anything is wrong, ask the on-site staff to correct it before you confirm.</p>
     <table><thead><tr><th style="text-align:left;">局 Leg</th><th>${escapeHtml(idA)}</th><th>${escapeHtml(idB)}</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="ms-result"><div class="label">🏆 勝方 WINNER</div><div class="who">${escapeHtml(idLabel(score.winner))}</div>
       <div class="score">${escapeHtml(idLabel(teamA))} ${last.teamA} : ${last.teamB} ${escapeHtml(idLabel(teamB))}</div></div>
@@ -516,8 +512,6 @@ el("mlResultCard").addEventListener("click", (e) => {
   const act = e.target.closest("[data-act]");
   if (!act) return;
   if (act.dataset.act === "confirm") mlSendConfirmation("confirm");
-  if (act.dataset.act === "dispute") mlSendConfirmation("dispute");
-  if (act.dataset.act === "show-dispute") el("mlDisputeBox").style.display = "block";
 });
 
 el("mlMatchSelect").addEventListener("change", async (e) => {

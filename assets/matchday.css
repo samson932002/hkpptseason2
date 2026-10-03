@@ -182,3 +182,7 @@ textarea:focus { outline: none; border-color: var(--navy); }
 .result-item .ri-date { font-size: 12px; color: var(--muted); font-weight: 700; }
 .result-item .ri-vs { display: block; margin-top: 4px; font-size: 14px; font-weight: 800; color: var(--navy); }
 .result-item .ri-score { display: block; margin-top: 2px; font-size: 13px; color: var(--ink); }
+
+/* Staff: correcting saved legs (any leg, one or several at once) */
+.ms-correct-bar { background: #FFF7E6; border: 1.5px solid #FFB25C; border-radius: 12px; padding: 14px; margin-top: 4px; }
+.ms-correct-bar .title { font-weight: 800; color: var(--navy); margin-bottom: 6px; }

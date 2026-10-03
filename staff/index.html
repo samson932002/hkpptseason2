@@ -93,7 +93,12 @@ let msCurrentMatch = null;
 let msCurrentScore = null; // { legs, status, winner } or null
 let msLineups = {};        // team -> { WD: [a,b], ... }
 let msLineupTimes = {};
-let msEditingLast = false;
+// Saved legs currently open for correction ({ WD: true, ... }). Any saved
+// leg can be corrected on its own; several can be open at once and are
+// saved together, so a run of wrong legs never has to be undone backwards.
+let msEditing = {};
+// Values typed into open boxes, kept while the cards re-render.
+let msDraft = {};
 
 function buildMsMatches() {
   msMatches = SCHEDULE_DATA.groupStage.map(m => ({
@@ -168,7 +173,8 @@ el("msMatchSelect").addEventListener("change", async (e) => {
 
 async function loadMsMatchDetail() {
   el("msLoading").style.display = "block";
-  msEditingLast = false;
+  msEditing = {};
+  msDraft = {};
   try {
     const id = encodeURIComponent(msCurrentMatch.matchId);
     const [scoreData, lineupData] = await Promise.all([
@@ -240,7 +246,7 @@ el("msLineupStatus").addEventListener("click", async (e) => {
 // ── Leg validation ───────────────────────────────────────────────────────
 // Returns { ok, msg, side } — side is "teamA"/"teamB" (who reached the
 // leg's target) when ok.
-function msCheckLeg(leg, a, b, prev) {
+function msCheckLeg(leg, a, b, prev, next) {
   const T = LEG_TARGET[leg];
   const m = msCurrentMatch;
   if (!Number.isInteger(a) || !Number.isInteger(b)) {
@@ -249,6 +255,9 @@ function msCheckLeg(leg, a, b, prev) {
   if (a < 0 || b < 0) return { ok: false, msg: "比分唔可以係負數 Scores can't be negative." };
   if (a < prev.teamA || b < prev.teamB) {
     return { ok: false, msg: `累積比分唔可以低過上一局（${idLabel(m.teamA)} ≥ ${prev.teamA}，${idLabel(m.teamB)} ≥ ${prev.teamB}）。Running totals can't go down.` };
+  }
+  if (next && (a > next.teamA || b > next.teamB)) {
+    return { ok: false, msg: `唔可以高過下一局 ${LEG_LABEL_SHORT[next.leg]} 嘅累積比分（${idLabel(m.teamA)} ≤ ${next.teamA}，${idLabel(m.teamB)} ≤ ${next.teamB}）。如果下一局都錯，可以一齊打開更正。Can't be higher than the next leg's totals — if that leg is wrong too, open it as well and save both together.` };
   }
   if (a > T || b > T) return { ok: false, msg: `呢局完結時冇隊可以超過 ${T} 分。No team can be above ${T} when this leg ends.` };
   if (a === T && b === T) return { ok: false, msg: `兩隊唔可以同時係 ${T} 分 — 先到嗰隊完結呢局。Both teams can't be on ${T} — the leg ends when the first team gets there.` };
@@ -270,14 +279,53 @@ function msPrevFor(legIdx) {
   return legIdx > 0 && legs[legIdx - 1] ? legs[legIdx - 1] : { teamA: 0, teamB: 0 };
 }
 
+// Saved legs with any open corrections applied (from the boxes on screen).
+function msProposedLegs() {
+  const legs = msCurrentScore ? msCurrentScore.legs : [];
+  return legs.map(rec => {
+    if (!msEditing[rec.leg]) return rec;
+    const card = el("msLegCards").querySelector(`.ms-leg-card[data-leg="${rec.leg}"]`);
+    if (!card) return rec;
+    const { a, b } = msReadCard(card);
+    return { leg: rec.leg, teamA: a, teamB: b, edited: true };
+  });
+}
+
+// The neighbours a card is checked against. While correcting, the leg
+// before uses its corrected value (if valid numbers); the leg after is only
+// a limit when it isn't itself being corrected — otherwise that leg's own
+// check catches any clash, so every pair of legs is always checked once.
+function msNeighbours(leg) {
+  const i = LEG_ORDER.indexOf(leg);
+  const saved = msCurrentScore ? msCurrentScore.legs : [];
+  const proposed = msProposedLegs();
+  let prev = { teamA: 0, teamB: 0 };
+  if (i > 0 && saved[i - 1]) {
+    const p = proposed[i - 1];
+    prev = (Number.isInteger(p.teamA) && Number.isInteger(p.teamB)) ? p : saved[i - 1];
+  }
+  const next = (saved[i] && saved[i + 1] && !msEditing[saved[i + 1].leg]) ? saved[i + 1] : null;
+  return { prev, next };
+}
+
 function msUpdateCheck(card) {
   const leg = card.dataset.leg;
   const { a, b } = msReadCard(card);
-  const res = msCheckLeg(leg, a, b, msPrevFor(LEG_ORDER.indexOf(leg)));
+  const nb = msNeighbours(leg);
+  const res = msCheckLeg(leg, a, b, nb.prev, nb.next);
+  const isCorrection = !!msEditing[leg];
   const box = card.querySelector(".ms-check");
   box.className = "ms-check " + (res.ok ? "ok" : res.idle ? "idle" : "bad");
   box.textContent = res.msg;
+  card.dataset.valid = res.ok ? "1" : "";
   const btn = card.querySelector(".ms-save-btn");
+  if (isCorrection || !btn) return res;
+  // New-leg box: wait until open corrections are saved.
+  if (Object.keys(msEditing).length) {
+    btn.disabled = true;
+    btn.textContent = "請先儲存或取消更正 Save or cancel corrections first";
+    return res;
+  }
   btn.disabled = !res.ok;
   if (leg === "MD" && res.ok) {
     const w = res.side === "teamA" ? msCurrentMatch.teamA : msCurrentMatch.teamB;
@@ -285,6 +333,32 @@ function msUpdateCheck(card) {
   } else {
     btn.textContent = `儲存 ${leg} 累積比分 Save`;
   }
+  return res;
+}
+
+function msUpdateAllChecks() {
+  el("msLegCards").querySelectorAll(".ms-leg-card .ms-check").forEach(box => msUpdateCheck(box.closest(".ms-leg-card")));
+  const bar = el("msCorrectBar");
+  if (!bar) return;
+  const open = LEG_ORDER.filter(l => msEditing[l]);
+  const allOk = open.every(l => {
+    const c = el("msLegCards").querySelector(`.ms-leg-card[data-leg="${l}"]`);
+    return c && c.dataset.valid === "1";
+  });
+  const btn = bar.querySelector("#msSaveCorrectionsBtn");
+  btn.disabled = !allOk;
+  bar.querySelector(".ms-check").className = "ms-check " + (allOk ? "ok" : "bad");
+  bar.querySelector(".ms-check").textContent = allOk
+    ? "✔ 更正符合計分規則，可以儲存。Corrections pass every scoring rule — ready to save."
+    : "⚠ 請先處理上面紅色提示。Fix the red messages above first.";
+}
+
+// Keeps whatever is typed in open boxes across a re-render.
+function msCaptureDrafts() {
+  el("msLegCards").querySelectorAll(".ms-leg-card").forEach(card => {
+    const ins = card.querySelectorAll(".ms-in");
+    if (ins.length === 2) msDraft[card.dataset.leg] = { teamA: ins[0].value, teamB: ins[1].value };
+  });
 }
 
 // ── Rendering ────────────────────────────────────────────────────────────
@@ -337,8 +411,7 @@ function renderMsMatchDetail() {
   LEG_ORDER.forEach((leg, i) => {
     const rec = legs[i];
     const prev = msPrevFor(i);
-    const isLast = rec && i === legs.length - 1;
-    const editing = isLast && msEditingLast && ready;
+    const editing = !!(rec && msEditing[leg] && ready);
     const isNext = !rec && i === nextIdx && !isFinal && ready && started;
     const wonSide = rec && !editing ? msLegWinnerSide(rec, leg) : null;
     let chip, cls = "";
@@ -351,7 +424,8 @@ function renderMsMatchDetail() {
     const side = (team, key) => {
       let body = "";
       if (editing || isNext) {
-        const val = editing ? rec[key] : "";
+        const d = msDraft[leg];
+        const val = d ? d[key] : (editing ? rec[key] : "");
         body = `<input type="number" min="${prev[key]}" max="${LEG_TARGET[leg]}" step="1" inputmode="numeric" class="ms-in" data-side="${key}" value="${val}" placeholder="累積 Total">`;
       } else if (rec) {
         body = `<div class="cum${wonSide === key ? " won" : ""}">${rec[key]}${wonSide === key ? " ✔" : ""}</div><div class="delta">本局 +${rec[key] - prev[key]}</div>`;
@@ -360,10 +434,13 @@ function renderMsMatchDetail() {
     };
 
     let actions = "";
-    if (editing || isNext) {
+    if (editing) {
       actions = `<div class="ms-check idle"></div>
-        <div class="ms-leg-actions">${editing ? '<button class="ms-edit-btn" data-act="cancel">取消 Cancel</button>' : ""}<button class="submit-btn ms-save-btn" disabled>儲存 ${leg} 累積比分 Save</button></div>`;
-    } else if (isLast && ready) {
+        <div class="ms-leg-actions"><button class="ms-edit-btn" data-act="cancel">取消更正 ${leg} Cancel</button></div>`;
+    } else if (isNext) {
+      actions = `<div class="ms-check idle"></div>
+        <div class="ms-leg-actions"><button class="submit-btn ms-save-btn" disabled>儲存 ${leg} 累積比分 Save</button></div>`;
+    } else if (rec && ready && started) {
       actions = `<div class="ms-leg-actions"><button class="ms-edit-btn" data-act="edit">✏️ 更正 ${leg} Edit</button></div>`;
     }
 
@@ -373,8 +450,17 @@ function renderMsMatchDetail() {
       ${actions}
     </div>`;
   });
+  const openLegs = LEG_ORDER.filter(l => msEditing[l]);
+  if (openLegs.length) {
+    html += `<div class="ms-correct-bar" id="msCorrectBar">
+      <div class="title">✏️ 更正中 Correcting: ${openLegs.join("、")}</div>
+      <div class="meta-note" style="margin:0;">每局可以獨立更正；如果幾局都錯，可以同時打開，一次過儲存。${isFinal ? "儲存後雙方隊長需要重新確認結果。" : ""}<br>Each leg can be corrected on its own; if several are wrong, open them all and save together.${isFinal ? " Both captains will need to re-confirm the result." : ""}</div>
+      <div class="ms-check idle"></div>
+      <div class="ms-leg-actions"><button class="ms-edit-btn" data-act="cancel-all">取消全部 Cancel all</button><button class="submit-btn" id="msSaveCorrectionsBtn" disabled>💾 儲存更正 Save corrections</button></div>
+    </div>`;
+  }
   el("msLegCards").innerHTML = html;
-  el("msLegCards").querySelectorAll(".ms-leg-card .ms-check").forEach(box => msUpdateCheck(box.closest(".ms-leg-card")));
+  msUpdateAllChecks();
 
   renderMsSummary(legs, isFinal);
 }
@@ -433,7 +519,8 @@ function renderMsSummary(legs, isFinal) {
 async function msSaveLeg(card) {
   const leg = card.dataset.leg;
   const { a, b } = msReadCard(card);
-  const check = msCheckLeg(leg, a, b, msPrevFor(LEG_ORDER.indexOf(leg)));
+  if (Object.keys(msEditing).length) { showToast("請先儲存或取消更正 Save or cancel corrections first", true); return; }
+  const check = msCheckLeg(leg, a, b, msPrevFor(LEG_ORDER.indexOf(leg)), null);
   if (!check.ok) { showToast(check.msg, true); return; }
   const m = msCurrentMatch;
   const dm = divisionMeta(m.division);
@@ -457,7 +544,7 @@ async function msSaveLeg(card) {
       return;
     }
     msCurrentScore = result.score;
-    msEditingLast = false;
+    delete msDraft[leg];
     renderMsMatchDetail();
     showToast(result.score.status === "final" ? `🏆 比賽完結 Match final — ${idLabel(result.score.winner)}` : `✅ ${leg} 已儲存 Saved`);
   } catch (e) {
@@ -466,11 +553,70 @@ async function msSaveLeg(card) {
   }
 }
 
+function msMetaFor(m) {
+  const dm = divisionMeta(m.division);
+  return {
+    isoDate: m.date, date: `${m.dateLabel}（${m.weekday}）`, time: m.time, venue: m.venueZh,
+    court: m.court ? String(m.court) : "", divisionZh: `${dm.zh} ${dm.en}`,
+    teamALabel: idLabel(m.teamA), teamBLabel: idLabel(m.teamB),
+  };
+}
+
+async function msSaveCorrections() {
+  msUpdateAllChecks();
+  const open = LEG_ORDER.filter(l => msEditing[l]);
+  const saved = msCurrentScore ? msCurrentScore.legs : [];
+  const corrections = {};
+  for (const leg of open) {
+    const card = el("msLegCards").querySelector(`.ms-leg-card[data-leg="${leg}"]`);
+    if (!card || card.dataset.valid !== "1") { showToast("⚠ 請先處理紅色提示 Fix the red messages first", true); return; }
+    const { a, b } = msReadCard(card);
+    const rec = saved.find(x => x.leg === leg);
+    if (!rec || rec.teamA !== a || rec.teamB !== b) corrections[leg] = { teamA: a, teamB: b };
+  }
+  const changed = Object.keys(corrections);
+  if (!changed.length) {
+    msEditing = {}; open.forEach(l => delete msDraft[l]);
+    renderMsMatchDetail();
+    showToast("冇改動 No changes");
+    return;
+  }
+  const isFinal = !!(msCurrentScore && msCurrentScore.status === "final");
+  const lines = changed.map(l => {
+    const rec = saved.find(x => x.leg === l);
+    return `${l}: ${rec.teamA}:${rec.teamB} → ${corrections[l].teamA}:${corrections[l].teamB}`;
+  }).join("\n");
+  if (!confirm(`確認更正？Save these corrections?\n\n${lines}${isFinal ? "\n\n雙方隊長需要重新確認結果。Both captains will need to re-confirm." : ""}`)) return;
+  const btn = el("msSaveCorrectionsBtn");
+  btn.disabled = true;
+  try {
+    const m = msCurrentMatch;
+    const result = await postAction(MATCH_SCORE_API, {
+      action: "correctLegs", passcode: msPasscode, matchId: m.matchId, corrections, meta: msMetaFor(m),
+    });
+    if (!result.ok) {
+      showToast(msScoreErrorMessage(result), true);
+      btn.disabled = false;
+      return;
+    }
+    msCurrentScore = result.score;
+    msEditing = {}; open.forEach(l => delete msDraft[l]);
+    renderMsMatchDetail();
+    const s = result.score;
+    showToast(s.status === "final" ? `✅ 已更正 Corrected — 勝方 Winner: ${idLabel(s.winner)}` : `✅ 已更正 ${changed.join("、")} Corrected`);
+  } catch (e) {
+    showToast("儲存失敗，請檢查網絡後再試一次 Save failed — check your connection", true);
+    btn.disabled = false;
+  }
+}
+
 function msScoreErrorMessage(r) {
   const err = r.error;
+  const at = r.leg ? `${r.leg}：` : "";
   if (err === "wrong_leg") return `⚠ 局數對唔上，下一局應該係 ${r.expectedLeg || "?"} Leg mismatch — next leg is ${r.expectedLeg || "?"}`;
-  if (err === "invalid_leg_total") return `⚠ 其中一隊必須剛好 ${r.target} 分 One team must be exactly ${r.target}`;
-  if (err === "score_must_not_decrease") return "⚠ 累積比分唔可以低過上一局 Running totals can't go down";
+  if (err === "invalid_leg_total") return `⚠ ${at}其中一隊必須剛好 ${r.target} 分 One team must be exactly ${r.target}`;
+  if (err === "score_must_not_decrease") return `⚠ ${at}累積比分唔可以低過上一局 Running totals can't go down`;
+  if (err === "leg_not_entered") return `⚠ ${at}呢局未有比分，唔可以更正 This leg hasn't been entered yet`;
   if (err === "match_already_final") return "⚠ 呢場比賽已經完結，請先重設先可以修改 Match is final — reset it first to change it";
   if (err === "invalid_passcode") return "密碼錯誤，請重新登入 Incorrect passcode — please sign in again";
   if (err === "not_started") return "⚠ 請先撳「確認名單並開始比賽」 Press “Confirm lineups & start match” first";
@@ -480,15 +626,24 @@ function msScoreErrorMessage(r) {
 }
 
 el("msLegCards").addEventListener("input", (e) => {
-  if (e.target.classList.contains("ms-in")) msUpdateCheck(e.target.closest(".ms-leg-card"));
+  if (e.target.classList.contains("ms-in")) msUpdateAllChecks();
 });
 el("msLegCards").addEventListener("click", (e) => {
+  if (e.target.closest("#msSaveCorrectionsBtn")) { msSaveCorrections(); return; }
+  const act = e.target.closest("[data-act]");
+  if (act && act.dataset.act === "cancel-all") {
+    LEG_ORDER.forEach(l => { if (msEditing[l]) delete msDraft[l]; });
+    msEditing = {};
+    msCaptureDrafts();
+    renderMsMatchDetail();
+    return;
+  }
   const card = e.target.closest(".ms-leg-card");
   if (!card) return;
+  const leg = card.dataset.leg;
   if (e.target.closest(".ms-save-btn")) { msSaveLeg(card); return; }
-  const act = e.target.closest("[data-act]");
-  if (act && act.dataset.act === "edit") { msEditingLast = true; renderMsMatchDetail(); }
-  if (act && act.dataset.act === "cancel") { msEditingLast = false; renderMsMatchDetail(); }
+  if (act && act.dataset.act === "edit") { msCaptureDrafts(); msEditing[leg] = true; renderMsMatchDetail(); }
+  if (act && act.dataset.act === "cancel") { msCaptureDrafts(); delete msEditing[leg]; delete msDraft[leg]; renderMsMatchDetail(); }
 });
 
 el("msResetBtn").addEventListener("click", async () => {
@@ -498,7 +653,8 @@ el("msResetBtn").addEventListener("click", async () => {
     const result = await postAction(MATCH_SCORE_API, { action: "reset", passcode: msPasscode, matchId: msCurrentMatch.matchId });
     if (!result.ok) { showToast("重設失敗 Reset failed", true); return; }
     msCurrentScore = null;
-    msEditingLast = false;
+    msEditing = {};
+    msDraft = {};
     renderMsMatchDetail();
     showToast("✅ 已重設 Reset complete");
   } catch (e) {

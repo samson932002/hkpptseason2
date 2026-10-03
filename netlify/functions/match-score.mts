@@ -97,7 +97,7 @@ async function loadLineups(db: ReturnType<typeof getDatabase>, matchId: string):
   return new Map(rows.map((r) => [r.team, r.legs]))
 }
 
-type LegEntry = { leg: Leg; teamA: number; teamB: number; enteredAt: string }
+type LegEntry = { leg: Leg; teamA: number; teamB: number; enteredAt: string; editedAt?: string }
 
 type Confirmation = { status: 'confirmed' | 'disputed'; name: string; note: string; at: string }
 
@@ -120,6 +120,38 @@ async function loadRow(db: ReturnType<typeof getDatabase>, matchId: string): Pro
     FROM match_scores WHERE match_id = ${matchId}
   `) as unknown as ScoreRow[]
   return rows[0] || null
+}
+
+// Checks a whole leg list against the scoring rules: legs in fixed order
+// (WD, XD1, XD2, XD3, MD, no gaps), after each leg exactly one team is on
+// that leg's target and the other below it, and running totals never go
+// down from one leg to the next. Returns null when valid.
+function validateLegSequence(legs: { leg: Leg; teamA: number; teamB: number }[]):
+  { error: string; leg: Leg; target?: number; prev?: { teamA: number; teamB: number } } | null {
+  let prevA = 0
+  let prevB = 0
+  for (let i = 0; i < legs.length; i++) {
+    const e = legs[i]
+    if (e.leg !== LEG_ORDER[i]) return { error: 'wrong_leg', leg: e.leg }
+    const target = LEG_TARGET[e.leg]
+    if (Math.max(e.teamA, e.teamB) !== target || Math.min(e.teamA, e.teamB) >= target) {
+      return { error: 'invalid_leg_total', leg: e.leg, target }
+    }
+    if (e.teamA < prevA || e.teamB < prevB) {
+      return { error: 'score_must_not_decrease', leg: e.leg, prev: { teamA: prevA, teamB: prevB } }
+    }
+    prevA = e.teamA
+    prevB = e.teamB
+  }
+  return null
+}
+
+function resultOf(legs: LegEntry[], teamA: string, teamB: string): { status: ScoreRow['status']; winner: string | null } {
+  const last = legs[legs.length - 1]
+  if (!last) return { status: 'in_progress', winner: null }
+  const isFinal = Math.max(last.teamA, last.teamB) >= TARGET_POINTS || last.leg === 'MD'
+  if (!isFinal) return { status: 'in_progress', winner: null }
+  return { status: 'final', winner: last.teamA === last.teamB ? null : last.teamA > last.teamB ? teamA : teamB }
 }
 
 function emptyScore(matchId: string, division: string, teamA: string, teamB: string): ScoreRow {
@@ -267,10 +299,7 @@ export default async (req: Request) => {
         legs.push(entry)
       }
 
-      const reachedTarget = Math.max(teamAScore, teamBScore) >= TARGET_POINTS
-      const isFinal = reachedTarget || leg === 'MD'
-      const status: ScoreRow['status'] = isFinal ? 'final' : 'in_progress'
-      const winner = isFinal ? (teamAScore === teamBScore ? null : teamAScore > teamBScore ? teamA : teamB) : null
+      const { status, winner } = resultOf(legs, teamA, teamB)
 
       const saved = (await db.sql<ScoreRow>`
         INSERT INTO match_scores (match_id, division, team_a, team_b, legs, status, winner)
@@ -293,6 +322,80 @@ export default async (req: Request) => {
         teamB,
         lineupA: lineups.get(teamA) || {},
         lineupB: lineups.get(teamB) || {},
+        legs: saved[0].legs,
+        status: saved[0].status,
+        winner: saved[0].winner,
+        confirmations: saved[0].confirmations || {},
+        updatedAt: saved[0].updated_at,
+      })
+
+      return Response.json({ ok: true, score: saved[0] })
+    }
+
+    // Staff correct any already-saved leg(s) directly — no need to undo
+    // later legs first. Several legs can be corrected in one save (e.g. a
+    // whole match entered on the wrong side). The corrected match must still
+    // pass every scoring rule as a whole (validateLegSequence), so a fix to
+    // one leg can't leave it out of step with the legs around it. Allowed on
+    // finished matches too; the winner is recomputed from the last leg and
+    // both captains' confirmations are cleared if anything changed.
+    if (payload.action === 'correctLegs') {
+      const rejected = rejectPasscode(payload.passcode)
+      if (rejected) return rejected
+      const matchId = typeof payload.matchId === 'string' ? payload.matchId.trim() : ''
+      if (!matchId) return Response.json({ ok: false, error: 'missing_match_id' }, { status: 400 })
+      const raw = payload.corrections
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+        return Response.json({ ok: false, error: 'invalid_corrections' }, { status: 400 })
+      }
+      const row = await loadRow(db, matchId)
+      if (!row || !row.started_at) return Response.json({ ok: false, error: 'not_started' }, { status: 409 })
+
+      const legs: LegEntry[] = row.legs.map((e) => ({ ...e }))
+      const now = new Date().toISOString()
+      let changed = false
+      for (const [legKey, val] of Object.entries(raw as Record<string, unknown>)) {
+        const idx = legs.findIndex((e) => e.leg === legKey)
+        if (idx < 0) return Response.json({ ok: false, error: 'leg_not_entered', leg: legKey }, { status: 400 })
+        const v = val as { teamA?: unknown; teamB?: unknown } | null
+        const a = v ? v.teamA : undefined
+        const b = v ? v.teamB : undefined
+        if (
+          typeof a !== 'number' || !Number.isInteger(a) || a < 0 ||
+          typeof b !== 'number' || !Number.isInteger(b) || b < 0
+        ) {
+          return Response.json({ ok: false, error: 'invalid_score', leg: legKey }, { status: 400 })
+        }
+        if (legs[idx].teamA !== a || legs[idx].teamB !== b) {
+          legs[idx] = { ...legs[idx], teamA: a, teamB: b, editedAt: now } as LegEntry
+          changed = true
+        }
+      }
+      const invalid = validateLegSequence(legs)
+      if (invalid) return Response.json({ ok: false, ...invalid }, { status: 400 })
+      if (!changed) return Response.json({ ok: true, unchanged: true, score: row })
+
+      const { status, winner } = resultOf(legs, row.team_a, row.team_b)
+      const saved = (await db.sql<ScoreRow>`
+        UPDATE match_scores SET
+          legs = ${JSON.stringify(legs)}::jsonb,
+          status = ${status},
+          winner = ${winner},
+          confirmations = '{}'::jsonb,
+          updated_at = now()
+        WHERE match_id = ${matchId}
+        RETURNING match_id, division, team_a, team_b, legs, status, winner, confirmations, started_at, updated_at
+      `) as unknown as ScoreRow[]
+
+      const lineups = await loadLineups(db, matchId)
+      await mirrorToSheet({
+        action: 'upsertMatch',
+        matchId,
+        meta: cleanMeta(payload.meta),
+        teamA: row.team_a,
+        teamB: row.team_b,
+        lineupA: lineups.get(row.team_a) || {},
+        lineupB: lineups.get(row.team_b) || {},
         legs: saved[0].legs,
         status: saved[0].status,
         winner: saved[0].winner,
