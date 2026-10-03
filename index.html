@@ -543,6 +543,9 @@
   .playoff-day-card .pd-date small { display: block; color: #9FB6CE; font-weight: 600; font-size: 10px; }
   .playoff-day-card .pd-label { font-weight: 700; font-size: 13.5px; color: var(--ink); }
   .playoff-day-card .pd-label small { display: block; color: var(--muted); font-weight: 500; font-size: 11.5px; margin-top: 2px; }
+  .playoff-day-card .pd-venue { display: block; margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--navy); }
+  .playoff-day-card .pd-venue .pd-venue-note { display: block; font-weight: 500; color: var(--muted); font-size: 11.5px; }
+  .playoff-day-card .pd-venue a { display: inline-block; margin-top: 2px; font-size: 11.5px; color: var(--navy); text-decoration: underline; }
   .venue-card { border: 1.5px solid var(--line); border-radius: 9px; padding: 12px 14px; margin-bottom: 8px; }
   .venue-card .v-name { font-weight: 800; font-size: 13.5px; color: var(--navy); }
   .venue-card .v-addr { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
@@ -596,8 +599,11 @@
 
 <div class="wrap">
 
-  <div class="tabgroup-label action">⚠️ 需要行動 Action Required</div>
-  <div class="tabbar action-tabbar">
+  <!-- Logo + Acknowledgment: every team has submitted, so the whole
+       "Action Required" group is hidden. Both tabs still work for the
+       organizer via the address bar: #logo and #ack. -->
+  <div class="tabgroup-label action" style="display:none;">⚠️ 需要行動 Action Required</div>
+  <div class="tabbar action-tabbar" style="display:none;">
     <button class="tab-btn action-btn" id="tabLogoBtn" data-tab="logo">🖼️ 隊徽提交<br><span class="tab-btn-en">Team Logo</span></button>
     <button class="tab-btn action-btn" id="tabAckBtn" data-tab="ack">✍️ 確認聲明<br><span class="tab-btn-en">Acknowledgment</span></button>
   </div>
@@ -832,8 +838,8 @@
     <div class="card" id="schPlayoffsCard">
       <h2>🏆 淘汰賽日期（暫定）Playoffs Dates (Tentative)</h2>
       <p style="margin:0 0 10px; font-size:12.5px; color:var(--muted); line-height:1.6;">
-        以下日期為暫定安排，如有調動大會會直接通知各隊伍。場地將於稍後公佈。<br>
-        Dates below are tentative and may change — affected teams will be notified directly. Venues will be announced later.
+        以下日期為暫定安排，如有調動大會會直接通知各隊伍。<br>
+        Dates below are tentative and may change — affected teams will be notified directly.
       </p>
       <div id="schPlayoffsDays"></div>
       <p class="meta-note" id="schPlayoffsVenueNote" style="text-align:left; margin-top:8px;"></p>
@@ -1419,7 +1425,9 @@ function renderPlayoffsAndVenues() {
   const daysHtml = (SCHEDULE_DATA.playoffs.days || []).map(d => `
     <div class="playoff-day-card">
       <div class="pd-date">${d.dateLabel}<small>（${d.weekday}）</small></div>
-      <div class="pd-label">${d.titleZh}<small>${d.titleEn}</small></div>
+      <div class="pd-label">${d.titleZh}<small>${d.titleEn}</small>${d.venue ? `<span class="pd-venue">📍 ${d.venue.name}${d.venue.mapUrl
+        ? `<br><a href="${d.venue.mapUrl}" target="_blank" rel="noopener">在Google地圖開啟 Open in Google Maps →</a>`
+        : `<span class="pd-venue-note">${d.venue.noteZh || ""} ${d.venue.noteEn || ""}</span>`}</span>` : ""}</div>
     </div>
   `).join("");
   el("schPlayoffsDays").innerHTML = daysHtml;

@@ -1855,24 +1855,38 @@
         "dateLabel": "11/22",
         "weekday": "日",
         "titleZh": "準決賽",
-        "titleEn": "Semi-Finals"
+        "titleEn": "Semi-Finals",
+        "venue": {
+          "name": "PickandMatch (Megabox)",
+          "mapUrl": "https://share.google/74jQ5bCONTVqwH3BQ"
+        }
       },
       {
         "date": "2026-11-28",
         "dateLabel": "11/28",
         "weekday": "六",
         "titleZh": "準決賽 + 季軍賽",
-        "titleEn": "Semi-Finals + 3rd Place Matches"
+        "titleEn": "Semi-Finals + 3rd Place Matches",
+        "venue": {
+          "name": "The Pickleball Lab @ Kowloon Bay",
+          "noteZh": "詳細地址稍後公佈",
+          "noteEn": "Address to be announced"
+        }
       },
       {
         "date": "2026-11-29",
         "dateLabel": "11/29",
         "weekday": "日",
         "titleZh": "總決賽（各組別）",
-        "titleEn": "Grand Finals (each Division)"
+        "titleEn": "Grand Finals (each Division)",
+        "venue": {
+          "name": "The Pickleball Lab @ Kowloon Bay",
+          "noteZh": "詳細地址稍後公佈",
+          "noteEn": "Address to be announced"
+        }
       }
     ],
-    "venueNote": "場地將於稍後公佈 Venue to be announced"
+    "venueNote": ""
   },
   "venues": [
     {
