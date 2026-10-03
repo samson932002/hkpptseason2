@@ -2,8 +2,8 @@
 -- captain before their match) and live leg-by-leg scoring (entered by
 -- on-site staff during the match).
 --
--- match_id is an opaque, client-built string ("<teamAId>-<teamBId>",
--- e.g. "E1-E3") derived from schedule.json + the
+-- match_id is an opaque, client-built string ("<division>__<teamAId>__
+-- <teamBId>", e.g. "Rookie__E1__E3") derived from schedule.json + the
 -- team identifiers already in divisions.json. It is never reconstructed
 -- server-side — both functions just treat it as a stable key.
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HKPPT Season 2 — 比賽日 Match Day</title>
+<title>HKPPT Season 2 - 比賽日 Match Day (Captains)</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <link rel="stylesheet" href="/assets/matchday.css">
@@ -284,6 +284,7 @@ function setMlMode(mode) {
   document.querySelectorAll("#mlModeTabs .mode-tab").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
   el("mlLineupMode").style.display = mode === "lineup" ? "block" : "none";
   el("mlConfirmMode").style.display = mode === "confirm" ? "block" : "none";
+  document.title = "HKPPT Season 2 - " + (mode === "confirm" ? "確認比賽結果 Confirm Result" : "提交出場名單 Submit Lineup");
   renderMlPendingBanner();
   try { history.replaceState(null, "", mode === "confirm" ? "#confirm" : location.pathname + location.search); } catch (e) { /* ignore */ }
 }

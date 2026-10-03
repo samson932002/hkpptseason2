@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HKPPT Season 2 — 隊伍名單提交</title>
+<title>HKPPT Season 2 - 賽事資訊 Tournament Info</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -1267,14 +1267,14 @@ async function populateTeamSelects() {
 
 // ══════════════════════════ Tab switching ══════════════════════════════
 const TAB_META = {
-  logo: { title: "隊徽提交", subtitle: "Team Logo Submission" },
-  ack: { title: "隊伍確認聲明", subtitle: "Team Acknowledgment" },
-  schedule: { title: "循環賽賽程表", subtitle: "Round-Robin Schedule" },
-  playoffs: { title: "淘汰賽日期（暫定）", subtitle: "Playoffs Dates (Tentative)" },
-  divisions: { title: "組別", subtitle: "Divisions & Promotion/Relegation" },
-  lineup: { title: "隊伍名單提交表格", subtitle: "Team Lineup Submission Form" },
-  survey: { title: "隊伍時間問卷", subtitle: "Team Availability Survey" },
-  payment: { title: "繳費收據上載", subtitle: "Team Payment Receipt Upload" },
+  logo: { title: "隊徽提交", subtitle: "Team Logo Submission", doc: "隊徽提交 Team Logo" },
+  ack: { title: "隊伍確認聲明", subtitle: "Team Acknowledgment", doc: "確認聲明 Acknowledgment" },
+  schedule: { title: "循環賽賽程表", subtitle: "Round-Robin Schedule", doc: "循環賽賽程 Round-Robin Schedule" },
+  playoffs: { title: "淘汰賽日期（暫定）", subtitle: "Playoffs Dates (Tentative)", doc: "淘汰賽 Playoffs" },
+  divisions: { title: "組別", subtitle: "Divisions & Promotion/Relegation", doc: "組別 Divisions" },
+  lineup: { title: "隊伍名單提交表格", subtitle: "Team Lineup Submission Form", doc: "隊伍名單提交 Team Lineup" },
+  survey: { title: "隊伍時間問卷", subtitle: "Team Availability Survey", doc: "時間問卷 Availability Survey" },
+  payment: { title: "繳費收據上載", subtitle: "Team Payment Receipt Upload", doc: "繳費收據上載 Payment Upload" },
 };
 
 function showTab(tab, opts) {
@@ -1298,6 +1298,8 @@ function showTab(tab, opts) {
   el("tabPaymentBtn").classList.toggle("active", tab === "payment");
   el("pageTitle").textContent = TAB_META[tab].title;
   el("pageSubtitle").textContent = TAB_META[tab].subtitle;
+  // Browser tab title: "HKPPT Season 2 - <this tab>".
+  document.title = "HKPPT Season 2 - " + TAB_META[tab].doc;
   if (!opts.skipHash) {
     history.replaceState(null, "", "#" + tab);
   }
